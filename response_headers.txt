@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Server: gunicorn
+Date: Thu, 04 Sep 2025 17:08:11 GMT
+Connection: close
+Content-Type: text/html; charset=utf-8
+Content-Length: 11616
+Vary: Cookie
+Set-Cookie: emotiontrack_session=eyJjc3JmX3Rva2VuIjoiZWZkZGM0OGYxOGUwZDZlMDkyNDdhM2Q0YzcxMjVkNmI0NDFhNTVhMiJ9.aLnHew._Nt9A62kqCp6wEXtKZ_pkGDK9LI; HttpOnly; Path=/; SameSite=Lax
+

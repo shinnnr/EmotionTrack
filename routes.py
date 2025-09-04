@@ -216,6 +216,11 @@ def login():
     
     form = LoginForm()
     
+    # Debug form validation
+    print(f"Request method: {request.method}")
+    print(f"Form errors: {form.errors}")
+    print(f"Form data - email: {form.email.data}, password: {'***' if form.password.data else 'None'}")
+    
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         print(f"Login attempt - Email: {form.email.data}")

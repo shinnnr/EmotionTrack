@@ -1,4 +1,6 @@
 from flask_wtf import FlaskForm
+from wtforms.csrf.session import SessionCSRF
+from wtforms.meta import DefaultMeta
 from wtforms import StringField, PasswordField, SelectField, TextAreaField, IntegerField, FloatField, HiddenField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, EqualTo
 from wtforms.widgets import TextArea
@@ -6,6 +8,9 @@ from wtforms.widgets import TextArea
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
+    
+    class Meta(DefaultMeta):
+        csrf = False  # Disable CSRF for now
 
 class RegisterForm(FlaskForm):
     firstname = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
