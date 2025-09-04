@@ -23,6 +23,8 @@ def create_app():
     
     # Configuration
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
+    app.config["WTF_CSRF_SECRET_KEY"] = app.secret_key
+    app.config["WTF_CSRF_TIME_LIMIT"] = None  # No time limit for CSRF tokens
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "postgresql://localhost/mindtrack_db")
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
@@ -40,6 +42,12 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'info'
+    
+    # Make csrf_token available in all templates
+    @app.context_processor
+    def inject_csrf_token():
+        from flask_wtf.csrf import generate_csrf
+        return dict(csrf_token=generate_csrf)
     
     # User loader for Flask-Login
     @login_manager.user_loader
