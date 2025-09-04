@@ -454,6 +454,57 @@ def respond_message(message_id):
     
     return jsonify({'success': False, 'message': 'Response text is required'})
 
+@admin_bp.route('/student-chat/<int:user_id>')
+@login_required
+def student_chat(user_id):
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('main.home'))
+    
+    student = User.query.get_or_404(user_id)
+    if student.is_admin:
+        flash('Cannot chat with admin users.', 'error')
+        return redirect(url_for('admin.messages'))
+    
+    # Get all messages for this student
+    messages = StudentMessage.query.filter_by(sender_user_id=user_id).order_by(StudentMessage.created_at).all()
+    
+    # Mark all messages as read
+    for message in messages:
+        if not message.is_read:
+            message.is_read = True
+    db.session.commit()
+    
+    return render_template('admin_chat.html', student=student, messages=messages)
+
+@admin_bp.route('/send-message/<int:user_id>', methods=['POST'])
+@login_required
+def send_message(user_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+    
+    student = User.query.get_or_404(user_id)
+    if student.is_admin:
+        return jsonify({'success': False, 'message': 'Cannot message admin users'})
+    
+    message_text = request.form.get('message_text')
+    if not message_text:
+        return jsonify({'success': False, 'message': 'Message text is required'})
+    
+    # Create a new message from admin to student
+    # We'll use the same StudentMessage model but indicate it's from admin
+    message = StudentMessage()
+    message.sender_user_id = user_id  # Keep the student as the "sender" for filtering
+    message.message_text = f"[ADMIN] {message_text}"  # Prefix to indicate admin message
+    message.admin_response = message_text  # Also store in admin_response field
+    message.is_read = True
+    message.responded_at = datetime.utcnow()
+    
+    db.session.add(message)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Message sent successfully'})
+
 # Admin API routes
 @admin_bp.route('/api/unread-messages-count')
 @login_required

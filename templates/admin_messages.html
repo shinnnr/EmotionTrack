@@ -78,11 +78,17 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" 
-                                                    onclick="viewMessage({{ message.id }}, '{{ user.full_name }}', '{{ message.message_text|e }}', '{{ message.admin_response or '' }}', {{ message.is_read|lower }})">
-                                                <i class="fas fa-eye"></i>
-                                                View
-                                            </button>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-primary" 
+                                                        onclick="viewMessage({{ message.id }}, '{{ user.full_name }}', '{{ message.message_text|e }}', '{{ message.admin_response or '' }}', {{ message.is_read|lower }})">
+                                                    <i class="fas fa-eye"></i>
+                                                    View
+                                                </button>
+                                                <a href="{{ url_for('admin.student_chat', user_id=user.id) }}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-comments"></i>
+                                                    Chat
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
