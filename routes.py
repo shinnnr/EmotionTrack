@@ -218,18 +218,25 @@ def login():
     
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
+        print(f"Login attempt - Email: {form.email.data}")
+        print(f"User found: {user is not None}")
         
-        if user and user.check_password(form.password.data):
-            login_user(user)
-            flash(f'Welcome back, {user.firstname}!', 'success')
+        if user:
+            print(f"User exists: {user.email}, Admin: {user.is_admin}")
+            password_check = user.check_password(form.password.data)
+            print(f"Password check result: {password_check}")
             
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            
-            if user.is_admin:
-                return redirect(url_for('admin.dashboard'))
-            return redirect(url_for('main.home'))
+            if password_check:
+                login_user(user)
+                flash(f'Welcome back, {user.firstname}!', 'success')
+                
+                next_page = request.args.get('next')
+                if next_page:
+                    return redirect(next_page)
+                
+                if user.is_admin:
+                    return redirect(url_for('admin.dashboard'))
+                return redirect(url_for('main.home'))
         
         flash('Invalid email or password.', 'error')
     
@@ -241,6 +248,9 @@ def register():
     form = RegisterForm()
     
     if form.validate_on_submit():
+        print(f"Registration form validated successfully")
+        print(f"Form data - Email: {form.email.data}, FirstName: {form.firstname.data}")
+        
         # Check if user already exists
         existing_user = User.query.filter_by(email=form.email.data).first()
         if existing_user:
@@ -261,9 +271,12 @@ def register():
         db.session.add(user)
         db.session.commit()
         
+        print(f"User created successfully: {user.email}")
         login_user(user)
         flash('Registration successful! Welcome to MindTrack.', 'success')
         return redirect(url_for('main.home'))
+    else:
+        print(f"Form validation failed: {form.errors}")
     
     # If form validation fails, flash errors
     for field, errors in form.errors.items():

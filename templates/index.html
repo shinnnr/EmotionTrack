@@ -78,65 +78,48 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">First Name</label>
-                                    <input type="text" name="firstname" class="form-control" required>
+                                    {{ register_form.firstname(class="form-control") }}
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Last Name</label>
-                                    <input type="text" name="lastname" class="form-control" required>
+                                    {{ register_form.lastname(class="form-control") }}
                                 </div>
                             </div>
                             
                             <div class="mb-3">
                                 <label class="form-label">Email Address</label>
-                                <input type="email" name="email" class="form-control" required>
+                                {{ register_form.email(class="form-control") }}
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Password</label>
-                                    <input type="password" name="password" class="form-control" required>
+                                    {{ register_form.password(class="form-control") }}
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Confirm Password</label>
-                                    <input type="password" name="confirm_password" class="form-control" required>
+                                    {{ register_form.confirm_password(class="form-control") }}
                                 </div>
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Gender</label>
-                                    <select name="gender" class="form-select" required>
-                                        <option value="">Select</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                        <option value="Other">Other</option>
-                                    </select>
+                                    {{ register_form.gender(class="form-select") }}
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Strand</label>
-                                    <select name="strand" class="form-select" required>
-                                        <option value="">Select</option>
-                                        <option value="STEM">STEM</option>
-                                        <option value="ABM">ABM</option>
-                                        <option value="HUMSS">HUMSS</option>
-                                        <option value="GAS">GAS</option>
-                                        <option value="TVL">TVL</option>
-                                        <option value="Other">Other</option>
-                                    </select>
+                                    {{ register_form.strand(class="form-select") }}
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Grade</label>
-                                    <select name="grade_level" class="form-select" required>
-                                        <option value="">Select</option>
-                                        <option value="11">Grade 11</option>
-                                        <option value="12">Grade 12</option>
-                                    </select>
+                                    {{ register_form.grade_level(class="form-select") }}
                                 </div>
                             </div>
                             
                             <div class="mb-3">
                                 <label class="form-label">Section</label>
-                                <input type="text" name="section" class="form-control" required>
+                                {{ register_form.section(class="form-control") }}
                             </div>
                             
                             <button type="submit" class="btn btn-clsu-gold w-100 mb-3">
