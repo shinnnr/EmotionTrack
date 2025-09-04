@@ -23,7 +23,7 @@ body {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     color: #333;
     line-height: 1.6;
-    transition: margin-right var(--transition-speed) ease;
+    transition: margin-left var(--transition-speed) ease;
 }
 
 /* CLSU Brand Colors */
@@ -133,12 +133,12 @@ body {
 /* Main Content Layout */
 .main-content {
     min-height: 100vh;
-    transition: margin-right var(--transition-speed) ease;
+    transition: margin-left var(--transition-speed) ease;
     padding: 0;
 }
 
 .main-content.with-sidebar {
-    margin-right: var(--sidebar-width);
+    margin-left: var(--sidebar-width);
 }
 
 /* Landing Page Styles */
@@ -455,7 +455,7 @@ body {
     }
     
     .main-content {
-        margin-right: 0 !important;
+        margin-left: 0 !important;
     }
     
     body {

@@ -39,12 +39,16 @@
     </div>
 
     <!-- Sidebar (for authenticated users) -->
-    {% if current_user.is_authenticated and not current_user.is_admin %}
-        {% include 'sidebar.html' %}
+    {% if current_user.is_authenticated %}
+        {% if current_user.is_admin %}
+            {% include 'admin_sidebar.html' %}
+        {% else %}
+            {% include 'sidebar.html' %}
+        {% endif %}
     {% endif %}
 
     <!-- Main Content -->
-    <main class="main-content {% if current_user.is_authenticated and not current_user.is_admin %}with-sidebar{% endif %}">
+    <main class="main-content {% if current_user.is_authenticated %}with-sidebar{% endif %}">
         {% block content %}{% endblock %}
     </main>
 
@@ -58,6 +62,29 @@
     
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Sidebar Toggle Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebarToggle = document.getElementById('sidebarToggle') || document.getElementById('adminSidebarToggle');
+        const sidebar = document.getElementById('sidebar') || document.getElementById('adminSidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay') || document.getElementById('adminSidebarOverlay');
+        
+        if (sidebarToggle && sidebar && sidebarOverlay) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+                sidebarOverlay.classList.toggle('show');
+                document.body.classList.toggle('sidebar-open');
+            });
+            
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+                document.body.classList.remove('sidebar-open');
+            });
+        }
+    });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>

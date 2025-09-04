@@ -262,23 +262,25 @@ function showNewMessageNotification(count) {
 
 function initializeDataExport() {
     // Set up data export functionality
-    window.exportData = async function() {
-        const exportBtn = document.querySelector('.btn-outline-success');
-        const hideLoading = MindTrack.showLoading(exportBtn, 'Exporting...');
-        
-        try {
-            const exportOptions = await showExportOptionsModal();
-            if (exportOptions) {
-                await performDataExport(exportOptions);
-                MindTrack.showAlert('Data exported successfully!', 'success');
+    if (typeof window.exportData === 'undefined') {
+        window.exportData = async function() {
+            const exportBtn = document.querySelector('.btn-outline-success');
+            const hideLoading = MindTrack.showLoading(exportBtn, 'Exporting...');
+            
+            try {
+                const exportOptions = await showExportOptionsModal();
+                if (exportOptions) {
+                    await performDataExport(exportOptions);
+                    MindTrack.showAlert('Data exported successfully!', 'success');
+                }
+            } catch (error) {
+                console.error('Export error:', error);
+                MindTrack.showAlert('Export failed. Please try again.', 'danger');
+            } finally {
+                hideLoading();
             }
-        } catch (error) {
-            console.error('Export error:', error);
-            MindTrack.showAlert('Export failed. Please try again.', 'danger');
-        } finally {
-            hideLoading();
-        }
-    };
+        };
+    }
 }
 
 function showExportOptionsModal() {
@@ -363,7 +365,8 @@ function showExportOptionsModal() {
         document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
         document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
         
-        document.getElementById('confirmExport').addEventListener('click', () => {
+        document.getElementById('confirmExport').addEventListener('click', (e) => {
+            e.preventDefault();
             const formData = new FormData(document.getElementById('exportForm'));
             const options = {
                 users: document.getElementById('exportUsers').checked,
@@ -377,7 +380,7 @@ function showExportOptionsModal() {
             
             bootstrapModal.hide();
             resolve(options);
-        });
+        }, { once: true });
         
         modal.addEventListener('hidden.bs.modal', () => {
             document.body.removeChild(modal);
