@@ -1,0 +1,1032 @@
+/* CLSU Theme - Computer Display Optimized (No Linear Gradient) */
+:root {
+    /* CLSU Colors */
+    --clsu-green-dark: #003300;
+    --clsu-green-medium: #005800;
+    --clsu-green-light: #4CAF50; /* A lighter green, similar to original profile-btn hover */
+    --clsu-gold: #ffd700;
+    --clsu-gold-dark: #c1a400;
+
+    /* Neutrals */
+    --color-white: #fff;
+    --color-light-gray: #f0f0f0;
+    --color-medium-gray: #ddd;
+    --color-dark-gray: #333;
+    --color-text-dark: #444;
+    --color-text-medium: #555;
+    --color-text-light: #aaa;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--clsu-green-medium); /* CLSU Green */
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition: background 0.5s ease-in-out;
+    color: var(--color-dark-gray);
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* Prevent scrolling when modal is open */
+body.modal-open {
+    overflow: hidden;
+}
+
+.profile-container {
+    background: rgba(255, 255, 255, 0.9); /* Slightly less transparent */
+    backdrop-filter: blur(12px); /* Increased blur */
+    max-width: 700px; /* Slightly wider default */
+    width: 90%;
+    padding: 2.5rem 3rem; /* Increased horizontal padding */
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); /* Softer shadow */
+    text-align: center;
+    transition: transform 0.3s ease-out, box-shadow 0.3s ease-out, background 0.3s ease-in-out;
+    margin: 25px; /* More margin */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle border for glass effect */
+}
+
+.profile-container:hover {
+    transform: translateY(-5px); /* Subtle lift effect */
+    background: var(--color-white);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+}
+
+h2 {
+    margin-bottom: 1.5rem; /* More space below heading */
+    font-size: 2rem; /* Larger heading */
+    color: var(--clsu-green-dark);
+    font-weight: 700; /* Bolder */
+    transition: color 0.3s ease-in-out;
+}
+
+.profile-details p {
+    margin: 0.7rem 0;
+    font-size: 1.1rem;
+    color: var(--color-text-dark);
+    text-align: left; /* Align text to left for readability */
+    padding-left: 1rem; /* Indent details */
+}
+
+.profile-details p strong {
+    color: var(--clsu-green-dark);
+    font-weight: 600;
+    min-width: 120px; /* Align colons */
+    display: inline-block;
+}
+
+.profile-actions {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    justify-content: center;
+    gap: 1rem; /* Space between buttons */
+}
+
+.profile-actions button {
+    flex-grow: 1; /* Allow buttons to grow */
+    max-width: 300px; /* Max width for individual buttons */
+}
+
+.log-btn, .insights-btn { /* Renamed .osa-btn to .insights-btn */
+    display: inline-block;
+    color: var(--color-white);
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600; /* Semi-bold */
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    font-size: 1.1rem;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+    border: none; /* Removed border */
+    position: relative; /* For potential pseudo-elements */
+    overflow: hidden; /* For hover effect */
+}
+
+/* Specific button colors */
+.log-btn {
+    background: #007bff; /* A distinct blue for logs */
+}
+
+.insights-btn { /* Style for the new insights button */
+    background: #FF6384; /* A vibrant pink/red for insights */
+}
+
+.log-btn:hover, .insights-btn:hover { /* Updated hover selector */
+    transform: translateY(-3px); /* Lift effect */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    opacity: 0.95;
+}
+
+.log-btn:active, .insights-btn:active { /* Updated active selector */
+    transform: translateY(0);
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal Specific Styles */
+.modal {
+    display: none; /* Crucial: Modal is hidden by default using CSS */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Darker overlay */
+    padding: 20px;
+    /* Removed display: flex; from here. It will be added by JS via .is-active */
+    justify-content: center; /* These will only apply when modal is flex */
+    align-items: center;   /* These will only apply when modal is flex */
+    animation: fadeIn 0.3s ease-out forwards; /* Fade in animation */
+}
+
+/* New class added by JavaScript to make the modal visible */
+.modal.is-active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: var(--color-white);
+    padding: 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    position: relative;
+    width: 90%;
+    max-width: 600px; /* Larger max width for modal */
+    animation: slideInFromTop 0.3s ease-out forwards; /* Slide in animation */
+    border: 1px solid var(--color-medium-gray);
+    overflow-y: auto; /* Enable scroll for long content */
+    max-height: 90vh; /* Limit modal content height */
+}
+
+.modal-content h2 {
+    color: var(--clsu-green-dark);
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+    text-align: center;
+}
+
+.close {
+    color: var(--color-text-light);
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 32px; /* Larger close icon */
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover,
+.close:focus {
+    color: var(--color-dark-gray);
+}
+
+/* Emotion Log History Modal (emotionLogModal) specific styles */
+#emotionLogModal ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+    max-height: 400px; /* Limit height for scrollable content */
+    overflow-y: auto; /* Enable scroll */
+    padding-right: 10px; /* Space for scrollbar */
+}
+
+#emotionLogModal ul::-webkit-scrollbar {
+    width: 8px;
+    background: var(--color-light-gray);
+    border-radius: 10px;
+}
+#emotionLogModal ul::-webkit-scrollbar-thumb {
+    background: var(--clsu-gold);
+    border-radius: 10px;
+}
+
+
+#emotionLogModal ul li {
+    background-color: var(--color-light-gray);
+    border: 1px solid var(--color-medium-gray);
+    border-radius: 10px;
+    margin-bottom: 12px; /* More space */
+    padding: 15px 20px; /* More padding */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease-out;
+}
+
+#emotionLogModal ul li:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    background-color: #e8e8e8;
+}
+
+#emotionLogModal ul li p {
+    margin: 0; /* Remove default paragraph margin */
+    font-weight: 500; /* Medium bold */
+    color: var(--clsu-green-dark);
+    flex-grow: 1; /* Allow text to take space */
+    text-align: left;
+}
+#emotionLogModal ul li p strong {
+    font-weight: 700;
+}
+
+
+#emotionLogModal button {
+    background-color: var(--clsu-gold);
+    color: var(--color-dark-gray);
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#emotionLogModal button:hover {
+    background-color: var(--clsu-gold-dark);
+    transform: scale(1.02);
+}
+
+.pagination {
+    margin-top: 25px; /* More space */
+    text-align: center;
+    display: flex; /* Use flex for pagination buttons */
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* Space between buttons and text */
+}
+
+.pagination button { /* Changed from a to button for consistency */
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: var(--clsu-green-medium);
+    color: var(--color-white);
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.pagination button:hover {
+    background-color: var(--clsu-green-dark);
+}
+
+.pagination span {
+    font-size: 1rem;
+    color: var(--color-text-dark);
+    font-weight: 500;
+}
+
+
+/* Log Details Modal (logDetailsModal) specific styles */
+.log-details-content {
+    text-align: left;
+    padding: 1rem 0;
+}
+
+.log-details-content strong {
+    color: var(--clsu-green-dark);
+    min-width: 150px; /* Align details */
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+.log-details-content br {
+    display: none; /* Hide default br tags */
+}
+.log-details-content p {
+    margin-bottom: 0.8rem;
+    font-size: 1.05rem;
+    color: var(--color-text-dark);
+}
+.log-details-content p:last-child {
+    margin-bottom: 0;
+}
+
+
+/* Insights Modal (insightsModal) specific styles */
+.insights-content {
+    text-align: left;
+    padding: 1rem 0;
+    color: var(--color-text-dark);
+}
+
+.insights-content h3 {
+    color: var(--clsu-green-dark);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border-bottom: 2px solid var(--clsu-gold);
+    padding-bottom: 0.5rem;
+}
+
+.insights-content h4 {
+    color: var(--clsu-green-medium);
+    margin-top: 1.5rem;
+    margin-bottom: 0.8rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.insights-content p {
+    margin-bottom: 1rem;
+    line-height: 1.7;
+    font-size: 1rem;
+}
+
+.insights-content strong {
+    color: var(--clsu-green-dark);
+    font-weight: 700;
+}
+
+.chart-container {
+    background-color: var(--color-light-gray);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    position: relative; /* Needed for chart responsiveness in some cases */
+    max-height: 400px; /* Limit height for charts to prevent excessive growth */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.chart-container canvas {
+    max-width: 100%;
+    height: auto; /* Allow chart to scale proportionally */
+}
+
+.insights-section {
+    margin-bottom: 2rem;
+}
+
+.intro-insight, .final-thoughts p {
+    font-style: italic;
+    color: var(--color-text-medium);
+    margin-bottom: 1.5rem;
+}
+
+.gratitude-note {
+    font-weight: 600;
+    color: var(--clsu-green-medium);
+    margin-top: 1.5rem;
+    border-top: 1px dashed var(--color-medium-gray);
+    padding-top: 1rem;
+}
+
+.info-message, .error-message {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+.info-message {
+    background-color: #e0f2f7; /* Light blue */
+    color: #01579B; /* Darker blue */
+    border: 1px solid #B3E5FC;
+}
+
+.error-message {
+    background-color: #ffe0e0; /* Light red */
+    color: #b71c1c; /* Darker red */
+    border: 1px solid #ffcdd2;
+}
+
+.insights-summary-text {
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+.insights-summary-text p {
+    margin-bottom: 0.5rem;
+}
+
+
+/* sjc-logo specific styles */
+.sjc-logo {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    opacity: 0.15; /* More subtle */
+    width: 220px; /* Slightly larger default */
+    height: auto;
+    z-index: -1;
+    pointer-events: none;
+    transition: width 0.3s ease, bottom 0.3s ease, right 0.3s ease, opacity 0.3s ease;
+}
+
+/* Back Button */
+.back-button {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    padding: 10px 18px; /* Slightly smaller padding */
+    background-color: var(--clsu-gold);
+    color: var(--color-dark-gray); /* Text in gold button should be dark */
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    border: none;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Space between icon and text if any */
+}
+
+.back-button svg {
+    margin-right: 5px; /* Add space between SVG and text */
+    vertical-align: middle;
+}
+
+.back-button:hover {
+    background-color: var(--clsu-gold-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInFromTop {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+
+/* --- Responsive Adjustments --- */
+
+/* Larger screens (Desktop and beyond) */
+@media (min-width: 1200px) {
+    .profile-container {
+        max-width: 850px;
+        padding: 3.5rem 4rem;
+    }
+    h2 {
+        font-size: 2.5rem;
+    }
+    .profile-details p {
+        font-size: 1.25rem;
+    }
+    .profile-actions button {
+        padding: 1.2rem 2.5rem;
+        font-size: 1.2rem;
+    }
+    .modal-content {
+        max-width: 750px; /* Increased max-width for insights modal */
+        padding: 3rem;
+    }
+    .modal-content h2 {
+        font-size: 2.2rem;
+    }
+    .close {
+        font-size: 38px;
+        top: 20px;
+        right: 25px;
+    }
+
+    #emotionLogModal ul li {
+        padding: 20px 25px;
+        font-size: 1.1rem;
+    }
+    #emotionLogModal button {
+        font-size: 1.05rem;
+        padding: 12px 20px;
+    }
+    .pagination button {
+        font-size: 1.05rem;
+        padding: 12px 18px;
+    }
+    .pagination span {
+        font-size: 1.1rem;
+    }
+
+    .log-details-content p {
+        font-size: 1.15rem;
+    }
+    .insights-content p {
+        font-size: 1.15rem;
+        margin-bottom: 1.2rem;
+    }
+    .insights-content h2 {
+        font-size: 2.2rem;
+    }
+
+    .back-button {
+        top: 40px;
+        left: 40px;
+        padding: 12px 22px;
+        font-size: 1.1rem;
+    }
+    .sjc-logo {
+        width: 280px;
+        bottom: 35px;
+        right: 35px;
+    }
+}
+
+/* Tablet and Smaller Desktop Screens (769px to 1199px) */
+@media (min-width: 769px) and (max-width: 1199px) {
+    .profile-container {
+        max-width: 750px;
+        padding: 2.5rem 3.5rem;
+    }
+    h2 {
+        font-size: 2.2rem;
+    }
+    .profile-details p {
+        font-size: 1.15rem;
+    }
+    .profile-actions button {
+        padding: 1rem 2.2rem;
+        font-size: 1.1rem;
+    }
+    .modal-content {
+        max-width: 650px;
+        padding: 2.2rem;
+    }
+    .modal-content h2 {
+        font-size: 1.9rem;
+    }
+    .close {
+        font-size: 34px;
+        top: 18px;
+        right: 22px;
+    }
+
+    #emotionLogModal ul li {
+        padding: 18px 22px;
+        font-size: 1.05rem;
+    }
+    #emotionLogModal button {
+        font-size: 1rem;
+        padding: 11px 19px;
+    }
+    .pagination button {
+        font-size: 1rem;
+        padding: 10px 16px;
+    }
+    .pagination span {
+        font-size: 1rem;
+    }
+
+    .log-details-content p {
+        font-size: 1.1rem;
+    }
+    .insights-content p {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+    .insights-content h2 {
+        font-size: 1.9rem;
+    }
+
+    .back-button {
+        top: 35px;
+        left: 35px;
+        padding: 10px 18px;
+        font-size: 1rem;
+    }
+    .sjc-logo {
+        width: 250px;
+        bottom: 25px;
+        right: 25px;
+    }
+}
+
+
+/* Mobile adjustments (up to 768px) */
+@media (max-width: 768px) {
+    body {
+        font-size: 15px;
+    }
+    .profile-container {
+        max-width: 95%;
+        padding: 2rem;
+        margin: 20px;
+    }
+    .profile-actions {
+        flex-direction: column; /* Stack buttons vertically */
+        gap: 0.8rem;
+    }
+    .profile-actions button {
+        width: 100%; /* Full width for stacked buttons */
+        max-width: none; /* Override max-width */
+        padding: 0.9rem 1.8rem;
+        font-size: 1.05rem;
+    }
+    h2 {
+        font-size: 1.8rem;
+        margin-bottom: 1.2rem;
+    }
+    .profile-details p {
+        font-size: 1rem;
+        margin: 0.6rem 0;
+        padding-left: 0.5rem;
+    }
+    .profile-details p strong {
+        min-width: 100px; /* Adjust for smaller screens */
+    }
+
+    /* Modal Responsive (general) */
+    .modal {
+        padding: 15px;
+    }
+    .modal-content {
+        width: 95%;
+        max-width: 500px;
+        padding: 1.8rem;
+    }
+    .modal-content h2 {
+        font-size: 1.6rem;
+        margin-bottom: 1.2rem;
+    }
+    .close {
+        top: 12px;
+        right: 18px;
+        font-size: 28px;
+    }
+
+    /* Emotion Log History Modal (specific) */
+    #emotionLogModal ul {
+        max-height: 350px;
+    }
+    #emotionLogModal ul li {
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+        flex-direction: column; /* Stack date and button */
+        align-items: flex-start;
+    }
+    #emotionLogModal ul li p {
+        margin-bottom: 8px; /* Space between date and button */
+    }
+    #emotionLogModal button {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        align-self: flex-end; /* Align button to the right */
+    }
+    .pagination button {
+        font-size: 0.95rem;
+        margin: 0 8px;
+        padding: 8px 12px;
+    }
+    .pagination span {
+        font-size: 0.95rem;
+    }
+
+    /* Log Details Modal (specific) */
+    .log-details-content p {
+        font-size: 0.95rem;
+    }
+    .log-details-content strong {
+        min-width: 120px;
+    }
+
+    /* Insights Modal (specific) */
+    .insights-content p {
+        font-size: 0.95rem;
+        margin-bottom: 0.8rem;
+    }
+    .insights-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .chart-container {
+        padding: 0.8rem;
+    }
+
+    /* Back Button */
+    .back-button {
+        top: 20px;
+        left: 20px;
+        padding: 0.7rem 1.2rem;
+        font-size: 0.95rem;
+    }
+    .sjc-logo {
+        width: 180px;
+        bottom: 18px;
+        right: 18px;
+    }
+}
+
+/* Smaller mobile screens (up to 480px) */
+@media (max-width: 480px) {
+    body {
+        font-size: 14px;
+    }
+    .profile-container {
+        padding: 1.5rem;
+        margin: 15px;
+    }
+    h2 {
+        font-size: 1.6rem;
+    }
+    .profile-details p {
+        font-size: 0.9rem;
+    }
+    .profile-details p strong {
+        min-width: 90px;
+    }
+    .profile-actions button {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+    }
+    .modal-content h2 {
+        font-size: 1.4rem;
+    }
+    .close {
+        top: 10px;
+        right: 15px;
+        font-size: 26px;
+    }
+
+    #emotionLogModal ul {
+        max-height: 300px;
+    }
+    #emotionLogModal ul li {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+    #emotionLogModal ul li p {
+        margin-bottom: 5px;
+    }
+    #emotionLogModal button {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    .pagination button {
+        font-size: 0.85rem;
+        margin: 0 5px;
+        padding: 7px 10px;
+    }
+    .pagination span {
+        font-size: 0.85rem;
+    }
+
+    .log-details-content p {
+        font-size: 0.9rem;
+    }
+    .log-details-content strong {
+        min-width: 100px;
+    }
+
+    .insights-content p {
+        font-size: 0.9rem;
+    }
+    .insights-content h2 {
+        font-size: 1.3rem;
+    }
+     .insights-content h3 {
+        font-size: 1.3rem;
+    }
+    .insights-content h4 {
+        font-size: 1.1rem;
+    }
+
+    .chart-container {
+        padding: 0.6rem;
+    }
+
+    .back-button {
+        top: 15px;
+        left: 15px;
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+    .sjc-logo {
+        width: 150px;
+        bottom: 15px;
+        right: 15px;
+    }
+}
+
+/* New style for the DASS-21 insights button */
+.dass-insights-btn {
+    background-color: #9b59b6; /* A shade of purple */
+    color: white;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dass-insights-btn:hover {
+    background-color: #8e44ad; /* A slightly darker purple on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.dass-insights-btn:active {
+    background-color: #7d3c98; /* Even darker on click */
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Container for the DASS-21 modal */
+#dassInsightsModal .modal-content {
+    background: linear-gradient(145deg, #f0f8ff, #e6f2ff);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    font-family: 'Poppins', sans-serif;
+    color: #333;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Header and main title */
+#dassInsightsModal h2 {
+    text-align: center;
+    color: #4a90e2; /* Soothing blue */
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+/* The psychiatrist-like intro text */
+#dassInsightsContent .intro {
+    font-style: italic;
+    color: #666;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 1rem;
+}
+
+/* Sections for each score */
+.dass-section {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease-in-out;
+}
+
+.dass-section:hover {
+    transform: translateY(-5px);
+}
+
+.dass-section h3 {
+    font-size: 1.6rem;
+    color: #34495e; /* Darker text for headings */
+    margin-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 5px;
+}
+
+/* Score and severity display */
+.dass-score-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.2rem;
+}
+
+.dass-score-display p {
+    margin: 0;
+}
+
+.dass-score {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #4a90e2;
+    transition: color 0.3s ease;
+}
+
+.dass-severity {
+    font-weight: 600;
+    font-style: italic;
+    padding: 5px 10px;
+    border-radius: 8px;
+    color: white;
+}
+
+/* Color coding for severity */
+.severity-Normal {
+    background-color: #27ae60; /* Green */
+}
+
+.severity-Mild {
+    background-color: #f1c40f; /* Yellow */
+}
+
+.severity-Moderate {
+    background-color: #f39c12; /* Orange */
+}
+
+.severity-Severe {
+    background-color: #e67e22; /* Burnt orange */
+}
+
+.severity-Extremely-Severe {
+    background-color: #c0392b; /* Red */
+}
+
+/* General recommendations section */
+.recommendations {
+    background-color: #f5f5f5;
+    border-left: 5px solid #4a90e2;
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.recommendations h4 {
+    color: #2c3e50;
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+.recommendations ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.recommendations li {
+    background-color: #ecf0f1;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.3s;
+}
+
+.recommendations li:hover {
+    background-color: #dbe4e6;
+}
+
+/* Final Note */
+.final-note {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
+    font-size: 1rem;
+    color: #555;
+    font-style: italic;
+}
