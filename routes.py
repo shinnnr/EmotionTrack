@@ -179,11 +179,13 @@ def process_dass21():
                              stress_score=stress_final,
                              depression_severity=depression_severity,
                              anxiety_severity=anxiety_severity,
-                             stress_severity=stress_severity)
+                             stress_severity=stress_severity,
+                             moment=datetime.now)
         
     except Exception as e:
         db.session.rollback()
-        flash('An error occurred while processing your assessment. Please try again.', 'error')
+        print(f"DASS-21 processing error: {str(e)}")  # For debugging
+        flash(f'An error occurred while processing your assessment: {str(e)}', 'error')
         return redirect(url_for('main.dass21_quiz'))
 
 @main_bp.route('/consultation', methods=['GET', 'POST'])
@@ -231,7 +233,8 @@ def login():
         
         flash('Invalid email or password.', 'error')
     
-    return render_template('index.html', login_form=form)
+    register_form = RegisterForm()
+    return render_template('index.html', login_form=form, register_form=register_form)
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
