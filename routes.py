@@ -437,3 +437,135 @@ def respond_message(message_id):
         return jsonify({'success': True, 'message': 'Response sent successfully'})
     
     return jsonify({'success': False, 'message': 'Response text is required'})
+
+# Admin API routes
+@admin_bp.route('/api/unread-messages-count')
+@login_required
+def get_unread_messages_count():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    count = StudentMessage.query.filter_by(is_read=False).count()
+    return jsonify({'count': count})
+
+@admin_bp.route('/api/dashboard-stats')
+@login_required  
+def get_dashboard_stats():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    total_users = User.query.filter_by(is_admin=False).count()
+    total_logs = MoodLog.query.count()
+    unread_messages = StudentMessage.query.filter_by(is_read=False).count()
+    
+    # Count high risk students
+    concerning_count = db.session.query(DASS21Result).join(User, DASS21Result.user_id == User.id).filter(
+        (DASS21Result.depression_severity.in_(['Severe', 'Extremely Severe'])) |
+        (DASS21Result.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
+        (DASS21Result.stress_severity.in_(['Severe', 'Extremely Severe']))
+    ).count()
+    
+    return jsonify({
+        'total_users': total_users,
+        'total_logs': total_logs,
+        'unread_messages': unread_messages,
+        'concerning_students': concerning_count
+    })
+
+@admin_bp.route('/api/export-data')
+@login_required
+def export_data():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        from flask import Response
+        import csv
+        import io
+        
+        # Get export type from query params
+        export_type = request.args.get('type', 'all')
+        
+        output = io.StringIO()
+        
+        if export_type == 'users' or export_type == 'all':
+            writer = csv.writer(output)
+            writer.writerow(['ID', 'First Name', 'Last Name', 'Email', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'])
+            
+            users = User.query.filter_by(is_admin=False).all()
+            for user in users:
+                writer.writerow([
+                    user.id, user.firstname, user.lastname, user.email, 
+                    user.gender, user.strand, user.grade_level, user.section,
+                    user.created_at.strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
+                ])
+        
+        elif export_type == 'mood_logs':
+            writer = csv.writer(output)
+            writer.writerow(['Log ID', 'User Email', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
+            
+            logs = db.session.query(MoodLog, User).join(User, MoodLog.id == User.id).all()
+            for log, user in logs:
+                writer.writerow([
+                    log.log_id, user.email, log.emotion, log.sleep, log.energy,
+                    log.triggers, log.coping, log.gratitude,
+                    log.log_date.strftime('%Y-%m-%d %H:%M:%S') if log.log_date else ''
+                ])
+        
+        elif export_type == 'dass21':
+            writer = csv.writer(output)
+            writer.writerow(['ID', 'User Email', 'Depression Score', 'Anxiety Score', 'Stress Score', 
+                           'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'])
+            
+            results = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id).all()
+            for result, user in results:
+                writer.writerow([
+                    result.id, user.email, result.depression_score, result.anxiety_score, result.stress_score,
+                    result.depression_severity, result.anxiety_severity, result.stress_severity,
+                    result.created_at.strftime('%Y-%m-%d %H:%M:%S') if result.created_at else ''
+                ])
+        
+        output.seek(0)
+        
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={'Content-Disposition': f'attachment; filename=mindtrack_{export_type}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'}
+        )
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/api/analytics-data')
+@login_required
+def get_analytics_data():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        # Mood distribution
+        mood_data = db.session.query(
+            MoodLog.emotion,
+            db.func.count(MoodLog.emotion).label('count')
+        ).group_by(MoodLog.emotion).all()
+        
+        # DASS-21 severity distribution
+        dass_data = db.session.query(
+            DASS21Result.depression_severity,
+            db.func.count(DASS21Result.depression_severity).label('count')
+        ).group_by(DASS21Result.depression_severity).all()
+        
+        # Monthly activity
+        monthly_logs = db.session.query(
+            db.func.date_trunc('month', MoodLog.log_date).label('month'),
+            db.func.count(MoodLog.log_id).label('count')
+        ).group_by(db.func.date_trunc('month', MoodLog.log_date)).order_by('month').all()
+        
+        return jsonify({
+            'mood_distribution': [{'emotion': row.emotion, 'count': row.count} for row in mood_data],
+            'dass_severity': [{'severity': row.depression_severity, 'count': row.count} for row in dass_data],
+            'monthly_activity': [{'month': row.month.strftime('%Y-%m'), 'count': row.count} for row in monthly_logs]
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

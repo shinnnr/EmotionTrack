@@ -175,6 +175,9 @@ function initializeMessageManagement() {
 async function updateUnreadMessageCount() {
     try {
         const response = await fetch('/admin/api/unread-messages-count');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         const data = await response.json();
         
         const unreadCountElement = document.querySelector('.stat-card:nth-child(3) h3');
@@ -384,30 +387,31 @@ function showExportOptionsModal() {
 }
 
 async function performDataExport(options) {
-    // Simulate export process
-    const exportData = {
-        ...options,
-        timestamp: new Date().toISOString()
-    };
-    
-    // In a real implementation, this would make an API call to the server
-    console.log('Exporting data with options:', exportData);
-    
-    // Simulate file download
-    const filename = `mindtrack_export_${new Date().toISOString().split('T')[0]}.${options.format}`;
-    
-    // Create a mock file for demonstration
-    const content = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([content], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+        // Determine export types based on options
+        const exportTypes = [];
+        if (options.users) exportTypes.push('users');
+        if (options.logs) exportTypes.push('mood_logs');
+        if (options.dass) exportTypes.push('dass21');
+        
+        // For now, export each type separately
+        for (const type of exportTypes) {
+            const url = `/admin/api/export-data?type=${type}`;
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `mindtrack_${type}_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Small delay between downloads
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        throw error;
+    }
 }
 
 function initializeAnalytics() {
@@ -615,8 +619,8 @@ function showAnalyticsModal() {
         bootstrapModal.show();
         
         // Initialize charts after modal is shown
-        modal.addEventListener('shown.bs.modal', () => {
-            initializeAnalyticsCharts();
+        modal.addEventListener('shown.bs.modal', async () => {
+            await initializeAnalyticsCharts();
         });
         
         modal.addEventListener('hidden.bs.modal', () => {
@@ -626,55 +630,121 @@ function showAnalyticsModal() {
     });
 }
 
-function initializeAnalyticsCharts() {
-    // Emotion Trends Chart
-    const emotionCtx = document.getElementById('emotionTrendsChart');
-    if (emotionCtx) {
-        new Chart(emotionCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'Positive Emotions',
-                    data: [65, 68, 70, 72, 75, 78],
-                    borderColor: '#28a745',
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    tension: 0.4
-                }, {
-                    label: 'Negative Emotions',
-                    data: [35, 32, 30, 28, 25, 22],
-                    borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
+async function initializeAnalyticsCharts() {
+    try {
+        // Fetch analytics data from API
+        const response = await fetch('/admin/api/analytics-data');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const analyticsData = await response.json();
+        
+        // Show loading state
+        document.querySelector('.analytics-dashboard').innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading analytics data...</div>';
+        
+        // Delay to show the analytics data is being loaded
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Reset the modal content
+        const modal = document.querySelector('.modal-content');
+        if (modal) {
+            modal.innerHTML = `
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="fas fa-analytics me-2"></i>
+                        Wellness Analytics Dashboard
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="analytics-dashboard">
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-3">
+                                <div class="analytics-metric">
+                                    <h6 class="text-muted">Total Mood Logs</h6>
+                                    <div class="h3 text-primary">${analyticsData.mood_distribution?.reduce((sum, item) => sum + item.count, 0) || 0}</div>
+                                    <small class="text-muted">All time</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="analytics-metric">
+                                    <h6 class="text-muted">DASS-21 Assessments</h6>
+                                    <div class="h3 text-info">${analyticsData.dass_severity?.reduce((sum, item) => sum + item.count, 0) || 0}</div>
+                                    <small class="text-muted">Completed</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="analytics-metric">
+                                    <h6 class="text-muted">Monthly Average</h6>
+                                    <div class="h3 text-success">${analyticsData.monthly_activity?.length > 0 ? Math.round(analyticsData.monthly_activity.reduce((sum, item) => sum + item.count, 0) / analyticsData.monthly_activity.length) : 0}</div>
+                                    <small class="text-muted">Logs per month</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="analytics-metric">
+                                    <h6 class="text-muted">Risk Cases</h6>
+                                    <div class="h3 text-warning">${analyticsData.dass_severity?.filter(item => item.severity === 'Severe' || item.severity === 'Extremely Severe').reduce((sum, item) => sum + item.count, 0) || 0}</div>
+                                    <small class="text-danger">Severe/Extremely Severe</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="analytics-chart">
+                                    <h6 class="fw-bold mb-3">Mood Distribution</h6>
+                                    <canvas id="emotionTrendsChart" width="400" height="250"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="analytics-chart">
+                                    <h6 class="fw-bold mb-3">DASS-21 Severity Distribution</h6>
+                                    <canvas id="dassDistributionChart" width="400" height="250"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="analytics-chart">
+                                    <h6 class="fw-bold mb-3">Monthly Activity</h6>
+                                    <canvas id="activityChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print Analytics
+                    </button>
+                </div>
+            `;
+        }
+
+        // Initialize charts with real data
+        initializeChartsWithData(analyticsData);
+        
+    } catch (error) {
+        console.error('Error loading analytics data:', error);
+        document.querySelector('.analytics-dashboard').innerHTML = '<div class="alert alert-danger text-center">Failed to load analytics data. Please try again.</div>';
     }
-    
-    // DASS Distribution Chart
-    const dassCtx = document.getElementById('dassDistributionChart');
-    if (dassCtx) {
-        new Chart(dassCtx, {
+}
+
+function initializeChartsWithData(analyticsData) {
+    // Mood Distribution Chart (previously Emotion Trends)
+    const emotionCtx = document.getElementById('emotionTrendsChart');
+    if (emotionCtx && analyticsData.mood_distribution) {
+        const labels = analyticsData.mood_distribution.map(item => item.emotion);
+        const data = analyticsData.mood_distribution.map(item => item.count);
+        
+        new Chart(emotionCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Normal', 'Mild', 'Moderate', 'Severe', 'Extremely Severe'],
+                labels: labels,
                 datasets: [{
-                    data: [60, 20, 12, 6, 2],
+                    data: data,
                     backgroundColor: [
-                        '#28a745',
-                        '#ffc107',
-                        '#fd7e14',
-                        '#dc3545',
-                        '#6f42c1'
+                        '#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545',
+                        '#6f42c1', '#20c997', '#e83e8c', '#6c757d', '#007bff'
                     ]
                 }]
             },
@@ -690,17 +760,63 @@ function initializeAnalyticsCharts() {
         });
     }
     
-    // Activity Chart
-    const activityCtx = document.getElementById('activityChart');
-    if (activityCtx) {
-        new Chart(activityCtx, {
-            type: 'bar',
+    // DASS Severity Distribution Chart
+    const dassCtx = document.getElementById('dassDistributionChart');
+    if (dassCtx && analyticsData.dass_severity) {
+        const severityOrder = ['Normal', 'Mild', 'Moderate', 'Severe', 'Extremely Severe'];
+        const labels = [];
+        const data = [];
+        
+        severityOrder.forEach(severity => {
+            const found = analyticsData.dass_severity.find(item => item.severity === severity);
+            labels.push(severity);
+            data.push(found ? found.count : 0);
+        });
+        
+        new Chart(dassCtx, {
+            type: 'doughnut',
             data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                labels: labels,
                 datasets: [{
-                    label: 'Daily Logs',
-                    data: [45, 52, 48, 61, 55, 38, 42],
-                    backgroundColor: '#007bff'
+                    data: data,
+                    backgroundColor: [
+                        '#28a745',  // Normal - Green
+                        '#ffc107',  // Mild - Yellow
+                        '#fd7e14',  // Moderate - Orange
+                        '#dc3545',  // Severe - Red
+                        '#6f42c1'   // Extremely Severe - Purple
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Monthly Activity Chart
+    const activityCtx = document.getElementById('activityChart');
+    if (activityCtx && analyticsData.monthly_activity) {
+        const labels = analyticsData.monthly_activity.map(item => item.month);
+        const data = analyticsData.monthly_activity.map(item => item.count);
+        
+        new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Monthly Mood Logs',
+                    data: data,
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
                 }]
             },
             options: {
@@ -710,32 +826,10 @@ function initializeAnalyticsCharts() {
                     legend: {
                         display: false
                     }
-                }
-            }
-        });
-    }
-    
-    // Sleep Patterns Chart
-    const sleepCtx = document.getElementById('sleepPatternsChart');
-    if (sleepCtx) {
-        new Chart(sleepCtx, {
-            type: 'radar',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Average Sleep Hours',
-                    data: [7.2, 6.8, 7.0, 6.5, 7.5, 8.2, 8.0],
-                    borderColor: '#17a2b8',
-                    backgroundColor: 'rgba(23, 162, 184, 0.2)'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                },
                 scales: {
-                    r: {
-                        beginAtZero: true,
-                        max: 10
+                    y: {
+                        beginAtZero: true
                     }
                 }
             }
@@ -762,7 +856,7 @@ async function refreshDashboardStats() {
         updateStatCard('users', stats.total_users);
         updateStatCard('logs', stats.total_logs);
         updateStatCard('messages', stats.unread_messages);
-        updateStatCard('risk', stats.high_risk_students);
+        updateStatCard('risk', stats.concerning_students);
         
     } catch (error) {
         console.error('Error refreshing dashboard stats:', error);
