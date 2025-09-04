@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.security import generate_password_hash
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -57,6 +58,23 @@ def create_app():
     with app.app_context():
         import models  # noqa: F401
         db.create_all()
+        
+        # Create admin user if it doesn't exist
+        from models import User
+        admin = User.query.filter_by(email='admin@emotiontrack.app').first()
+        if not admin:
+            admin = User()
+            admin.firstname = 'Admin'
+            admin.lastname = 'User'
+            admin.email = 'admin@emotiontrack.app'
+            admin.password_hash = generate_password_hash('admin123')
+            admin.gender = 'Other'
+            admin.strand = 'N/A'
+            admin.grade_level = '12'
+            admin.section = 'Admin'
+            admin.is_admin = True
+            db.session.add(admin)
+            db.session.commit()
     
     return app
 

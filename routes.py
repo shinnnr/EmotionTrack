@@ -273,7 +273,7 @@ def register():
         
         print(f"User created successfully: {user.email}")
         login_user(user)
-        flash('Registration successful! Welcome to MindTrack.', 'success')
+        flash('Registration successful! Welcome to EmotionTrack.', 'success')
         return redirect(url_for('main.home'))
     else:
         print(f"Form validation failed: {form.errors}")

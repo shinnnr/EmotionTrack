@@ -1,6 +1,6 @@
 # Overview
 
-MindTrack is a mental wellness platform designed for students to track their emotional states, complete psychological assessments, and connect with guidance counselors. The application serves as a comprehensive tool for monitoring student mental health, featuring emotion logging, DASS-21 assessments, consultation messaging, and admin oversight. Built with Flask and targeting high school students (grades 11-12), the platform emphasizes privacy, user-friendly design, and professional mental health support.
+EmotionTrack is a mental wellness platform designed for students to track their emotional states, complete psychological assessments, and connect with guidance counselors. The application serves as a comprehensive tool for monitoring student mental health, featuring emotion logging, DASS-21 assessments, consultation messaging, and admin oversight. Built with Flask and targeting high school students (grades 11-12), the platform emphasizes privacy, user-friendly design, and professional mental health support. The application has been renamed from MindTrack to EmotionTrack.
 
 # User Preferences
 
