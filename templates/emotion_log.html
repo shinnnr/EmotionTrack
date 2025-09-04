@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Log Emotions - MindTrack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="emotion-log-container">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bold text-clsu-green mb-3">
+                        <i class="fas fa-heart me-3"></i>
+                        How are you feeling today?
+                    </h1>
+                    <p class="lead text-muted">Select all emotions that describe your current state and provide additional details about your day.</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('main.emotion_log') }}" id="emotionForm">
+                    {{ form.hidden_tag() }}
+                    {{ form.emotions() }}
+
+                    <!-- Emotion Selection -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="card-title fw-bold mb-4">
+                                <i class="fas fa-smile text-clsu-gold me-2"></i>
+                                Select Your Emotions
+                            </h5>
+                            
+                            <div class="emotion-grid" id="emotionGrid">
+                                <!-- Positive Emotions -->
+                                <div class="emotion-category mb-4">
+                                    <h6 class="fw-bold text-success mb-3">Positive Emotions</h6>
+                                    <div class="row g-2">
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Happy">
+                                                <i class="fas fa-smile"></i>
+                                                <span>Happy</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Joyful">
+                                                <i class="fas fa-laugh-beam"></i>
+                                                <span>Joyful</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Excited">
+                                                <i class="fas fa-star"></i>
+                                                <span>Excited</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Grateful">
+                                                <i class="fas fa-heart"></i>
+                                                <span>Grateful</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Proud">
+                                                <i class="fas fa-trophy"></i>
+                                                <span>Proud</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Content">
+                                                <i class="fas fa-check-circle"></i>
+                                                <span>Content</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Loved">
+                                                <i class="fas fa-heart-circle"></i>
+                                                <span>Loved</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Hopeful">
+                                                <i class="fas fa-sun"></i>
+                                                <span>Hopeful</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Neutral Emotions -->
+                                <div class="emotion-category mb-4">
+                                    <h6 class="fw-bold text-warning mb-3">Neutral Emotions</h6>
+                                    <div class="row g-2">
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Calm">
+                                                <i class="fas fa-leaf"></i>
+                                                <span>Calm</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Peaceful">
+                                                <i class="fas fa-dove"></i>
+                                                <span>Peaceful</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Tired">
+                                                <i class="fas fa-bed"></i>
+                                                <span>Tired</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Confused">
+                                                <i class="fas fa-question-circle"></i>
+                                                <span>Confused</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Curious">
+                                                <i class="fas fa-search"></i>
+                                                <span>Curious</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Surprised">
+                                                <i class="fas fa-surprise"></i>
+                                                <span>Surprised</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Negative Emotions -->
+                                <div class="emotion-category mb-4">
+                                    <h6 class="fw-bold text-danger mb-3">Challenging Emotions</h6>
+                                    <div class="row g-2">
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Sad">
+                                                <i class="fas fa-frown"></i>
+                                                <span>Sad</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Anxious">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                <span>Anxious</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Stressed">
+                                                <i class="fas fa-head-side-cough"></i>
+                                                <span>Stressed</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Angry">
+                                                <i class="fas fa-angry"></i>
+                                                <span>Angry</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Frustrated">
+                                                <i class="fas fa-fist-raised"></i>
+                                                <span>Frustrated</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Overwhelmed">
+                                                <i class="fas fa-dizzy"></i>
+                                                <span>Overwhelmed</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Lonely">
+                                                <i class="fas fa-user-times"></i>
+                                                <span>Lonely</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Disappointed">
+                                                <i class="fas fa-thumbs-down"></i>
+                                                <span>Disappointed</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Worried">
+                                                <i class="fas fa-cloud-rain"></i>
+                                                <span>Worried</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Insecure">
+                                                <i class="fas fa-user-shield"></i>
+                                                <span>Insecure</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="emotion-item" data-emotion="Guilty">
+                                                <i class="fas fa-hand-paper"></i>
+                                                <span>Guilty</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="selected-emotions mt-4" id="selectedEmotions" style="display: none;">
+                                <h6 class="fw-bold text-clsu-green">Selected Emotions:</h6>
+                                <div class="selected-list d-flex flex-wrap gap-2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Details -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="card-title fw-bold mb-4">
+                                <i class="fas fa-clipboard-list text-clsu-gold me-2"></i>
+                                Additional Details
+                            </h5>
+                            
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label for="{{ form.sleep.id }}" class="form-label fw-bold">
+                                        <i class="fas fa-bed me-2"></i>Hours of Sleep Last Night
+                                    </label>
+                                    {{ form.sleep(class="form-control", step="0.5", min="0", max="24") }}
+                                    <small class="form-text text-muted">Enter the number of hours you slept</small>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="{{ form.energy.id }}" class="form-label fw-bold">
+                                        <i class="fas fa-battery-three-quarters me-2"></i>Energy Level (1-10)
+                                    </label>
+                                    {{ form.energy(class="form-control", min="1", max="10") }}
+                                    <small class="form-text text-muted">1 = Very low energy, 10 = Very high energy</small>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="{{ form.triggers.id }}" class="form-label fw-bold">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Main Trigger/Stressor
+                                    </label>
+                                    {{ form.triggers(class="form-select") }}
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="{{ form.coping.id }}" class="form-label fw-bold">
+                                        <i class="fas fa-heart me-2"></i>Coping Strategy Used
+                                    </label>
+                                    {{ form.coping(class="form-select") }}
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="{{ form.gratitude.id }}" class="form-label fw-bold">
+                                        <i class="fas fa-sun me-2"></i>Gratitude Note (Optional)
+                                    </label>
+                                    {{ form.gratitude(class="form-control", rows="3", placeholder="What are you grateful for today?") }}
+                                    <small class="form-text text-muted">Share something positive from your day</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-clsu-green btn-lg px-5">
+                            <i class="fas fa-save me-2"></i>
+                            Save My Mood Log
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/emotion_log.js') }}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.emotion-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    min-height: 100px;
+}
+
+.emotion-item:hover {
+    border-color: var(--clsu-gold);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.emotion-item.selected {
+    border-color: var(--clsu-green);
+    background: var(--clsu-green);
+    color: white;
+}
+
+.emotion-item i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.emotion-item span {
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.selected-emotions .badge {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+</style>
+{% endblock %}

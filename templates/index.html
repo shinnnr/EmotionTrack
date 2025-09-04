@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to MindTrack{% endblock %}
+
+{% block content %}
+<div class="landing-container">
+    <div class="container-fluid min-vh-100">
+        <div class="row min-vh-100">
+            <!-- Left side - Welcome content -->
+            <div class="col-lg-6 d-flex align-items-center justify-content-center bg-clsu-green">
+                <div class="welcome-content text-white text-center p-5">
+                    <img src="{{ url_for('static', filename='images/sjc-logo.svg') }}" alt="SJC Logo" class="landing-logo mb-4">
+                    <h1 class="display-4 fw-bold mb-4">MindTrack</h1>
+                    <h2 class="h3 mb-4">Mental Wellness Platform</h2>
+                    <p class="lead mb-4">Your journey to better mental health starts here. Track your emotions, access professional guidance, and build resilience with our comprehensive wellness tools.</p>
+                    <div class="features-list text-start">
+                        <div class="feature-item mb-3">
+                            <i class="fas fa-heart text-clsu-gold me-3"></i>
+                            <span>Daily Emotion Tracking</span>
+                        </div>
+                        <div class="feature-item mb-3">
+                            <i class="fas fa-chart-line text-clsu-gold me-3"></i>
+                            <span>Personal Wellness Insights</span>
+                        </div>
+                        <div class="feature-item mb-3">
+                            <i class="fas fa-user-md text-clsu-gold me-3"></i>
+                            <span>Professional Consultation</span>
+                        </div>
+                        <div class="feature-item mb-3">
+                            <i class="fas fa-shield-alt text-clsu-gold me-3"></i>
+                            <span>Confidential & Secure</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right side - Login/Register forms -->
+            <div class="col-lg-6 d-flex align-items-center justify-content-center bg-light">
+                <div class="auth-container p-5 w-100" style="max-width: 500px;">
+                    <!-- Login Form -->
+                    <div class="auth-form active" id="loginForm">
+                        <h3 class="text-center mb-4 text-clsu-green">Welcome Back</h3>
+                        <form method="POST" action="{{ url_for('auth.login') }}">
+                            {{ login_form.hidden_tag() }}
+                            
+                            <div class="mb-3">
+                                <label for="{{ login_form.email.id }}" class="form-label">
+                                    <i class="fas fa-envelope me-2"></i>Email Address
+                                </label>
+                                {{ login_form.email(class="form-control") }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ login_form.password.id }}" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>Password
+                                </label>
+                                {{ login_form.password(class="form-control") }}
+                            </div>
+                            
+                            <button type="submit" class="btn btn-clsu-green w-100 mb-3">
+                                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                            </button>
+                        </form>
+                        
+                        <div class="text-center">
+                            <p class="mb-0">Don't have an account? 
+                                <a href="#" onclick="showRegisterForm()" class="text-clsu-green fw-bold">Sign up here</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div class="auth-form" id="registerForm" style="display: none;">
+                        <h3 class="text-center mb-4 text-clsu-green">Create Account</h3>
+                        <form method="POST" action="{{ url_for('auth.register') }}">
+                            {{ register_form.hidden_tag() }}
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" name="firstname" class="form-control" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" name="lastname" class="form-control" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-control" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Confirm Password</label>
+                                    <input type="password" name="confirm_password" class="form-control" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Gender</label>
+                                    <select name="gender" class="form-select" required>
+                                        <option value="">Select</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Strand</label>
+                                    <select name="strand" class="form-select" required>
+                                        <option value="">Select</option>
+                                        <option value="STEM">STEM</option>
+                                        <option value="ABM">ABM</option>
+                                        <option value="HUMSS">HUMSS</option>
+                                        <option value="GAS">GAS</option>
+                                        <option value="TVL">TVL</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Grade</label>
+                                    <select name="grade_level" class="form-select" required>
+                                        <option value="">Select</option>
+                                        <option value="11">Grade 11</option>
+                                        <option value="12">Grade 12</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Section</label>
+                                <input type="text" name="section" class="form-control" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-clsu-gold w-100 mb-3">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
+                        </form>
+                        
+                        <div class="text-center">
+                            <p class="mb-0">Already have an account? 
+                                <a href="#" onclick="showLoginForm()" class="text-clsu-green fw-bold">Sign in here</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showRegisterForm() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+}
+
+function showLoginForm() {
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+}
+</script>
+{% endblock %}

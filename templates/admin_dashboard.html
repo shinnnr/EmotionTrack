@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - MindTrack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Admin Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="admin-header bg-gradient-dark text-white p-4 rounded">
+                <h1 class="display-6 fw-bold mb-2">
+                    <i class="fas fa-tachometer-alt me-3"></i>
+                    Admin Dashboard
+                </h1>
+                <p class="lead mb-0">Monitor student wellness and manage consultations</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card card border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-users fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="fw-bold">{{ total_users }}</h3>
+                    <p class="text-muted mb-0">Total Students</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card card border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-heart fa-3x text-success"></i>
+                    </div>
+                    <h3 class="fw-bold">{{ total_logs }}</h3>
+                    <p class="text-muted mb-0">Mood Logs</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card card border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-envelope fa-3x text-warning"></i>
+                    </div>
+                    <h3 class="fw-bold">{{ unread_messages }}</h3>
+                    <p class="text-muted mb-0">Unread Messages</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card card border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-chart-line fa-3x text-info"></i>
+                    </div>
+                    <h3 class="fw-bold">{{ concerning_students|length }}</h3>
+                    <p class="text-muted mb-0">High Risk Students</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Activity -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        Recent Student Activity
+                    </h5>
+                    
+                    <div class="activity-list">
+                        {% if recent_logs %}
+                            {% for log, user in recent_logs %}
+                                <div class="activity-item d-flex align-items-center p-3 border-bottom">
+                                    <div class="activity-icon me-3">
+                                        <i class="fas fa-heart text-danger"></i>
+                                    </div>
+                                    <div class="activity-content flex-grow-1">
+                                        <h6 class="mb-1">{{ user.full_name }}</h6>
+                                        <p class="mb-1">Logged emotion: <strong>{{ log.emotion }}</strong></p>
+                                        <small class="text-muted">{{ log.log_date.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                    </div>
+                                    <div class="activity-meta">
+                                        <span class="badge bg-light text-dark">Sleep: {{ log.sleep }}h</span>
+                                        <span class="badge bg-light text-dark">Energy: {{ log.energy }}/10</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No recent activity</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- High Risk Students -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                        High Risk Students
+                    </h5>
+                    
+                    <div class="risk-list">
+                        {% if concerning_students %}
+                            {% for dass_result, user in concerning_students %}
+                                <div class="risk-item p-3 border rounded mb-3">
+                                    <h6 class="fw-bold mb-2">{{ user.full_name }}</h6>
+                                    <div class="risk-scores">
+                                        {% if dass_result.depression_severity in ['Severe', 'Extremely Severe'] %}
+                                            <span class="badge bg-danger">Depression: {{ dass_result.depression_severity }}</span>
+                                        {% endif %}
+                                        {% if dass_result.anxiety_severity in ['Severe', 'Extremely Severe'] %}
+                                            <span class="badge bg-warning">Anxiety: {{ dass_result.anxiety_severity }}</span>
+                                        {% endif %}
+                                        {% if dass_result.stress_severity in ['Severe', 'Extremely Severe'] %}
+                                            <span class="badge bg-info">Stress: {{ dass_result.stress_severity }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        Assessed: {{ dass_result.created_at.strftime('%B %d, %Y') }}
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                <p class="text-muted">No high risk students</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-bolt text-warning me-2"></i>
+                        Quick Actions
+                    </h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin.messages') }}" class="btn btn-outline-primary w-100 py-3">
+                                <i class="fas fa-envelope fa-2x d-block mb-2"></i>
+                                <span class="fw-bold">View Messages</span>
+                                {% if unread_messages > 0 %}
+                                    <span class="badge bg-danger">{{ unread_messages }}</span>
+                                {% endif %}
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100 py-3" onclick="exportData()">
+                                <i class="fas fa-download fa-2x d-block mb-2"></i>
+                                <span class="fw-bold">Export Data</span>
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info w-100 py-3" onclick="generateReport()">
+                                <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
+                                <span class="fw-bold">Generate Report</span>
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-warning w-100 py-3" onclick="viewAnalytics()">
+                                <i class="fas fa-analytics fa-2x d-block mb-2"></i>
+                                <span class="fw-bold">View Analytics</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.stat-card {
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.activity-item:last-child {
+    border-bottom: none !important;
+}
+
+.risk-item {
+    border-left: 4px solid #dc3545 !important;
+}
+
+.admin-header {
+    border-left: 5px solid var(--clsu-gold);
+}
+</style>
+{% endblock %}

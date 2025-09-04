@@ -1,0 +1,48 @@
+<!-- Sidebar Navigation -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h5 class="text-white mb-0">Navigation</h5>
+    </div>
+    
+    <div class="sidebar-menu">
+        <a href="{{ url_for('main.home') }}" class="sidebar-link {{ 'active' if request.endpoint == 'main.home' }}">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        
+        <a href="{{ url_for('main.profile') }}" class="sidebar-link {{ 'active' if request.endpoint == 'main.profile' }}">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+        
+        <a href="{{ url_for('main.emotion_log') }}" class="sidebar-link {{ 'active' if request.endpoint == 'main.emotion_log' }}">
+            <i class="fas fa-heart"></i>
+            <span>Log Emotions</span>
+        </a>
+        
+        <a href="{{ url_for('main.dass21_quiz') }}" class="sidebar-link {{ 'active' if request.endpoint == 'main.dass21_quiz' }}">
+            <i class="fas fa-brain"></i>
+            <span>DASS-21 Assessment</span>
+        </a>
+        
+        <a href="{{ url_for('main.consultation') }}" class="sidebar-link {{ 'active' if request.endpoint == 'main.consultation' }}">
+            <i class="fas fa-user-md"></i>
+            <span>Consultation</span>
+        </a>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="sidebar-link logout-link" onclick="return confirm('Are you sure you want to logout?')">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar Toggle Button (Mobile) -->
+<button class="sidebar-toggle d-lg-none" id="sidebarToggle">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar Overlay (Mobile) -->
+<div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>

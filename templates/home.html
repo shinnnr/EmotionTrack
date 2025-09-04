@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - MindTrack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="welcome-header mb-4">
+                <h1 class="display-5 fw-bold text-clsu-green">Welcome back, {{ current_user.firstname }}! 👋</h1>
+                <p class="lead text-muted">How are you feeling today? Let's track your wellness journey.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Quick Actions -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-lightning-bolt text-clsu-gold me-2"></i>
+                        Quick Actions
+                    </h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('main.emotion_log') }}" class="quick-action-card">
+                                <div class="card bg-gradient-primary text-white h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-heart fa-2x mb-3"></i>
+                                        <h6 class="card-title">Log Your Emotions</h6>
+                                        <p class="card-text small">Track how you're feeling today</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <a href="{{ url_for('main.dass21_quiz') }}" class="quick-action-card">
+                                <div class="card bg-gradient-info text-white h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-brain fa-2x mb-3"></i>
+                                        <h6 class="card-title">DASS-21 Assessment</h6>
+                                        <p class="card-text small">Evaluate your mental wellness</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <a href="{{ url_for('main.consultation') }}" class="quick-action-card">
+                                <div class="card bg-gradient-success text-white h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-user-md fa-2x mb-3"></i>
+                                        <h6 class="card-title">Consultation</h6>
+                                        <p class="card-text small">Connect with guidance counselors</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <button class="quick-action-card w-100 border-0" onclick="viewInsights()">
+                                <div class="card bg-gradient-warning text-white h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-chart-line fa-2x mb-3"></i>
+                                        <h6 class="card-title">View Insights</h6>
+                                        <p class="card-text small">Analyze your wellness patterns</p>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-clock text-clsu-green me-2"></i>
+                        Recent Activity
+                    </h5>
+                    
+                    {% if recent_logs %}
+                        <div class="recent-logs">
+                            {% for log in recent_logs %}
+                                <div class="recent-log-item mb-3 p-3 rounded bg-light">
+                                    <div class="d-flex align-items-center">
+                                        <div class="emotion-icon me-3">
+                                            <i class="fas fa-heart text-clsu-gold"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 fw-bold">{{ log.emotion }}</h6>
+                                            <small class="text-muted">
+                                                {{ log.log_date.strftime('%B %d, %Y at %I:%M %p') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-plus-circle fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No recent activity. Start by logging your emotions!</p>
+                            <a href="{{ url_for('main.emotion_log') }}" class="btn btn-clsu-green btn-sm">Log Emotions</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest DASS-21 Results -->
+    {% if latest_dass %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-brain text-clsu-green me-2"></i>
+                        Latest DASS-21 Assessment Results
+                    </h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="text-center p-3 rounded bg-light">
+                                <h6 class="fw-bold text-clsu-green">Depression</h6>
+                                <div class="h4 mb-1">{{ latest_dass.depression_score }}</div>
+                                <span class="badge severity-{{ latest_dass.depression_severity.replace(' ', '') }}">
+                                    {{ latest_dass.depression_severity }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="text-center p-3 rounded bg-light">
+                                <h6 class="fw-bold text-clsu-green">Anxiety</h6>
+                                <div class="h4 mb-1">{{ latest_dass.anxiety_score }}</div>
+                                <span class="badge severity-{{ latest_dass.anxiety_severity.replace(' ', '') }}">
+                                    {{ latest_dass.anxiety_severity }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="text-center p-3 rounded bg-light">
+                                <h6 class="fw-bold text-clsu-green">Stress</h6>
+                                <div class="h4 mb-1">{{ latest_dass.stress_score }}</div>
+                                <span class="badge severity-{{ latest_dass.stress_severity.replace(' ', '') }}">
+                                    {{ latest_dass.stress_severity }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Assessed on {{ latest_dass.created_at.strftime('%B %d, %Y') }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Insights Modal -->
+<div class="modal fade" id="insightsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-clsu-green text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Your Wellness Insights
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="insightsContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-clsu-green" role="status">
+                            <span class="visually-hidden">Loading insights...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewInsights() {
+    const modal = new bootstrap.Modal(document.getElementById('insightsModal'));
+    modal.show();
+    
+    // Load weekly insights
+    fetch('/api/weekly-insights')
+        .then(response => response.json())
+        .then(data => {
+            const content = document.getElementById('insightsContent');
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="insights-card">
+                            <h6 class="fw-bold text-clsu-green"><i class="fas fa-smile me-2"></i>Most Common Emotion</h6>
+                            <p class="h5">${data.emotion}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="insights-card">
+                            <h6 class="fw-bold text-clsu-green"><i class="fas fa-bed me-2"></i>Average Sleep</h6>
+                            <p class="h5">${data.average_sleep} hours</p>
+                            <small class="text-muted">${data.sleep_advice}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="insights-card">
+                            <h6 class="fw-bold text-clsu-green"><i class="fas fa-exclamation-triangle me-2"></i>Main Trigger</h6>
+                            <p class="h5">${data.trigger}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="insights-card">
+                            <h6 class="fw-bold text-clsu-green"><i class="fas fa-heart me-2"></i>Coping Strategy</h6>
+                            <p class="h5">${data.coping}</p>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="insights-card">
+                            <h6 class="fw-bold text-clsu-green"><i class="fas fa-gratitude me-2"></i>Latest Gratitude</h6>
+                            <p class="fst-italic">"${data.gratitude}"</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(error => {
+            console.error('Error loading insights:', error);
+            document.getElementById('insightsContent').innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Unable to load insights. Please try again later.
+                </div>
+            `;
+        });
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.quick-action-card {
+    text-decoration: none;
+    transition: transform 0.2s;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-2px);
+}
+
+.insights-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    height: 100%;
+}
+
+.severity-Normal { background-color: #28a745; }
+.severity-Mild { background-color: #ffc107; color: #000; }
+.severity-Moderate { background-color: #fd7e14; }
+.severity-Severe { background-color: #dc3545; }
+.severity-ExtremelySevere { background-color: #6f42c1; }
+</style>
+{% endblock %}

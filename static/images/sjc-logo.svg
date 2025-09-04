@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="leafGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#228B22;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#006400;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bookGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5F5DC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFFACD;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="flameGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#FF4500;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="sunGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Outer Circle -->
+  <circle cx="100" cy="100" r="95" fill="#1e3a8a" stroke="#FFD700" stroke-width="4"/>
+  
+  <!-- Inner Background Circle -->
+  <circle cx="100" cy="100" r="80" fill="#D2B48C" opacity="0.9"/>
+  
+  <!-- Sun Rays Background -->
+  <g transform="translate(100,100)">
+    <!-- Sun rays -->
+    <g fill="url(#sunGradient)" opacity="0.8">
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(0)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(30)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(60)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(90)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(120)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(150)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(180)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(210)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(240)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(270)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(300)"/>
+      <polygon points="0,-35 5,-45 -5,-45" transform="rotate(330)"/>
+    </g>
+  </g>
+  
+  <!-- Laurel Branches -->
+  <g fill="url(#leafGradient)">
+    <!-- Left Branch -->
+    <path d="M45 140 Q35 130 30 120 Q25 115 30 110 Q35 105 45 110 Q55 115 60 125 Q65 135 60 145 Q55 150 45 150 Q40 145 45 140 Z"/>
+    <path d="M50 150 Q40 140 35 130 Q30 125 35 120 Q40 115 50 120 Q60 125 65 135 Q70 145 65 155 Q60 160 50 160 Q45 155 50 150 Z"/>
+    <path d="M55 160 Q45 150 40 140 Q35 135 40 130 Q45 125 55 130 Q65 135 70 145 Q75 155 70 165 Q65 170 55 170 Q50 165 55 160 Z"/>
+    
+    <!-- Right Branch -->
+    <path d="M155 140 Q165 130 170 120 Q175 115 170 110 Q165 105 155 110 Q145 115 140 125 Q135 135 140 145 Q145 150 155 150 Q160 145 155 140 Z"/>
+    <path d="M150 150 Q160 140 165 130 Q170 125 165 120 Q160 115 150 120 Q140 125 135 135 Q130 145 135 155 Q140 160 150 160 Q155 155 150 150 Z"/>
+    <path d="M145 160 Q155 150 160 140 Q165 135 160 130 Q155 125 145 130 Q135 135 130 145 Q125 155 130 165 Q135 170 145 170 Q150 165 145 160 Z"/>
+  </g>
+  
+  <!-- Central Book -->
+  <g transform="translate(100,100)">
+    <!-- Book base -->
+    <rect x="-20" y="-15" width="40" height="25" fill="url(#bookGradient)" stroke="#8B4513" stroke-width="1" rx="2"/>
+    <!-- Book pages -->
+    <rect x="-18" y="-13" width="36" height="21" fill="white" opacity="0.9" rx="1"/>
+    <!-- Book spine -->
+    <rect x="-20" y="-15" width="3" height="25" fill="#8B4513"/>
+    <!-- Pen/Quill on book -->
+    <line x1="-10" y1="-5" x2="10" y2="-8" stroke="#4B0000" stroke-width="2"/>
+    <circle cx="12" cy="-9" r="2" fill="#8B4513"/>
+  </g>
+  
+  <!-- Flame/Torch above book -->
+  <g transform="translate(100,75)">
+    <path d="M0,-20 Q-8,-15 -6,-8 Q-4,-2 0,0 Q4,-2 6,-8 Q8,-15 0,-20 Z" fill="url(#flameGradient)"/>
+    <path d="M0,-18 Q-5,-14 -3,-9 Q-2,-5 0,-3 Q2,-5 3,-9 Q5,-14 0,-18 Z" fill="#FFD700" opacity="0.8"/>
+  </g>
+  
+  <!-- School Text (Top Arc) -->
+  <path id="topArc" d="M 30,100 A 70,70 0 0,1 170,100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+    <textPath href="#topArc" startOffset="5%">SAN JOSE CITY NATIONAL HIGH</textPath>
+  </text>
+  
+  <!-- School Text (Bottom Arc) -->
+  <path id="bottomArc" d="M 170,100 A 70,70 0 0,1 30,100" fill="none"/>
+  <text font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">
+    <textPath href="#bottomArc" startOffset="25%">SCHOOL</textPath>
+  </text>
+  
+  <!-- Location Text (Very Bottom) -->
+  <text x="100" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white">
+    SAN JOSE CITY, NUEVA ECIJA
+  </text>
+  
+  <!-- Central Motto Banner -->
+  <g transform="translate(100,130)">
+    <rect x="-35" y="-5" width="70" height="10" fill="white" opacity="0.9" rx="5"/>
+    <text x="0" y="2" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" font-weight="bold" fill="#1e3a8a">
+      EXCELLENCE IN EDUCATION
+    </text>
+  </g>
+</svg>

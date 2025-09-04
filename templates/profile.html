@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - MindTrack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header mb-4">
+                <h1 class="display-6 fw-bold text-clsu-green">
+                    <i class="fas fa-user-circle me-3"></i>
+                    Your Profile & Wellness Insights
+                </h1>
+                <p class="lead text-muted">Manage your account and view your wellness journey</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Profile Information -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-id-card text-clsu-green me-2"></i>
+                        Profile Information
+                    </h5>
+                    
+                    <div class="profile-info">
+                        <div class="info-item mb-3">
+                            <label class="fw-bold text-muted">Full Name</label>
+                            <p class="mb-0">{{ user.full_name }}</p>
+                        </div>
+                        
+                        <div class="info-item mb-3">
+                            <label class="fw-bold text-muted">Email Address</label>
+                            <p class="mb-0">{{ user.email }}</p>
+                        </div>
+                        
+                        <div class="info-item mb-3">
+                            <label class="fw-bold text-muted">Gender</label>
+                            <p class="mb-0">{{ user.gender or 'Not specified' }}</p>
+                        </div>
+                        
+                        <div class="info-item mb-3">
+                            <label class="fw-bold text-muted">Academic Information</label>
+                            <p class="mb-0">
+                                Grade {{ user.grade_level or 'N/A' }} - {{ user.strand or 'N/A' }}<br>
+                                Section: {{ user.section or 'N/A' }}
+                            </p>
+                        </div>
+                        
+                        <div class="info-item">
+                            <label class="fw-bold text-muted">Member Since</label>
+                            <p class="mb-0">{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Actions -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-cogs text-clsu-green me-2"></i>
+                        Profile Actions
+                    </h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="viewJournalEntries()">
+                                <i class="fas fa-book-open fa-2x mb-2 d-block"></i>
+                                <span class="fw-bold">View Journal Entries</span>
+                                <small class="d-block text-muted">Review your emotion logs</small>
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-info w-100 py-3" onclick="viewWellnessInsights()">
+                                <i class="fas fa-chart-pie fa-2x mb-2 d-block"></i>
+                                <span class="fw-bold">Wellness Insights</span>
+                                <small class="d-block text-muted">Analyze your patterns</small>
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-success w-100 py-3" onclick="viewDASSInsights()">
+                                <i class="fas fa-brain fa-2x mb-2 d-block"></i>
+                                <span class="fw-bold">DASS-21 Results</span>
+                                <small class="d-block text-muted">Mental health assessment</small>
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <a href="{{ url_for('main.emotion_log') }}" class="btn btn-clsu-green w-100 py-3 text-decoration-none">
+                                <i class="fas fa-plus-circle fa-2x mb-2 d-block"></i>
+                                <span class="fw-bold">Log New Entry</span>
+                                <small class="d-block">Track your current mood</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Journal Entries Modal -->
+<div class="modal fade" id="journalModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-book-open me-2"></i>
+                    My Emotional Journal
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="journalContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading journal entries...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Wellness Insights Modal -->
+<div class="modal fade" id="insightsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    My Wellness Insights
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="insightsContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-info" role="status">
+                            <span class="visually-hidden">Loading insights...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DASS Insights Modal -->
+<div class="modal fade" id="dassModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-brain me-2"></i>
+                    My DASS-21 Assessment Results
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="dassContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading assessment results...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

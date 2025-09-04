@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}DASS-21 Assessment - MindTrack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="dass21-container">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <div class="dass21-header bg-gradient-primary text-white p-5 rounded">
+                        <h1 class="display-5 fw-bold mb-3">
+                            <i class="fas fa-brain me-3"></i>
+                            DASS-21 Self-Assessment
+                        </h1>
+                        <p class="lead mb-4">Hello, {{ current_user.firstname }}!</p>
+                        <p class="mb-4">Take a moment to reflect on your feelings over the past week. For each statement, please select the response that best describes your experience. There are no right or wrong answers, just your personal truth.</p>
+                        
+                        <div class="rating-scale d-flex flex-wrap justify-content-center gap-3 mt-4">
+                            <span class="badge bg-light text-dark px-3 py-2">0: Did not apply to me at all</span>
+                            <span class="badge bg-light text-dark px-3 py-2">1: Applied to me to some degree</span>
+                            <span class="badge bg-light text-dark px-3 py-2">2: Applied to me considerably</span>
+                            <span class="badge bg-light text-dark px-3 py-2">3: Applied to me very much</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DASS-21 Form -->
+                <form method="POST" action="{{ url_for('main.process_dass21') }}" id="dass21Form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="emotions" value="{{ emotions|tojson }}">
+
+                    {% for question in questions %}
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <div class="question-header mb-4">
+                                <h5 class="fw-bold text-clsu-green">
+                                    <span class="question-number me-3">{{ question.id }}</span>
+                                    {{ question.text }}
+                                </h5>
+                            </div>
+                            
+                            <div class="rating-options">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="rating-label w-100">
+                                            <input type="radio" name="q{{ question.id }}" value="0" required>
+                                            <div class="rating-option">
+                                                <span class="rating-circle">0</span>
+                                                <span class="rating-text">Did not apply to me at all</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="rating-label w-100">
+                                            <input type="radio" name="q{{ question.id }}" value="1" required>
+                                            <div class="rating-option">
+                                                <span class="rating-circle">1</span>
+                                                <span class="rating-text">Applied to me to some degree, or some of the time</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="rating-label w-100">
+                                            <input type="radio" name="q{{ question.id }}" value="2" required>
+                                            <div class="rating-option">
+                                                <span class="rating-circle">2</span>
+                                                <span class="rating-text">Applied to me to a considerable degree, or a good part of time</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="rating-label w-100">
+                                            <input type="radio" name="q{{ question.id }}" value="3" required>
+                                            <div class="rating-option">
+                                                <span class="rating-circle">3</span>
+                                                <span class="rating-text">Applied to me very much, or most of the time</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Submit Button -->
+                    <div class="text-center mt-5">
+                        <button type="submit" class="btn btn-clsu-gold btn-lg px-5 py-3">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Submit Assessment
+                        </button>
+                        <p class="text-muted mt-3">
+                            <i class="fas fa-lock me-1"></i>
+                            Your responses are confidential and secure
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.dass21-container {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.question-number {
+    background: var(--clsu-gold);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 50%;
+    font-weight: bold;
+    min-width: 3rem;
+    text-align: center;
+    display: inline-block;
+}
+
+.rating-label {
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+.rating-option {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.rating-option:hover {
+    border-color: var(--clsu-gold);
+    background: #fff8e1;
+}
+
+.rating-label input[type="radio"] {
+    display: none;
+}
+
+.rating-label input[type="radio"]:checked + .rating-option {
+    border-color: var(--clsu-green);
+    background: var(--clsu-green);
+    color: white;
+}
+
+.rating-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    margin-right: 1rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.rating-label input[type="radio"]:checked + .rating-option .rating-circle {
+    border-color: white;
+    background: white;
+    color: var(--clsu-green);
+}
+
+.rating-text {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+</style>
+{% endblock %}

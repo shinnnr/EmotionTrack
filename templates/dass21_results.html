@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}DASS-21 Results - MindTrack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="results-container">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <div class="results-header bg-gradient-success text-white p-5 rounded">
+                        <h1 class="display-5 fw-bold mb-3">
+                            <i class="fas fa-chart-bar me-3"></i>
+                            Your DASS-21 Assessment Results
+                        </h1>
+                        <p class="lead">Assessment completed successfully</p>
+                        <small class="text-light">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            Completed on {{ moment().format('MMMM Do, YYYY [at] h:mm A') }}
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Results Cards -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="result-card card border-0 shadow-sm h-100">
+                            <div class="card-body text-center p-4">
+                                <div class="result-icon mb-3">
+                                    <i class="fas fa-cloud-rain fa-3x text-primary"></i>
+                                </div>
+                                <h4 class="fw-bold text-clsu-green">Depression</h4>
+                                <div class="result-score my-3">
+                                    <span class="h2 fw-bold">{{ depression_score }}</span>
+                                </div>
+                                <span class="badge severity-{{ depression_severity.replace(' ', '') }} fs-6 px-3 py-2">
+                                    {{ depression_severity }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="result-card card border-0 shadow-sm h-100">
+                            <div class="card-body text-center p-4">
+                                <div class="result-icon mb-3">
+                                    <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+                                </div>
+                                <h4 class="fw-bold text-clsu-green">Anxiety</h4>
+                                <div class="result-score my-3">
+                                    <span class="h2 fw-bold">{{ anxiety_score }}</span>
+                                </div>
+                                <span class="badge severity-{{ anxiety_severity.replace(' ', '') }} fs-6 px-3 py-2">
+                                    {{ anxiety_severity }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="result-card card border-0 shadow-sm h-100">
+                            <div class="card-body text-center p-4">
+                                <div class="result-icon mb-3">
+                                    <i class="fas fa-head-side-cough fa-3x text-danger"></i>
+                                </div>
+                                <h4 class="fw-bold text-clsu-green">Stress</h4>
+                                <div class="result-score my-3">
+                                    <span class="h2 fw-bold">{{ stress_score }}</span>
+                                </div>
+                                <span class="badge severity-{{ stress_severity.replace(' ', '') }} fs-6 px-3 py-2">
+                                    {{ stress_severity }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interpretation Section -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4">
+                            <i class="fas fa-lightbulb text-clsu-gold me-2"></i>
+                            Understanding Your Results
+                        </h5>
+                        
+                        <div class="interpretation-content">
+                            <div class="alert alert-info">
+                                <h6 class="fw-bold">What do these scores mean?</h6>
+                                <p class="mb-2">The DASS-21 measures three related negative emotional states:</p>
+                                <ul class="mb-0">
+                                    <li><strong>Depression:</strong> Measures hopelessness, devaluation of life, self-deprecation, lack of interest/involvement, anhedonia, and inertia.</li>
+                                    <li><strong>Anxiety:</strong> Measures autonomic arousal, skeletal muscle effects, situational anxiety, and subjective experience of anxious affect.</li>
+                                    <li><strong>Stress:</strong> Measures difficulty relaxing, nervous arousal, being easily upset/agitated, irritable/over-reactive, and impatient.</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="severity-guide mt-4">
+                                <h6 class="fw-bold mb-3">Severity Level Guide:</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="severity-item p-3 rounded bg-light">
+                                            <span class="badge severity-Normal me-2">Normal</span>
+                                            <span>No significant symptoms</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="severity-item p-3 rounded bg-light">
+                                            <span class="badge severity-Mild me-2">Mild</span>
+                                            <span>Mild symptoms present</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="severity-item p-3 rounded bg-light">
+                                            <span class="badge severity-Moderate me-2">Moderate</span>
+                                            <span>Moderate symptoms present</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="severity-item p-3 rounded bg-light">
+                                            <span class="badge severity-Severe me-2">Severe</span>
+                                            <span>Severe symptoms present</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="severity-item p-3 rounded bg-light">
+                                            <span class="badge severity-ExtremelySevere me-2">Extremely Severe</span>
+                                            <span>Very severe symptoms present</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations Section -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4">
+                            <i class="fas fa-heart text-clsu-green me-2"></i>
+                            Personalized Recommendations
+                        </h5>
+                        
+                        <div class="recommendations">
+                            <div class="recommendation-item mb-3 p-3 rounded bg-light">
+                                <i class="fas fa-user-md text-clsu-green me-2"></i>
+                                <strong>Professional Support:</strong> Consider speaking with a counselor or mental health professional for personalized guidance and support.
+                            </div>
+                            
+                            <div class="recommendation-item mb-3 p-3 rounded bg-light">
+                                <i class="fas fa-heart text-danger me-2"></i>
+                                <strong>Self-Care:</strong> Practice regular self-care activities such as exercise, meditation, adequate sleep, and healthy eating.
+                            </div>
+                            
+                            <div class="recommendation-item mb-3 p-3 rounded bg-light">
+                                <i class="fas fa-users text-info me-2"></i>
+                                <strong>Social Support:</strong> Connect with trusted friends, family members, or support groups who can provide emotional support.
+                            </div>
+                            
+                            <div class="recommendation-item mb-3 p-3 rounded bg-light">
+                                <i class="fas fa-book text-warning me-2"></i>
+                                <strong>Continue Tracking:</strong> Keep logging your emotions and monitoring your mental health through our platform.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Important Notice -->
+                <div class="alert alert-warning">
+                    <h6 class="fw-bold">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Important Notice
+                    </h6>
+                    <p class="mb-2">The DASS-21 is a screening tool and is not a substitute for professional clinical diagnosis. These results provide insight into your current emotional state but should not be used for self-diagnosis.</p>
+                    <p class="mb-0">If you are experiencing high levels of depression, anxiety, or stress, or if you have concerns about your mental health, please consider consulting with a qualified mental health professional or contact the guidance office.</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-5">
+                    <a href="{{ url_for('main.home') }}" class="btn btn-clsu-green btn-lg me-3">
+                        <i class="fas fa-home me-2"></i>
+                        Return to Dashboard
+                    </a>
+                    <a href="{{ url_for('main.consultation') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-comments me-2"></i>
+                        Contact Guidance Office
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.result-card {
+    transition: transform 0.3s ease;
+}
+
+.result-card:hover {
+    transform: translateY(-5px);
+}
+
+.result-icon {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.severity-Normal { 
+    background-color: #28a745; 
+    color: white; 
+}
+
+.severity-Mild { 
+    background-color: #ffc107; 
+    color: #000; 
+}
+
+.severity-Moderate { 
+    background-color: #fd7e14; 
+    color: white; 
+}
+
+.severity-Severe { 
+    background-color: #dc3545; 
+    color: white; 
+}
+
+.severity-ExtremelySevere { 
+    background-color: #6f42c1; 
+    color: white; 
+}
+
+.recommendation-item {
+    border-left: 4px solid var(--clsu-green);
+}
+
+.severity-item {
+    border: 1px solid #e9ecef;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+{% endblock %}
