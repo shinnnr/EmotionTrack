@@ -71,13 +71,21 @@
         const sidebar = document.getElementById('sidebar') || document.getElementById('adminSidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay') || document.getElementById('adminSidebarOverlay');
         
-        if (sidebarToggle && sidebar && sidebarOverlay) {
-            sidebarToggle.addEventListener('click', function() {
+        console.log('Sidebar elements:', { sidebarToggle, sidebar, sidebarOverlay });
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Toggle clicked');
                 sidebar.classList.toggle('show');
-                sidebarOverlay.classList.toggle('show');
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.toggle('show');
+                }
                 document.body.classList.toggle('sidebar-open');
             });
-            
+        }
+        
+        if (sidebarOverlay) {
             sidebarOverlay.addEventListener('click', function() {
                 sidebar.classList.remove('show');
                 sidebarOverlay.classList.remove('show');

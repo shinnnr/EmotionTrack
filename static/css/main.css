@@ -139,6 +139,11 @@ body {
 
 .main-content.with-sidebar {
     margin-left: var(--sidebar-width);
+    padding: 2rem;
+    min-height: 100vh;
+    background: #f8f9fa;
+    position: relative;
+    z-index: 1;
 }
 
 /* Landing Page Styles */

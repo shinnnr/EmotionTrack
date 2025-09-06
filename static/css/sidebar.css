@@ -182,6 +182,7 @@
 @media (max-width: 991px) {
     .sidebar {
         transform: translateX(-100%);
+        z-index: 1055;
     }
     
     .sidebar.show {
@@ -189,11 +190,21 @@
     }
     
     .sidebar-toggle {
-        display: flex;
+        display: flex !important;
         align-items: center;
         justify-content: center;
         left: 20px;
         right: auto;
+        z-index: 1060;
+    }
+    
+    .sidebar-overlay {
+        display: block !important;
+    }
+    
+    .sidebar-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
     }
     
     body.sidebar-open {
@@ -202,6 +213,24 @@
     
     .main-content.with-sidebar {
         margin-left: 0 !important;
+    }
+}
+
+@media (min-width: 992px) {
+    .sidebar {
+        transform: translateX(0) !important;
+    }
+    
+    .sidebar-toggle {
+        display: none !important;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .main-content.with-sidebar {
+        margin-left: var(--sidebar-width);
     }
 }
 
