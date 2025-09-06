@@ -549,35 +549,9 @@ function showAnalyticsModal() {
                     </div>
                     <div class="modal-body">
                         <div class="analytics-dashboard">
-                            <div class="row g-4 mb-4">
-                                <div class="col-md-3">
-                                    <div class="analytics-metric">
-                                        <h6 class="text-muted">Average Mood Score</h6>
-                                        <div class="h3 text-success">7.2/10</div>
-                                        <small class="text-success">↑ 0.3 from last month</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="analytics-metric">
-                                        <h6 class="text-muted">Active Students</h6>
-                                        <div class="h3 text-primary">89%</div>
-                                        <small class="text-primary">↑ 5% from last month</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="analytics-metric">
-                                        <h6 class="text-muted">Response Rate</h6>
-                                        <div class="h3 text-info">92%</div>
-                                        <small class="text-info">↑ 2% from last month</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="analytics-metric">
-                                        <h6 class="text-muted">Risk Cases</h6>
-                                        <div class="h3 text-warning">12</div>
-                                        <small class="text-danger">↑ 3 from last month</small>
-                                    </div>
-                                </div>
+                            <div class="text-center p-4">
+                                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                                <p class="mt-2 text-muted">Loading analytics data...</p>
                             </div>
                             
                             <div class="row g-4">
@@ -670,6 +644,29 @@ async function initializeAnalyticsCharts() {
                                     <small class="text-muted">All time</small>
                                 </div>
                             </div>
+                            <div class="col-md-3">
+                                <div class="analytics-metric">
+                                    <h6 class="text-muted">Average Energy Level</h6>
+                                    <div class="h3 text-success">${analyticsData.average_energy ? analyticsData.average_energy.toFixed(1) + '/10' : 'N/A'}</div>
+                                    <small class="text-muted">Current average</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="analytics-metric">
+                                    <h6 class="text-muted">Total Students</h6>
+                                    <div class="h3 text-info">${analyticsData.total_users || 0}</div>
+                                    <small class="text-muted">Registered students</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="analytics-metric">
+                                    <h6 class="text-muted">High Risk Cases</h6>
+                                    <div class="h3 text-warning">${analyticsData.concerning_students || 0}</div>
+                                    <small class="text-muted">Severe DASS-21 scores</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-4 mb-4">
                             <div class="col-md-3">
                                 <div class="analytics-metric">
                                     <h6 class="text-muted">DASS-21 Assessments</h6>
