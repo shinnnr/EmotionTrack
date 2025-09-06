@@ -562,80 +562,9 @@
     }
     
     function loadChangePasswordForm() {
-        // Legacy function - replaced by modal
-                    <form id="changePasswordForm">
-                        <div class="mb-3">
-                            <label for="currentPassword" class="form-label fw-bold">Current Password</label>
-                            <input type="password" class="form-control" id="currentPassword" name="current_password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="newPassword" class="form-label fw-bold">New Password</label>
-                            <input type="password" class="form-control" id="newPassword" name="new_password" required minlength="6">
-                            <small class="form-text text-muted">Password must be at least 6 characters long</small>
-                        </div>
-                        <div class="mb-3">
-                            <label for="confirmPassword" class="form-label fw-bold">Confirm New Password</label>
-                            <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-clsu-green">
-                                <i class="fas fa-save me-2"></i>
-                                Update Password
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        `;
-        
-        // Add form submission handler
-        const form = document.getElementById('changePasswordForm');
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            // Validate passwords match
-            if (newPassword !== confirmPassword) {
-                showAlert('New passwords do not match', 'danger');
-                return;
-            }
-            
-            // Show loading state
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
-            submitBtn.disabled = true;
-            
-            try {
-                const formData = new FormData();
-                formData.append('current_password', currentPassword);
-                formData.append('new_password', newPassword);
-                
-                const response = await fetch('/api/change-password', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
-                    }
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert('Password updated successfully!', 'success');
-                    form.reset();
-                } else {
-                    showAlert(result.message || 'Failed to update password', 'danger');
-                }
-            } catch (error) {
-                showAlert('An error occurred. Please try again.', 'danger');
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
+        // Legacy function - not used anymore as we use modal instead
+        return;
+    }
         });
     }
     

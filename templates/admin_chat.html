@@ -35,37 +35,35 @@
                 <div class="chat-container" id="chatContainer">
                     {% if messages %}
                         {% for message in messages %}
+                            <!-- Student Message -->
                             {% if message.message_text and not message.message_text.startswith('[ADMIN]') %}
-                                <!-- Student Message (left side) -->
                                 <div class="message-bubble student-message">
                                     <div class="message-content">
                                         <div class="message-text">{{ message.message_text }}</div>
                                         <div class="message-time">
                                             {{ message.created_at.strftime('%I:%M %p') }}
-                                            <br><small class="text-muted">{{ message.created_at.strftime('%B %d, %Y') }}</small>
                                         </div>
                                     </div>
                                 </div>
                             {% endif %}
                             
+                            <!-- Admin Response -->
                             {% if message.admin_response %}
-                                <!-- Admin Response (right side) -->
                                 <div class="message-bubble admin-message">
+                                    <div class="message-avatar">
+                                        <div class="avatar-sm">
+                                            <div class="avatar-title rounded-circle bg-clsu-green text-white">
+                                                GC
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="message-content">
-                                        <div class="message-sender">You (Guidance Counselor)</div>
+                                        <div class="message-sender">Guidance Counselor</div>
                                         <div class="message-text">{{ message.admin_response }}</div>
                                         <div class="message-time">
                                             {% if message.responded_at %}
                                                 {{ message.responded_at.strftime('%I:%M %p') }}
-                                                <br><small class="text-muted">{{ message.responded_at.strftime('%B %d, %Y') }}</small>
                                             {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="message-avatar">
-                                        <div class="avatar-sm">
-                                            <div class="avatar-title rounded-circle bg-success text-white">
-                                                GC
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
