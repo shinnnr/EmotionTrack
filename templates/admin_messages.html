@@ -60,11 +60,11 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
-                                            <div class="message-preview">
+                                        <td style="max-width: 250px;">
+                                            <div class="message-preview text-truncate">
                                                 {% if conversation.latest_message %}
-                                                    {{ conversation.latest_message.message_text[:80] }}
-                                                    {% if conversation.latest_message.message_text|length > 80 %}...{% endif %}
+                                                    {{ conversation.latest_message.message_text[:50] }}
+                                                    {% if conversation.latest_message.message_text|length > 50 %}...{% endif %}
                                                 {% else %}
                                                     <em class="text-muted">No messages yet</em>
                                                 {% endif %}

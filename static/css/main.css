@@ -576,6 +576,18 @@ body {
     }
 }
 
+/* Admin Messages Table */
+.message-preview {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
 /* Print Styles */
 @media print {
     .sidebar,
