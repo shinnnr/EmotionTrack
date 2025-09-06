@@ -74,6 +74,31 @@
                     {% endif %}
                 </div>
                 
+                <!-- Message Suggestions -->
+                <div class="message-suggestions p-3 bg-light border-top">
+                    <h6 class="fw-bold text-clsu-green mb-2">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Quick Message Suggestions:
+                    </h6>
+                    <div class="suggestion-buttons d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm suggestion-btn" data-message="I'm feeling overwhelmed with school work and need someone to talk to.">
+                            <i class="fas fa-school me-1"></i>School Stress
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm suggestion-btn" data-message="I've been having trouble sleeping and it's affecting my daily life.">
+                            <i class="fas fa-bed me-1"></i>Sleep Issues
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm suggestion-btn" data-message="I'm experiencing anxiety about upcoming exams and need coping strategies.">
+                            <i class="fas fa-brain me-1"></i>Anxiety & Exams
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm suggestion-btn" data-message="I'm having difficulties with social interactions and relationships at school.">
+                            <i class="fas fa-users me-1"></i>Social Issues
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm suggestion-btn" data-message="I'm going through a very difficult time and need immediate support and guidance.">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Need Support
+                        </button>
+                    </div>
+                </div>
+                
                 <!-- Message Input -->
                 <div class="message-input-container">
                     <form id="messageForm" class="d-flex align-items-end gap-3">
@@ -365,6 +390,45 @@
 
 .message-bubble {
     animation: messageSlideIn 0.3s ease-out;
+}
+
+/* Suggestion buttons */
+.suggestion-buttons {
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.suggestion-btn {
+    font-size: 0.875rem;
+    border-radius: 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.suggestion-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.message-suggestions {
+    border-top: 1px solid #e9ecef;
+}
+
+.message-suggestions::-webkit-scrollbar {
+    height: 4px;
+}
+
+.message-suggestions::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.message-suggestions::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.message-suggestions::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 </style>
 {% endblock %}

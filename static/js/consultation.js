@@ -31,6 +31,34 @@ function initializeChat() {
             }
         });
     }
+    
+    // Initialize suggestion buttons
+    initializeSuggestionButtons();
+}
+
+function initializeSuggestionButtons() {
+    const suggestionButtons = document.querySelectorAll('.suggestion-btn');
+    const messageInput = document.querySelector('#message_text');
+    
+    suggestionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const suggestionMessage = this.dataset.message;
+            
+            if (messageInput.value.trim() === '') {
+                messageInput.value = suggestionMessage;
+                messageInput.style.height = 'auto';
+                messageInput.style.height = (messageInput.scrollHeight) + 'px';
+                messageInput.focus();
+            } else {
+                if (confirm('This will replace your current message. Continue?')) {
+                    messageInput.value = suggestionMessage;
+                    messageInput.style.height = 'auto';
+                    messageInput.style.height = (messageInput.scrollHeight) + 'px';
+                    messageInput.focus();
+                }
+            }
+        });
+    });
 }
 
 async function sendMessage() {
