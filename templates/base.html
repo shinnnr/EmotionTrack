@@ -67,17 +67,29 @@
     <!-- Sidebar Toggle Script -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        initializeSidebar();
+    });
+    
+    function initializeSidebar() {
         const sidebarToggle = document.getElementById('sidebarToggle') || document.getElementById('adminSidebarToggle');
         const sidebar = document.getElementById('sidebar') || document.getElementById('adminSidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay') || document.getElementById('adminSidebarOverlay');
         
-        console.log('Sidebar elements:', { sidebarToggle, sidebar, sidebarOverlay });
+        console.log('Initializing sidebar:', { sidebarToggle, sidebar, sidebarOverlay });
         
-        if (sidebarToggle && sidebar) {
-            sidebarToggle.addEventListener('click', function(e) {
+        if (sidebarToggle) {
+            // Remove any existing event listeners
+            sidebarToggle.replaceWith(sidebarToggle.cloneNode(true));
+            const newToggle = document.getElementById('sidebarToggle') || document.getElementById('adminSidebarToggle');
+            
+            newToggle.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 console.log('Toggle clicked');
-                sidebar.classList.toggle('show');
+                
+                if (sidebar) {
+                    sidebar.classList.toggle('show');
+                }
                 if (sidebarOverlay) {
                     sidebarOverlay.classList.toggle('show');
                 }
@@ -86,13 +98,18 @@
         }
         
         if (sidebarOverlay) {
-            sidebarOverlay.addEventListener('click', function() {
-                sidebar.classList.remove('show');
+            sidebarOverlay.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Overlay clicked');
+                
+                if (sidebar) {
+                    sidebar.classList.remove('show');
+                }
                 sidebarOverlay.classList.remove('show');
                 document.body.classList.remove('sidebar-open');
             });
         }
-    });
+    }
     </script>
     
     {% block extra_js %}{% endblock %}
