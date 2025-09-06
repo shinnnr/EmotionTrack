@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from app import db
 from models import User, MoodLog, DASS21Result, StudentMessage
@@ -44,6 +44,70 @@ def home():
 @login_required
 def profile():
     return render_template('profile.html', user=current_user)
+
+
+@main_bp.route('/api/mood-logs')
+@login_required
+def get_mood_logs():
+    try:
+        logs = MoodLog.query.filter_by(id=current_user.id).order_by(desc(MoodLog.log_date)).all()
+        return jsonify([{
+            'log_id': log.log_id,
+            'emotion': log.emotion,
+            'energy': log.energy,
+            'sleep': log.sleep,
+            'triggers': log.triggers,
+            'coping': log.coping,
+            'gratitude': log.gratitude,
+            'log_date': log.log_date.isoformat() if log.log_date else None
+        } for log in logs])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@main_bp.route('/api/wellness-insights')
+@login_required
+def get_wellness_insights():
+    try:
+        logs = MoodLog.query.filter_by(id=current_user.id).all()
+        if not logs:
+            return jsonify({'has_data': False})
+        
+        from collections import Counter
+        emotions = Counter(log.emotion for log in logs)
+        energy_levels = [log.energy for log in logs if log.energy]
+        sleep_hours = [log.sleep for log in logs if log.sleep]
+        triggers = Counter(log.triggers for log in logs if log.triggers)
+        
+        return jsonify({
+            'has_data': True,
+            'most_common_emotion': emotions.most_common(1)[0][0] if emotions else 'None',
+            'avg_energy': sum(energy_levels) / len(energy_levels) if energy_levels else 0,
+            'avg_sleep': sum(sleep_hours) / len(sleep_hours) if sleep_hours else 0,
+            'main_trigger': triggers.most_common(1)[0][0] if triggers else 'None'
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@main_bp.route('/api/dass21-results')
+@login_required
+def get_dass21_results():
+    try:
+        results = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).all()
+        return jsonify([{
+            'id': result.id,
+            'depression_score': result.depression_score,
+            'anxiety_score': result.anxiety_score,
+            'stress_score': result.stress_score,
+            'depression_severity': result.depression_severity,
+            'anxiety_severity': result.anxiety_severity,
+            'stress_severity': result.stress_severity,
+            'created_at': result.created_at.isoformat() if result.created_at else None
+        } for result in results])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @main_bp.route('/emotion-log', methods=['GET', 'POST'])
 @login_required
