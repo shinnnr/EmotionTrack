@@ -17,6 +17,60 @@
     </div>
 
     <div class="row g-4">
+        <!-- Profile Actions -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-cogs text-clsu-green me-2"></i>
+                        Profile Actions
+                    </h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary w-100 py-3" id="journalEntriesBtn">
+                                <i class="fas fa-book-open fa-2x mb-2 d-block"></i>
+                                <span class="fw-bold">View Journal Entries</span>
+                                <small class="d-block text-muted">Review your emotion logs</small>
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-info w-100 py-3" id="wellnessInsightsBtn">
+                                <i class="fas fa-chart-pie fa-2x mb-2 d-block"></i>
+                                <span class="fw-bold">Wellness Insights</span>
+                                <small class="d-block text-muted">Analyze your patterns</small>
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-success w-100 py-3" id="dassResultsBtn">
+                                <i class="fas fa-brain fa-2x mb-2 d-block"></i>
+                                <span class="fw-bold">DASS-21 Results</span>
+                                <small class="d-block text-muted">Mental health assessment</small>
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <a href="{{ url_for('main.emotion_log') }}" class="btn btn-clsu-green w-100 py-3 text-decoration-none">
+                                <i class="fas fa-plus-circle fa-2x mb-2 d-block"></i>
+                                <span class="fw-bold">Log New Entry</span>
+                                <small class="d-block">Track your current mood</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-warning w-100 py-3" id="changePasswordBtn">
+                                <i class="fas fa-key fa-2x mb-2 d-block"></i>
+                                <span class="fw-bold">Change Password</span>
+                                <small class="d-block text-muted">Update your account security</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Profile Information -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm">
@@ -58,62 +112,6 @@
                         <div class="info-item">
                             <label class="fw-bold text-muted">Member Since</label>
                             <p class="mb-0">{{ user.created_at.strftime('%B %d, %Y') }}</p>
-                        </div>
-                    </div>
-                    
-                    <hr class="my-4">
-                    
-                    <div class="profile-actions">
-                        <h6 class="fw-bold text-muted mb-3">Account Management</h6>
-                        <button class="btn btn-outline-primary btn-sm w-100" id="changePasswordBtn">
-                            <i class="fas fa-key me-2"></i>
-                            Change Password
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Profile Actions -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <h5 class="card-title fw-bold mb-4">
-                        <i class="fas fa-cogs text-clsu-green me-2"></i>
-                        Profile Actions
-                    </h5>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <button class="btn btn-outline-primary w-100 py-3" id="journalEntriesBtn">
-                                <i class="fas fa-book-open fa-2x mb-2 d-block"></i>
-                                <span class="fw-bold">View Journal Entries</span>
-                                <small class="d-block text-muted">Review your emotion logs</small>
-                            </button>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <button class="btn btn-outline-info w-100 py-3" id="wellnessInsightsBtn">
-                                <i class="fas fa-chart-pie fa-2x mb-2 d-block"></i>
-                                <span class="fw-bold">Wellness Insights</span>
-                                <small class="d-block text-muted">Analyze your patterns</small>
-                            </button>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <button class="btn btn-outline-success w-100 py-3" id="dassResultsBtn">
-                                <i class="fas fa-brain fa-2x mb-2 d-block"></i>
-                                <span class="fw-bold">DASS-21 Results</span>
-                                <small class="d-block text-muted">Mental health assessment</small>
-                            </button>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <a href="{{ url_for('main.emotion_log') }}" class="btn btn-clsu-green w-100 py-3 text-decoration-none">
-                                <i class="fas fa-plus-circle fa-2x mb-2 d-block"></i>
-                                <span class="fw-bold">Log New Entry</span>
-                                <small class="d-block">Track your current mood</small>
-                            </a>
                         </div>
                     </div>
                 </div>

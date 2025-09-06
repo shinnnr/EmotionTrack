@@ -21,14 +21,9 @@ function initializeEmotionSelection() {
                 this.classList.remove('selected');
                 selectedEmotions = selectedEmotions.filter(e => e !== emotion);
             } else {
-                // Add emotion (max 5 emotions)
-                if (selectedEmotions.length < 5) {
-                    this.classList.add('selected');
-                    selectedEmotions.push(emotion);
-                } else {
-                    MindTrack.showAlert('You can select up to 5 emotions at a time.', 'warning');
-                    return;
-                }
+                // Add emotion (no limit)
+                this.classList.add('selected');
+                selectedEmotions.push(emotion);
             }
 
             updateSelectedEmotions();
