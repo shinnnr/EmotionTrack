@@ -9,8 +9,7 @@ class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     
-    class Meta(DefaultMeta):
-        csrf = False  # Disable CSRF for now
+    # CSRF protection is handled globally
 
 class RegisterForm(FlaskForm):
     firstname = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
