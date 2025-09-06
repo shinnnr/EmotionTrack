@@ -267,6 +267,7 @@ def register():
         user.firstname = form.firstname.data
         user.lastname = form.lastname.data
         user.email = form.email.data
+        user.birthday = form.birthday.data
         user.gender = form.gender.data
         user.strand = form.strand.data
         user.grade_level = form.grade_level.data

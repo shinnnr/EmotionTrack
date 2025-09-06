@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms.csrf.session import SessionCSRF
 from wtforms.meta import DefaultMeta
-from wtforms import StringField, PasswordField, SelectField, TextAreaField, IntegerField, FloatField, HiddenField
+from wtforms import StringField, PasswordField, SelectField, TextAreaField, IntegerField, FloatField, HiddenField, DateField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, EqualTo
 from wtforms.widgets import TextArea
 
@@ -18,6 +18,7 @@ class RegisterForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Confirm Password', 
                                    validators=[DataRequired(), EqualTo('password')])
+    birthday = DateField('Birthday', validators=[DataRequired()])
     gender = SelectField('Gender', choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')])
     strand = SelectField('Strand', choices=[
         ('STEM', 'STEM'), ('ABM', 'ABM'), ('HUMSS', 'HUMSS'), 

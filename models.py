@@ -12,6 +12,7 @@ class User(UserMixin, db.Model):
     lastname = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    birthday = db.Column(db.Date)
     gender = db.Column(db.String(20))
     strand = db.Column(db.String(100))
     grade_level = db.Column(db.String(20))
