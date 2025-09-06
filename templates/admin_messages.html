@@ -35,7 +35,6 @@
                                     <tr>
                                         <th>Student</th>
                                         <th>Last Message</th>
-                                        <th>Messages Count</th>
                                         <th>Last Activity</th>
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -71,15 +70,9 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">{{ conversation.message_count }}</span>
-                                            {% if conversation.unread_count > 0 %}
-                                                <span class="badge bg-warning">{{ conversation.unread_count }} new</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
                                             {% if conversation.latest_message %}
                                                 <small class="text-muted">
-                                                    {{ conversation.latest_message.created_at.strftime('%m/%d %H:%M') }}
+                                                    {{ conversation.latest_message.created_at.strftime('%B %d, %Y at %I:%M %p') if conversation.latest_message.created_at else 'Unknown' }}
                                                 </small>
                                             {% else %}
                                                 <small class="text-muted">Never</small>

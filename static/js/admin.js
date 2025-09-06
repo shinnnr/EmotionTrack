@@ -1067,50 +1067,98 @@ function downloadCSV(csvData, filename) {
 }
 
 async function generateSummaryCSV() {
-    const headers = ['Metric', 'Value', 'Description'];
-    const data = [
-        ['Total Students', '50', 'Total number of registered students'],
-        ['Active This Month', '42', 'Students who logged emotions this month'],
-        ['Average Mood Score', '7.2', 'Average mood rating (1-10)'],
-        ['Most Common Emotion', 'Content', 'Most frequently logged emotion'],
-        ['DASS-21 Assessments', '35', 'Total assessments completed'],
-        ['High Risk Students', '3', 'Students requiring immediate attention']
-    ];
-    
-    return [headers, ...data].map(row => row.join(',')).join('\n');
+    try {
+        // Fetch analytics data from API
+        const response = await fetch('/admin/api/analytics-data');
+        const analyticsData = await response.json();
+        
+        // Prepare comprehensive summary data from real API data
+        const headers = ['Metric', 'Value', 'Description'];
+        const data = [
+            ['Total Students', analyticsData.total_users?.toString() || '0', 'Total number of registered students'],
+            ['Total Mood Logs', analyticsData.monthly_activity?.reduce((sum, item) => sum + item.count, 0)?.toString() || '0', 'Total number of emotion logs recorded'],
+            ['Average Energy Level', analyticsData.average_energy?.toFixed(1) || '0.0', 'Average energy level across all students (1-10 scale)'],
+            ['Most Common Emotion', analyticsData.mood_distribution?.[0]?.emotion || 'N/A', 'Most frequently logged emotion'],
+            ['High Risk Students', analyticsData.concerning_students?.toString() || '0', 'Number of students requiring immediate attention'],
+            ['DASS Assessments', analyticsData.dass_severity?.reduce((sum, item) => sum + item.count, 0)?.toString() || '0', 'Total number of DASS-21 assessments completed'],
+            ['Last Data Update', new Date().toLocaleString(), 'Timestamp of report generation']
+        ];
+        
+        return [headers, ...data].map(row => row.join(',')).join('\n');
+    } catch (error) {
+        console.error('Error generating summary CSV:', error);
+        // Fallback to basic structure if API fails
+        const headers = ['Metric', 'Value', 'Description'];
+        const data = [
+            ['Error', 'Data Unavailable', 'Unable to fetch current statistics'],
+            ['Last Attempt', new Date().toLocaleString(), 'Timestamp of report generation']
+        ];
+        return [headers, ...data].map(row => row.join(',')).join('\n');
+    }
 }
 
 async function generateDetailedAnalysisCSV() {
-    const headers = ['Student ID', 'Name', 'Email', 'Average Mood', 'Last Activity', 'DASS Depression', 'DASS Anxiety', 'DASS Stress', 'Risk Level'];
-    const data = [
-        ['1', 'John Doe', 'john@example.com', '6.5', '2024-03-15', '5', '7', '6', 'Moderate'],
-        ['2', 'Jane Smith', 'jane@example.com', '8.2', '2024-03-14', '2', '3', '4', 'Normal'],
-        ['3', 'Bob Johnson', 'bob@example.com', '4.1', '2024-03-13', '12', '11', '13', 'High']
-    ];
-    
-    return [headers, ...data].map(row => row.join(',')).join('\n');
+    try {
+        // Fetch user data from API
+        const response = await fetch('/admin/api/export-data?type=users');
+        const csvData = await response.text();
+        
+        if (csvData && csvData.trim()) {
+            return csvData;
+        } else {
+            // Fallback structure
+            const headers = ['ID', 'First Name', 'Last Name', 'Email', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'];
+            const data = [['No data available', '', '', '', '', '', '', '', '']];
+            return [headers, ...data].map(row => row.join(',')).join('\n');
+        }
+    } catch (error) {
+        console.error('Error generating detailed analysis CSV:', error);
+        const headers = ['Error', 'Message', 'Timestamp'];
+        const data = [['Data Unavailable', 'Unable to fetch student data', new Date().toLocaleString()]];
+        return [headers, ...data].map(row => row.join(',')).join('\n');
+    }
 }
 
 async function generateRiskAssessmentCSV() {
-    const headers = ['Student Name', 'Email', 'Risk Level', 'DASS Depression Score', 'DASS Anxiety Score', 'DASS Stress Score', 'Last Mood Log', 'Recommended Action'];
-    const data = [
-        ['Alice Wilson', 'alice@example.com', 'High', '15', '14', '16', '2024-03-10', 'Immediate counselor intervention'],
-        ['Charlie Brown', 'charlie@example.com', 'Moderate', '8', '9', '7', '2024-03-12', 'Weekly check-in recommended'],
-        ['David Lee', 'david@example.com', 'Normal', '3', '4', '2', '2024-03-14', 'Continue regular monitoring']
-    ];
-    
-    return [headers, ...data].map(row => row.join(',')).join('\n');
+    try {
+        // Fetch DASS-21 results from API
+        const response = await fetch('/admin/api/export-data?type=dass21');
+        const csvData = await response.text();
+        
+        if (csvData && csvData.trim()) {
+            return csvData;
+        } else {
+            // Fallback structure
+            const headers = ['ID', 'User Email', 'Depression Score', 'Anxiety Score', 'Stress Score', 'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'];
+            const data = [['No assessments found', '', '', '', '', '', '', '', '']];
+            return [headers, ...data].map(row => row.join(',')).join('\n');
+        }
+    } catch (error) {
+        console.error('Error generating risk assessment CSV:', error);
+        const headers = ['Error', 'Message', 'Timestamp'];
+        const data = [['Data Unavailable', 'Unable to fetch DASS-21 data', new Date().toLocaleString()]];
+        return [headers, ...data].map(row => row.join(',')).join('\n');
+    }
 }
 
 async function generateTrendAnalysisCSV() {
-    const headers = ['Date', 'Average Mood', 'Total Logs', 'Positive Emotions %', 'Negative Emotions %', 'Neutral Emotions %', 'DASS Assessments'];
-    const data = [
-        ['2024-03-01', '7.1', '25', '65%', '20%', '15%', '5'],
-        ['2024-03-02', '6.8', '28', '60%', '25%', '15%', '3'],
-        ['2024-03-03', '7.4', '30', '70%', '18%', '12%', '7'],
-        ['2024-03-04', '6.9', '26', '62%', '23%', '15%', '4'],
-        ['2024-03-05', '7.2', '32', '68%', '19%', '13%', '6']
-    ];
-    
-    return [headers, ...data].map(row => row.join(',')).join('\n');
+    try {
+        // Fetch mood logs from API
+        const response = await fetch('/admin/api/export-data?type=mood_logs');
+        const csvData = await response.text();
+        
+        if (csvData && csvData.trim()) {
+            return csvData;
+        } else {
+            // Fallback structure
+            const headers = ['Log ID', 'User Email', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'];
+            const data = [['No mood logs found', '', '', '', '', '', '', '', '']];
+            return [headers, ...data].map(row => row.join(',')).join('\n');
+        }
+    } catch (error) {
+        console.error('Error generating trend analysis CSV:', error);
+        const headers = ['Error', 'Message', 'Timestamp'];
+        const data = [['Data Unavailable', 'Unable to fetch mood log data', new Date().toLocaleString()]];
+        return [headers, ...data].map(row => row.join(',')).join('\n');
+    }
 }

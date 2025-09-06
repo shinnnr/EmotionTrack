@@ -9,7 +9,10 @@
             <!-- Left side - Welcome content -->
             <div class="col-lg-6 d-flex align-items-center justify-content-center bg-clsu-green">
                 <div class="welcome-content text-white text-center p-5">
-                    <img src="{{ url_for('static', filename='images/sjc_1757154544362.png') }}" alt="SJC Logo" class="landing-logo mb-4">
+                    <div class="logo-container mb-4">
+                        <img src="{{ url_for('static', filename='images/sjc-logo.png') }}" alt="SJC Logo" class="sjc-logo-main mb-3" style="width: 80px; height: 80px;">
+                        <img src="{{ url_for('static', filename='images/sjc_1757154544362.png') }}" alt="EmotionTrack Logo" class="landing-logo">
+                    </div>
                     <h1 class="display-4 fw-bold mb-4">EmotionTrack</h1>
                     <h2 class="h3 mb-4">Mental Wellness Platform</h2>
                     <p class="lead mb-4">Your journey to better mental health starts here. Track your emotions, access professional guidance, and build resilience with our comprehensive wellness tools.</p>
