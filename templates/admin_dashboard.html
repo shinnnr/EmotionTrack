@@ -149,52 +149,6 @@
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <h5 class="card-title fw-bold mb-4">
-                        <i class="fas fa-bolt text-warning me-2"></i>
-                        Quick Actions
-                    </h5>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <a href="{{ url_for('admin.messages') }}" class="btn btn-outline-primary w-100 py-3">
-                                <i class="fas fa-envelope fa-2x d-block mb-2"></i>
-                                <span class="fw-bold">View Messages</span>
-                                {% if unread_messages > 0 %}
-                                    <span class="badge bg-danger">{{ unread_messages }}</span>
-                                {% endif %}
-                            </a>
-                        </div>
-                        
-                        <div class="col-md-3">
-                            <button class="btn btn-outline-success w-100 py-3" onclick="exportData()">
-                                <i class="fas fa-download fa-2x d-block mb-2"></i>
-                                <span class="fw-bold">Export Data</span>
-                            </button>
-                        </div>
-                        
-                        <div class="col-md-3">
-                            <button class="btn btn-outline-info w-100 py-3" onclick="generateReport()">
-                                <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
-                                <span class="fw-bold">Generate Report</span>
-                            </button>
-                        </div>
-                        
-                        <div class="col-md-3">
-                            <button class="btn btn-outline-warning w-100 py-3" onclick="viewAnalytics()">
-                                <i class="fas fa-analytics fa-2x d-block mb-2"></i>
-                                <span class="fw-bold">View Analytics</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
