@@ -596,6 +596,36 @@ def send_message(user_id):
     
     return jsonify({'success': True, 'message': 'Message sent successfully'})
 
+
+@main_bp.route('/api/change-password', methods=['POST'])
+@login_required
+def change_password():
+    try:
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        
+        if not current_password or not new_password:
+            return jsonify({'success': False, 'message': 'Both current and new passwords are required'})
+        
+        # Verify current password
+        if not check_password_hash(current_user.password_hash, current_password):
+            return jsonify({'success': False, 'message': 'Current password is incorrect'})
+        
+        # Validate new password length
+        if len(new_password) < 6:
+            return jsonify({'success': False, 'message': 'New password must be at least 6 characters long'})
+        
+        # Update password
+        current_user.password_hash = generate_password_hash(new_password)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Password updated successfully'})
+        
+    except Exception as e:
+        print(f"Error changing password: {e}")
+        return jsonify({'success': False, 'message': 'An error occurred while updating password'})
+
+
 # Admin API routes
 @admin_bp.route('/api/unread-messages-count')
 @login_required
