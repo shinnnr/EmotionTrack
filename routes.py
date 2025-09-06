@@ -400,6 +400,62 @@ def get_dass_insights():
         }
     })
 
+@api_bp.route('/wellness-insights')
+@login_required
+def get_wellness_insights():
+    logs = MoodLog.query.filter_by(id=current_user.id).all()
+    
+    if not logs:
+        return jsonify({'has_data': False})
+    
+    from collections import Counter
+    
+    # Calculate insights
+    emotions = [log.emotion for log in logs]
+    energy_levels = [log.energy for log in logs]
+    sleep_hours = [log.sleep for log in logs]
+    triggers = [log.triggers for log in logs]
+    
+    # Most common emotion
+    emotion_counts = Counter(emotions)
+    most_common_emotion = emotion_counts.most_common(1)[0][0] if emotion_counts else 'N/A'
+    
+    # Average energy and sleep
+    avg_energy = sum(energy_levels) / len(energy_levels) if energy_levels else 0
+    avg_sleep = sum(sleep_hours) / len(sleep_hours) if sleep_hours else 0
+    
+    # Most common trigger
+    trigger_counts = Counter(triggers)
+    main_trigger = trigger_counts.most_common(1)[0][0] if trigger_counts else 'N/A'
+    
+    return jsonify({
+        'has_data': True,
+        'most_common_emotion': most_common_emotion,
+        'avg_energy': avg_energy,
+        'avg_sleep': avg_sleep,
+        'main_trigger': main_trigger
+    })
+
+@api_bp.route('/dass21-results')
+@login_required
+def get_dass21_results():
+    results = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).all()
+    
+    results_data = []
+    for result in results:
+        results_data.append({
+            'id': result.id,
+            'depression_score': result.depression_score,
+            'anxiety_score': result.anxiety_score,
+            'stress_score': result.stress_score,
+            'depression_severity': result.depression_severity,
+            'anxiety_severity': result.anxiety_severity,
+            'stress_severity': result.stress_severity,
+            'created_at': result.created_at.strftime('%Y-%m-%d %H:%M')
+        })
+    
+    return jsonify(results_data)
+
 # Admin routes
 @admin_bp.route('/dashboard')
 @login_required

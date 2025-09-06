@@ -38,6 +38,11 @@
                         </div>
                         
                         <div class="info-item mb-3">
+                            <label class="fw-bold text-muted">Birthday</label>
+                            <p class="mb-0">{{ user.birthday.strftime('%B %d, %Y') if user.birthday else 'Not specified' }}</p>
+                        </div>
+                        
+                        <div class="info-item mb-3">
                             <label class="fw-bold text-muted">Gender</label>
                             <p class="mb-0">{{ user.gender or 'Not specified' }}</p>
                         </div>
@@ -70,7 +75,7 @@
                     
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <button class="btn btn-outline-primary w-100 py-3" onclick="viewJournalEntries()">
+                            <button class="btn btn-outline-primary w-100 py-3" id="journalEntriesBtn">
                                 <i class="fas fa-book-open fa-2x mb-2 d-block"></i>
                                 <span class="fw-bold">View Journal Entries</span>
                                 <small class="d-block text-muted">Review your emotion logs</small>
@@ -78,7 +83,7 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <button class="btn btn-outline-info w-100 py-3" onclick="viewWellnessInsights()">
+                            <button class="btn btn-outline-info w-100 py-3" id="wellnessInsightsBtn">
                                 <i class="fas fa-chart-pie fa-2x mb-2 d-block"></i>
                                 <span class="fw-bold">Wellness Insights</span>
                                 <small class="d-block text-muted">Analyze your patterns</small>
@@ -86,7 +91,7 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <button class="btn btn-outline-success w-100 py-3" onclick="viewDASSInsights()">
+                            <button class="btn btn-outline-success w-100 py-3" id="dassResultsBtn">
                                 <i class="fas fa-brain fa-2x mb-2 d-block"></i>
                                 <span class="fw-bold">DASS-21 Results</span>
                                 <small class="d-block text-muted">Mental health assessment</small>
@@ -179,5 +184,269 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    console.log('Profile page loaded successfully');
+    
+    // Profile Action handlers
+    document.getElementById('journalEntriesBtn').addEventListener('click', function() {
+        showContentArea('journal-entries', 'Your Emotion Journal Entries');
+        loadJournalEntries();
+    });
+    
+    document.getElementById('wellnessInsightsBtn').addEventListener('click', function() {
+        showContentArea('wellness-insights', 'Wellness Insights & Analytics');
+        loadWellnessInsights();
+    });
+    
+    document.getElementById('dassResultsBtn').addEventListener('click', function() {
+        showContentArea('dass-results', 'DASS-21 Assessment Results');
+        loadDASSResults();
+    });
+    
+    function showContentArea(contentId, title) {
+        // Hide all content areas
+        const contentAreas = document.querySelectorAll('.content-area');
+        contentAreas.forEach(area => area.style.display = 'none');
+        
+        // Show or create the requested content area
+        let contentArea = document.getElementById(contentId);
+        if (!contentArea) {
+            contentArea = createContentArea(contentId, title);
+        }
+        contentArea.style.display = 'block';
+        
+        // Scroll to content area
+        contentArea.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function createContentArea(contentId, title) {
+        const container = document.querySelector('.container-fluid');
+        const contentArea = document.createElement('div');
+        contentArea.id = contentId;
+        contentArea.className = 'content-area row mt-4';
+        contentArea.innerHTML = \`
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="card-title fw-bold mb-0">
+                                <i class="fas fa-chart-line text-clsu-green me-2"></i>
+                                \${title}
+                            </h5>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="this.closest('.content-area').style.display='none'">
+                                <i class="fas fa-times"></i> Close
+                            </button>
+                        </div>
+                        <div class="content-body">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-clsu-green" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        \`;
+        container.appendChild(contentArea);
+        return contentArea;
+    }
+    
+    function loadJournalEntries() {
+        const contentBody = document.querySelector('#journal-entries .content-body');
+        
+        fetch('/api/mood-logs')
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    contentBody.innerHTML = \`
+                        <div class="text-center py-5">
+                            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                            <h5>No journal entries found</h5>
+                            <p class="text-muted">Start tracking your emotions to see entries here.</p>
+                            <a href="/emotion-log" class="btn btn-clsu-green">
+                                <i class="fas fa-plus me-2"></i>Create First Entry
+                            </a>
+                        </div>
+                    \`;
+                } else {
+                    let entriesHtml = '<div class="row g-3">';
+                    data.slice(0, 10).forEach(entry => {
+                        entriesHtml += \`
+                            <div class="col-md-6">
+                                <div class="card border-start border-4 border-clsu-green">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="fw-bold">\${entry.emotion}</h6>
+                                            <small class="text-muted">\${new Date(entry.log_date).toLocaleDateString()}</small>
+                                        </div>
+                                        <p class="mb-2"><strong>Energy:</strong> \${entry.energy}/10</p>
+                                        <p class="mb-2"><strong>Sleep:</strong> \${entry.sleep} hours</p>
+                                        <p class="mb-2"><strong>Trigger:</strong> \${entry.triggers}</p>
+                                        \${entry.gratitude ? \`<p class="mb-0 text-muted small">"\${entry.gratitude}"</p>\` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        \`;
+                    });
+                    entriesHtml += '</div>';
+                    if (data.length > 10) {
+                        entriesHtml += \`<div class="mt-3 text-center"><small class="text-muted">Showing 10 most recent entries (\${data.length} total)</small></div>\`;
+                    }
+                    contentBody.innerHTML = entriesHtml;
+                }
+            })
+            .catch(error => {
+                contentBody.innerHTML = \`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Error loading journal entries. Please try again.
+                    </div>
+                \`;
+            });
+    }
+    
+    function loadWellnessInsights() {
+        const contentBody = document.querySelector('#wellness-insights .content-body');
+        
+        fetch('/api/wellness-insights')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.has_data) {
+                    contentBody.innerHTML = \`
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                            <h5>Not enough data for insights</h5>
+                            <p class="text-muted">Log more emotions to see personalized wellness insights.</p>
+                            <a href="/emotion-log" class="btn btn-clsu-green">
+                                <i class="fas fa-plus me-2"></i>Log Emotions
+                            </a>
+                        </div>
+                    \`;
+                } else {
+                    contentBody.innerHTML = \`
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="text-clsu-green">\${data.most_common_emotion}</h3>
+                                        <p class="mb-0">Most Common Emotion</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="text-clsu-green">\${data.avg_energy.toFixed(1)}/10</h3>
+                                        <p class="mb-0">Average Energy Level</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="text-clsu-green">\${data.avg_sleep.toFixed(1)} hrs</h3>
+                                        <p class="mb-0">Average Sleep</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="text-clsu-green">\${data.main_trigger}</h3>
+                                        <p class="mb-0">Main Trigger</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    \`;
+                }
+            })
+            .catch(error => {
+                contentBody.innerHTML = \`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Error loading wellness insights. Please try again.
+                    </div>
+                \`;
+            });
+    }
+    
+    function loadDASSResults() {
+        const contentBody = document.querySelector('#dass-results .content-body');
+        
+        fetch('/api/dass21-results')
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    contentBody.innerHTML = \`
+                        <div class="text-center py-5">
+                            <i class="fas fa-brain fa-3x text-muted mb-3"></i>
+                            <h5>No DASS-21 results found</h5>
+                            <p class="text-muted">Take the DASS-21 assessment to see your mental health insights.</p>
+                            <a href="/dass21-quiz" class="btn btn-clsu-green">
+                                <i class="fas fa-clipboard-check me-2"></i>Take Assessment
+                            </a>
+                        </div>
+                    \`;
+                } else {
+                    let resultsHtml = '<div class="row g-3">';
+                    data.slice(0, 5).forEach(result => {
+                        resultsHtml += \`
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 class="fw-bold mb-0">Assessment Results</h6>
+                                            <small class="text-muted">\${new Date(result.created_at).toLocaleDateString()}</small>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <h5 class="text-danger">\${result.depression_score}</h5>
+                                                    <p class="mb-1">Depression</p>
+                                                    <small class="text-muted">\${result.depression_severity}</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <h5 class="text-warning">\${result.anxiety_score}</h5>
+                                                    <p class="mb-1">Anxiety</p>
+                                                    <small class="text-muted">\${result.anxiety_severity}</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <h5 class="text-info">\${result.stress_score}</h5>
+                                                    <p class="mb-1">Stress</p>
+                                                    <small class="text-muted">\${result.stress_severity}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        \`;
+                    });
+                    resultsHtml += '</div>';
+                    if (data.length > 5) {
+                        resultsHtml += \`<div class="mt-3 text-center"><small class="text-muted">Showing 5 most recent results (\${data.length} total)</small></div>\`;
+                    }
+                    contentBody.innerHTML = resultsHtml;
+                }
+            })
+            .catch(error => {
+                contentBody.innerHTML = \`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Error loading DASS-21 results. Please try again.
+                    </div>
+                \`;
+            });
+    }
+</script>
 {% endblock %}
