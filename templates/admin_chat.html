@@ -373,7 +373,9 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 
-<!-- Include admin.js for export functionality -->
+{% endblock %}
+
+{% block extra_js %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 <script>
 // Initialize admin functions for this page
