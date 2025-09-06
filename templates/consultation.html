@@ -32,14 +32,16 @@
                     {% if messages %}
                         {% for message in messages %}
                             <!-- Student Message -->
-                            <div class="message-bubble student-message">
-                                <div class="message-content">
-                                    <div class="message-text">{{ message.message_text }}</div>
-                                    <div class="message-time">
-                                        {{ message.created_at.strftime('%I:%M %p') }}
+                            {% if message.message_text and not message.message_text.startswith('[ADMIN]') %}
+                                <div class="message-bubble student-message">
+                                    <div class="message-content">
+                                        <div class="message-text">{{ message.message_text }}</div>
+                                        <div class="message-time">
+                                            {{ message.created_at.strftime('%I:%M %p') }}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            {% endif %}
                             
                             <!-- Admin Response -->
                             {% if message.admin_response %}
@@ -120,29 +122,6 @@
                 </div>
             </div>
             
-            <!-- Support Information -->
-            <div class="card border-0 shadow-sm mt-3">
-                <div class="card-body p-3">
-                    <h6 class="fw-bold text-clsu-green mb-2">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Support Information
-                    </h6>
-                    <div class="row g-2 small">
-                        <div class="col-md-6">
-                            <i class="fas fa-shield-alt text-success me-1"></i> All conversations are confidential
-                        </div>
-                        <div class="col-md-6">
-                            <i class="fas fa-clock text-info me-1"></i> Response within 24 hours
-                        </div>
-                        <div class="col-md-6">
-                            <i class="fas fa-exclamation-triangle text-warning me-1"></i> For emergencies: 911
-                        </div>
-                        <div class="col-md-6">
-                            <i class="fas fa-calendar text-primary me-1"></i> Office hours: Mon-Fri, 8AM-5PM
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
