@@ -229,8 +229,7 @@
         const changePassBtn = document.getElementById('changePasswordBtn');
         if (changePassBtn) {
             changePassBtn.addEventListener('click', function() {
-                showContentArea('change-password', 'Change Password');
-                loadChangePasswordForm();
+                showChangePasswordModal();
             });
         }
     });
@@ -487,15 +486,83 @@
             });
     }
     
+    function showChangePasswordModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = \`
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Change Password</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="changePasswordForm">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" name="new_password" required minlength="6">
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="submitPasswordChange()">Change Password</button>
+                    </div>
+                </div>
+            </div>
+        \`;
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+        
+        modal.addEventListener('hidden.bs.modal', () => {
+            document.body.removeChild(modal);
+        });
+    }
+    
+    function submitPasswordChange() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (newPassword !== confirmPassword) {
+            alert('New passwords do not match');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('current_password', currentPassword);
+        formData.append('new_password', newPassword);
+        
+        fetch('/api/change-password', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Password changed successfully!');
+                bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while changing password');
+        });
+    }
+    
     function loadChangePasswordForm() {
-        const changePasswordArea = document.getElementById('change-password');
-        if (!changePasswordArea) return;
-        
-        const contentBody = changePasswordArea.querySelector('.content-body');
-        
-        contentBody.innerHTML = `
-            <div class="row justify-content-center">
-                <div class="col-md-6">
+        // Legacy function - replaced by modal
                     <form id="changePasswordForm">
                         <div class="mb-3">
                             <label for="currentPassword" class="form-label fw-bold">Current Password</label>

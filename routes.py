@@ -267,8 +267,8 @@ def consultation():
         flash('Your message has been sent to the guidance office.', 'success')
         return redirect(url_for('main.consultation'))
     
-    # Get user's previous messages
-    messages = StudentMessage.query.filter_by(sender_user_id=current_user.id).order_by(desc(StudentMessage.created_at)).all()
+    # Get user's previous messages (ordered oldest to newest like admin side)
+    messages = StudentMessage.query.filter_by(sender_user_id=current_user.id).order_by(StudentMessage.created_at).all()
     
     return render_template('consultation.html', form=form, messages=messages)
 
