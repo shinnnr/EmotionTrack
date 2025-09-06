@@ -262,25 +262,26 @@ function showNewMessageNotification(count) {
 
 function initializeDataExport() {
     // Set up data export functionality
-    if (typeof window.exportData === 'undefined') {
-        window.exportData = async function() {
-            const exportBtn = document.querySelector('.btn-outline-success');
-            const hideLoading = MindTrack.showLoading(exportBtn, 'Exporting...');
-            
-            try {
-                const exportOptions = await showExportOptionsModal();
-                if (exportOptions) {
-                    await performDataExport(exportOptions);
-                    MindTrack.showAlert('Data exported successfully!', 'success');
+    window.exportData = async function() {
+        try {
+            // Remove any existing export modals first
+            const existingModals = document.querySelectorAll('.modal');
+            existingModals.forEach(modal => {
+                if (modal.innerHTML.includes('Export Data Options')) {
+                    modal.remove();
                 }
-            } catch (error) {
-                console.error('Export error:', error);
-                MindTrack.showAlert('Export failed. Please try again.', 'danger');
-            } finally {
-                hideLoading();
+            });
+            
+            const exportOptions = await showExportOptionsModal();
+            if (exportOptions) {
+                await performDataExport(exportOptions);
+                alert('Data exported successfully!');
             }
-        };
-    }
+        } catch (error) {
+            console.error('Export error:', error);
+            alert('Export failed. Please try again.');
+        }
+    };
 }
 
 function showExportOptionsModal() {

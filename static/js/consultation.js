@@ -1,23 +1,163 @@
 // Consultation Page JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    initializeConsultationFeatures();
-    initializeMessagePolling();
-    initializeCrisisResources();
+    initializeChat();
+    scrollToBottom();
 });
 
-function initializeConsultationFeatures() {
-    const form = document.querySelector('form[action*="consultation"]');
-    const messageTextarea = form?.querySelector('textarea[name="message_text"]');
+function initializeChat() {
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.querySelector('#message_text');
+    const chatContainer = document.getElementById('chatContainer');
     
-    if (messageTextarea) {
-        enhanceMessageTextarea(messageTextarea);
-        setupFormValidation(form);
-        addTypingIndicator(messageTextarea);
-        addCharacterCounter(messageTextarea);
+    if (messageForm) {
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            sendMessage();
+        });
     }
     
-    setupMessageHistory();
-    addQuickActions();
+    // Auto-resize textarea
+    if (messageInput) {
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+        
+        // Send message on Enter key (but not Shift+Enter)
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
+}
+
+async function sendMessage() {
+    const messageInput = document.querySelector('#message_text');
+    const messageText = messageInput.value.trim();
+    
+    if (!messageText) {
+        return;
+    }
+    
+    // Show loading state
+    const sendButton = document.querySelector('.btn-send');
+    const originalContent = sendButton.innerHTML;
+    sendButton.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div>';
+    sendButton.disabled = true;
+    
+    try {
+        const formData = new FormData();
+        formData.append('message_text', messageText);
+        formData.append('csrf_token', document.querySelector('[name=csrf_token]').value);
+        
+        const response = await fetch('/consultation', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            // Add message to chat immediately for better UX
+            addMessageToChat(messageText, 'student');
+            
+            // Clear input
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            // Show success message
+            showNotification('Message sent successfully!', 'success');
+            
+            // Scroll to bottom
+            scrollToBottom();
+        } else {
+            throw new Error('Failed to send message');
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        showNotification('Failed to send message. Please try again.', 'error');
+    } finally {
+        // Restore button
+        sendButton.innerHTML = originalContent;
+        sendButton.disabled = false;
+    }
+}
+
+function addMessageToChat(messageText, type) {
+    const chatContainer = document.getElementById('chatContainer');
+    const messageDiv = document.createElement('div');
+    
+    const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    if (type === 'student') {
+        messageDiv.className = 'message-bubble student-message';
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                <div class="message-text">${messageText}</div>
+                <div class="message-time">${currentTime}</div>
+            </div>
+        `;
+    } else {
+        messageDiv.className = 'message-bubble admin-message';
+        messageDiv.innerHTML = `
+            <div class="message-avatar">
+                <div class="avatar-sm">
+                    <div class="avatar-title rounded-circle bg-clsu-green text-white">GC</div>
+                </div>
+            </div>
+            <div class="message-content">
+                <div class="message-sender">Guidance Counselor</div>
+                <div class="message-text">${messageText}</div>
+                <div class="message-time">${currentTime}</div>
+            </div>
+        `;
+    }
+    
+    // Remove empty chat message if it exists
+    const emptyChat = chatContainer.querySelector('.empty-chat');
+    if (emptyChat) {
+        emptyChat.remove();
+    }
+    
+    chatContainer.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function scrollToBottom() {
+    const chatContainer = document.getElementById('chatContainer');
+    if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 1060;
+        max-width: 400px;
+    `;
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 150);
+        }
+    }, 3000);
 }
 
 function enhanceMessageTextarea(textarea) {

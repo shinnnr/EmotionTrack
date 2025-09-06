@@ -179,7 +179,7 @@
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
     .sidebar {
         transform: translateX(-100%);
     }
@@ -198,6 +198,10 @@
     
     body.sidebar-open {
         overflow: hidden;
+    }
+    
+    .main-content.with-sidebar {
+        margin-left: 0 !important;
     }
 }
 

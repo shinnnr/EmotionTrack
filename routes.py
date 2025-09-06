@@ -436,9 +436,38 @@ def messages():
         flash('Access denied. Admin privileges required.', 'error')
         return redirect(url_for('main.home'))
     
-    messages = db.session.query(StudentMessage, User).join(User, StudentMessage.sender_user_id == User.id).order_by(desc(StudentMessage.created_at)).all()
+    # Get all students who have sent messages, grouped by student
+    students_with_messages = db.session.query(User).join(StudentMessage, User.id == StudentMessage.sender_user_id).distinct().all()
     
-    return render_template('admin_messages.html', messages=messages)
+    # Get all students for the complete list
+    all_students = User.query.filter_by(is_admin=False).all()
+    
+    student_conversations = []
+    
+    for student in all_students:
+        # Get latest message for this student
+        latest_message = StudentMessage.query.filter_by(sender_user_id=student.id).order_by(desc(StudentMessage.created_at)).first()
+        
+        # Count total messages
+        message_count = StudentMessage.query.filter_by(sender_user_id=student.id).count()
+        
+        # Count unread messages
+        unread_count = StudentMessage.query.filter_by(sender_user_id=student.id, is_read=False).count()
+        
+        conversation = {
+            'user': student,
+            'latest_message': latest_message,
+            'message_count': message_count,
+            'unread_count': unread_count,
+            'has_unread': unread_count > 0
+        }
+        
+        student_conversations.append(conversation)
+    
+    # Sort by latest activity (students with recent messages first)
+    student_conversations.sort(key=lambda x: x['latest_message'].created_at if x['latest_message'] else datetime.min, reverse=True)
+    
+    return render_template('admin_messages.html', student_conversations=student_conversations)
 
 @admin_bp.route('/respond-message/<int:message_id>', methods=['POST'])
 @login_required

@@ -28,67 +28,79 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    {% if messages %}
+                    {% if student_conversations %}
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
                                         <th>Student</th>
-                                        <th>Message</th>
-                                        <th>Date</th>
+                                        <th>Last Message</th>
+                                        <th>Messages Count</th>
+                                        <th>Last Activity</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for message, user in messages %}
-                                    <tr class="{% if not message.is_read %}table-warning{% endif %}">
+                                    {% for conversation in student_conversations %}
+                                    <tr class="{% if conversation.has_unread %}table-warning{% endif %}">
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-3">
                                                     <div class="avatar-title rounded-circle bg-primary text-white">
-                                                        {{ user.firstname[0] }}{{ user.lastname[0] }}
+                                                        {{ conversation.user.firstname[0] }}{{ conversation.user.lastname[0] }}
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-0">{{ user.full_name }}</h6>
-                                                    <small class="text-muted">{{ user.email }}</small>
+                                                    <h6 class="mb-0">{{ conversation.user.full_name }}</h6>
+                                                    <small class="text-muted">{{ conversation.user.email }}</small>
+                                                    <div class="small text-muted">
+                                                        {{ conversation.user.strand }} - Grade {{ conversation.user.grade_level }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="message-preview">
-                                                {{ message.message_text[:100] }}
-                                                {% if message.message_text|length > 100 %}...{% endif %}
+                                                {% if conversation.latest_message %}
+                                                    {{ conversation.latest_message.message_text[:80] }}
+                                                    {% if conversation.latest_message.message_text|length > 80 %}...{% endif %}
+                                                {% else %}
+                                                    <em class="text-muted">No messages yet</em>
+                                                {% endif %}
                                             </div>
                                         </td>
                                         <td>
-                                            <small class="text-muted">
-                                                {{ message.created_at.strftime('%Y-%m-%d %H:%M') }}
-                                            </small>
-                                        </td>
-                                        <td>
-                                            {% if message.is_read %}
-                                                <span class="badge bg-success">Read</span>
-                                                {% if message.admin_response %}
-                                                    <span class="badge bg-info">Responded</span>
-                                                {% endif %}
-                                            {% else %}
-                                                <span class="badge bg-warning">Unread</span>
+                                            <span class="badge bg-info">{{ conversation.message_count }}</span>
+                                            {% if conversation.unread_count > 0 %}
+                                                <span class="badge bg-warning">{{ conversation.unread_count }} new</span>
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <div class="btn-group">
-                                                <button class="btn btn-sm btn-outline-primary" 
-                                                        onclick="viewMessage({{ message.id }}, '{{ user.full_name }}', '{{ message.message_text|e }}', '{{ message.admin_response or '' }}', {{ message.is_read|lower }})">
-                                                    <i class="fas fa-eye"></i>
-                                                    View
-                                                </button>
-                                                <a href="{{ url_for('admin.student_chat', user_id=user.id) }}" class="btn btn-sm btn-success">
-                                                    <i class="fas fa-comments"></i>
-                                                    Chat
-                                                </a>
-                                            </div>
+                                            {% if conversation.latest_message %}
+                                                <small class="text-muted">
+                                                    {{ conversation.latest_message.created_at.strftime('%m/%d %H:%M') }}
+                                                </small>
+                                            {% else %}
+                                                <small class="text-muted">Never</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if conversation.has_unread %}
+                                                <span class="badge bg-warning">New Messages</span>
+                                            {% elif conversation.latest_message and conversation.latest_message.admin_response %}
+                                                <span class="badge bg-success">Responded</span>
+                                            {% elif conversation.latest_message %}
+                                                <span class="badge bg-secondary">Pending</span>
+                                            {% else %}
+                                                <span class="badge bg-light text-dark">No Activity</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('admin.student_chat', user_id=conversation.user.id) }}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-comments"></i>
+                                                Chat
+                                            </a>
                                         </td>
                                     </tr>
                                     {% endfor %}

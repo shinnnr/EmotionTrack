@@ -76,10 +76,10 @@
                 
                 <!-- Message Input -->
                 <div class="message-input-container">
-                    <form method="POST" action="{{ url_for('main.consultation') }}" class="d-flex align-items-end gap-3">
+                    <form id="messageForm" class="d-flex align-items-end gap-3">
                         {{ form.hidden_tag() }}
                         <div class="flex-grow-1">
-                            {{ form.message_text(class="form-control message-input", placeholder="Type your message...", rows="1") }}
+                            {{ form.message_text(class="form-control message-input", placeholder="Type your message...", rows="3") }}
                             {% if form.message_text.errors %}
                                 <div class="text-danger mt-1">
                                     {% for error in form.message_text.errors %}
