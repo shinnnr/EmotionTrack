@@ -586,8 +586,8 @@ def send_message(user_id):
     # We'll use the same StudentMessage model but indicate it's from admin
     message = StudentMessage()
     message.sender_user_id = user_id  # Keep the student as the "sender" for filtering
-    message.message_text = f"[ADMIN] {message_text}"  # Prefix to indicate admin message
-    message.admin_response = message_text  # Also store in admin_response field
+    message.message_text = ""  # Empty for admin messages, we only use admin_response
+    message.admin_response = message_text  # Store the actual admin message
     message.is_read = True
     message.responded_at = datetime.utcnow()
     

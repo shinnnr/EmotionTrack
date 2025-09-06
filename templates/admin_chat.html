@@ -35,27 +35,22 @@
                 <div class="chat-container" id="chatContainer">
                     {% if messages %}
                         {% for message in messages %}
-                            <!-- Student Message -->
-                            <div class="message-bubble student-message">
-                                <div class="message-content">
-                                    <div class="message-text">{{ message.message_text }}</div>
-                                    <div class="message-time">
-                                        {{ message.created_at.strftime('%I:%M %p') }}
-                                        <br><small class="text-muted">{{ message.created_at.strftime('%B %d, %Y') }}</small>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Admin Response -->
-                            {% if message.admin_response %}
-                                <div class="message-bubble admin-message">
-                                    <div class="message-avatar">
-                                        <div class="avatar-sm">
-                                            <div class="avatar-title rounded-circle bg-success text-white">
-                                                GC
-                                            </div>
+                            {% if message.message_text and not message.message_text.startswith('[ADMIN]') %}
+                                <!-- Student Message (left side) -->
+                                <div class="message-bubble student-message">
+                                    <div class="message-content">
+                                        <div class="message-text">{{ message.message_text }}</div>
+                                        <div class="message-time">
+                                            {{ message.created_at.strftime('%I:%M %p') }}
+                                            <br><small class="text-muted">{{ message.created_at.strftime('%B %d, %Y') }}</small>
                                         </div>
                                     </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if message.admin_response %}
+                                <!-- Admin Response (right side) -->
+                                <div class="message-bubble admin-message">
                                     <div class="message-content">
                                         <div class="message-sender">You (Guidance Counselor)</div>
                                         <div class="message-text">{{ message.admin_response }}</div>
@@ -64,6 +59,13 @@
                                                 {{ message.responded_at.strftime('%I:%M %p') }}
                                                 <br><small class="text-muted">{{ message.responded_at.strftime('%B %d, %Y') }}</small>
                                             {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="message-avatar">
+                                        <div class="avatar-sm">
+                                            <div class="avatar-title rounded-circle bg-success text-white">
+                                                GC
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -258,14 +260,14 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .admin-message {
-    justify-content: flex-start;
+    justify-content: flex-end;
 }
 
 .admin-message .message-content {
     background: #28a745;
     color: white;
     padding: 0.875rem 1.25rem;
-    border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
+    border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
     max-width: 70%;
     box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
 }
@@ -284,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .admin-message .message-time {
-    text-align: left;
+    text-align: right;
 }
 
 .message-sender {
