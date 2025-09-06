@@ -198,27 +198,41 @@
 
 {% block extra_js %}
 <script>
-    console.log('Profile page loaded successfully');
-    
-    // Profile Action handlers
-    document.getElementById('journalEntriesBtn').addEventListener('click', function() {
-        showContentArea('journal-entries', 'Your Emotion Journal Entries');
-        loadJournalEntries();
-    });
-    
-    document.getElementById('wellnessInsightsBtn').addEventListener('click', function() {
-        showContentArea('wellness-insights', 'Wellness Insights & Analytics');
-        loadWellnessInsights();
-    });
-    
-    document.getElementById('dassResultsBtn').addEventListener('click', function() {
-        showContentArea('dass-results', 'DASS-21 Assessment Results');
-        loadDASSResults();
-    });
-    
-    document.getElementById('changePasswordBtn').addEventListener('click', function() {
-        showContentArea('change-password', 'Change Password');
-        loadChangePasswordForm();
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Profile page loaded successfully');
+        
+        // Profile Action handlers
+        const journalBtn = document.getElementById('journalEntriesBtn');
+        if (journalBtn) {
+            journalBtn.addEventListener('click', function() {
+                showContentArea('journal-entries', 'Your Emotion Journal Entries');
+                loadJournalEntries();
+            });
+        }
+        
+        const insightsBtn = document.getElementById('wellnessInsightsBtn');
+        if (insightsBtn) {
+            insightsBtn.addEventListener('click', function() {
+                showContentArea('wellness-insights', 'Wellness Insights & Analytics');
+                loadWellnessInsights();
+            });
+        }
+        
+        const dassBtn = document.getElementById('dassResultsBtn');
+        if (dassBtn) {
+            dassBtn.addEventListener('click', function() {
+                showContentArea('dass-results', 'DASS-21 Assessment Results');
+                loadDASSResults();
+            });
+        }
+        
+        const changePassBtn = document.getElementById('changePasswordBtn');
+        if (changePassBtn) {
+            changePassBtn.addEventListener('click', function() {
+                showContentArea('change-password', 'Change Password');
+                loadChangePasswordForm();
+            });
+        }
     });
     
     function showContentArea(contentId, title) {
@@ -272,7 +286,10 @@
     }
     
     function loadJournalEntries() {
-        const contentBody = document.querySelector('#journal-entries .content-body');
+        const journalArea = document.getElementById('journal-entries');
+        if (!journalArea) return;
+        
+        const contentBody = journalArea.querySelector('.content-body');
         
         fetch('/api/mood-logs')
             .then(response => response.json())
@@ -326,7 +343,10 @@
     }
     
     function loadWellnessInsights() {
-        const contentBody = document.querySelector('#wellness-insights .content-body');
+        const insightsArea = document.getElementById('wellness-insights');
+        if (!insightsArea) return;
+        
+        const contentBody = insightsArea.querySelector('.content-body');
         
         fetch('/api/wellness-insights')
             .then(response => response.json())
@@ -392,7 +412,10 @@
     }
     
     function loadDASSResults() {
-        const contentBody = document.querySelector('#dass-results .content-body');
+        const dassArea = document.getElementById('dass-results');
+        if (!dassArea) return;
+        
+        const contentBody = dassArea.querySelector('.content-body');
         
         fetch('/api/dass21-results')
             .then(response => response.json())
@@ -465,7 +488,10 @@
     }
     
     function loadChangePasswordForm() {
-        const contentBody = document.querySelector('#change-password .content-body');
+        const changePasswordArea = document.getElementById('change-password');
+        if (!changePasswordArea) return;
+        
+        const contentBody = changePasswordArea.querySelector('.content-body');
         
         contentBody.innerHTML = `
             <div class="row justify-content-center">
