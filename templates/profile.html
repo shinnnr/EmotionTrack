@@ -60,6 +60,16 @@
                             <p class="mb-0">{{ user.created_at.strftime('%B %d, %Y') }}</p>
                         </div>
                     </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="profile-actions">
+                        <h6 class="fw-bold text-muted mb-3">Account Management</h6>
+                        <button class="btn btn-outline-primary btn-sm w-100" id="changePasswordBtn">
+                            <i class="fas fa-key me-2"></i>
+                            Change Password
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -204,6 +214,11 @@
     document.getElementById('dassResultsBtn').addEventListener('click', function() {
         showContentArea('dass-results', 'DASS-21 Assessment Results');
         loadDASSResults();
+    });
+    
+    document.getElementById('changePasswordBtn').addEventListener('click', function() {
+        showContentArea('change-password', 'Change Password');
+        loadChangePasswordForm();
     });
     
     function showContentArea(contentId, title) {
@@ -447,6 +462,104 @@
                     </div>
                 \`;
             });
+    }
+    
+    function loadChangePasswordForm() {
+        const contentBody = document.querySelector('#change-password .content-body');
+        
+        contentBody.innerHTML = `
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label fw-bold">Current Password</label>
+                            <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label fw-bold">New Password</label>
+                            <input type="password" class="form-control" id="newPassword" name="new_password" required minlength="6">
+                            <small class="form-text text-muted">Password must be at least 6 characters long</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label fw-bold">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-clsu-green">
+                                <i class="fas fa-save me-2"></i>
+                                Update Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        // Add form submission handler
+        const form = document.getElementById('changePasswordForm');
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate passwords match
+            if (newPassword !== confirmPassword) {
+                showAlert('New passwords do not match', 'danger');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+            submitBtn.disabled = true;
+            
+            try {
+                const formData = new FormData();
+                formData.append('current_password', currentPassword);
+                formData.append('new_password', newPassword);
+                
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Password updated successfully!', 'success');
+                    form.reset();
+                } else {
+                    showAlert(result.message || 'Failed to update password', 'danger');
+                }
+            } catch (error) {
+                showAlert('An error occurred. Please try again.', 'danger');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+    
+    function showAlert(message, type) {
+        const alertHtml = \`
+            <div class="alert alert-\${type} alert-dismissible fade show" role="alert">
+                \${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        \`;
+        
+        // Insert at the top of the content area
+        const contentArea = document.querySelector('.content-area:not([style*="display: none"])');
+        if (contentArea) {
+            const cardBody = contentArea.querySelector('.card-body');
+            cardBody.insertAdjacentHTML('afterbegin', alertHtml);
+        }
     }
 </script>
 {% endblock %}
