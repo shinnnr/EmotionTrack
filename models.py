@@ -42,7 +42,7 @@ class MoodLog(db.Model):
     __tablename__ = 'mood_logs'
     
     log_id = db.Column(db.Integer, primary_key=True)
-    id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     emotion = db.Column(db.String(50), nullable=False)
     sleep = db.Column(db.Float, nullable=False)
     energy = db.Column(db.Integer, nullable=False)
@@ -52,7 +52,7 @@ class MoodLog(db.Model):
     log_date = db.Column(db.DateTime, default=datetime.utcnow)
     
     def __repr__(self):
-        return f'<MoodLog {self.emotion} by User {self.id}>'
+        return f'<MoodLog {self.emotion} by User {self.user_id}>'
 
 class DASS21Result(db.Model):
     __tablename__ = 'dass21_results'
