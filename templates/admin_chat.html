@@ -288,7 +288,7 @@ async function loadSuggestedResponses() {
                     
                     // Add the suggestion to the textarea
                     if (messageInput.value.trim()) {
-                        messageInput.value += '\\n\\n' + suggestionText;
+                        messageInput.value += '\n\n' + suggestionText;
                     } else {
                         messageInput.value = suggestionText;
                     }
