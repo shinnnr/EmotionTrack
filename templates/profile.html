@@ -195,24 +195,21 @@
         const journalBtn = document.getElementById('journalEntriesBtn');
         if (journalBtn) {
             journalBtn.addEventListener('click', function() {
-                showContentArea('journal-entries', 'Your Emotion Journal Entries');
-                loadJournalEntries();
+                viewJournalEntries();
             });
         }
         
         const insightsBtn = document.getElementById('wellnessInsightsBtn');
         if (insightsBtn) {
             insightsBtn.addEventListener('click', function() {
-                showContentArea('wellness-insights', 'Wellness Insights & Analytics');
-                loadWellnessInsights();
+                viewWellnessInsights();
             });
         }
         
         const dassBtn = document.getElementById('dassResultsBtn');
         if (dassBtn) {
             dassBtn.addEventListener('click', function() {
-                showContentArea('dass-results', 'DASS-21 Assessment Results');
-                loadDASSResults();
+                viewDASSInsights();
             });
         }
         
@@ -569,6 +566,291 @@
         if (contentArea) {
             const cardBody = contentArea.querySelector('.card-body');
             cardBody.insertAdjacentHTML('afterbegin', alertHtml);
+        }
+    }
+    
+    // Modal functions
+    async function viewJournalEntries() {
+        const modal = new bootstrap.Modal(document.getElementById('journalModal'));
+        modal.show();
+        const content = document.getElementById('journalContent');
+        
+        // Show loading state
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading journal entries...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading your journal entries...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/api/mood-logs');
+            const logs = await response.json();
+            
+            if (logs.length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No journal entries yet</h5>
+                        <p class="text-muted">Start logging your emotions to see them here!</p>
+                        <a href="/emotion-log" class="btn btn-clsu-green">Log Your First Entry</a>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group logs by date
+            const groupedLogs = groupLogsByDate(logs);
+            
+            let html = '<div class="journal-entries">';
+            
+            for (const [date, entries] of Object.entries(groupedLogs)) {
+                html += `
+                    <div class="journal-date-group mb-4">
+                        <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            ${formatJournalDate(date)}
+                        </h6>
+                        <div class="entries-grid row g-3">
+                `;
+                
+                entries.forEach(log => {
+                    html += `
+                        <div class="col-md-6">
+                            <div class="card border-start border-4 border-clsu-green">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold">${log.emotion}</h6>
+                                        <small class="text-muted">${new Date(log.log_date).toLocaleDateString()}</small>
+                                    </div>
+                                    <p class="mb-2"><strong>Energy:</strong> ${log.energy}/10</p>
+                                    <p class="mb-2"><strong>Sleep:</strong> ${log.sleep} hours</p>
+                                    <p class="mb-2"><strong>Trigger:</strong> ${log.triggers || 'None specified'}</p>
+                                    ${log.gratitude ? `<p class="mb-0 text-muted small">"${log.gratitude}"</p>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+            
+            html += '</div>';
+            content.innerHTML = html;
+
+        } catch (error) {
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Unable to load journal entries. Please try again later.
+                </div>
+            `;
+        }
+    }
+
+    async function viewWellnessInsights() {
+        const modal = new bootstrap.Modal(document.getElementById('insightsModal'));
+        modal.show();
+        const content = document.getElementById('insightsContent');
+        
+        // Show loading state
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-info" role="status">
+                    <span class="visually-hidden">Loading insights...</span>
+                </div>
+                <p class="mt-2 text-muted">Analyzing your wellness patterns...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/api/wellness-insights');
+            const data = await response.json();
+            
+            if (!data.has_data) {
+                content.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                        <h5>Not enough data for insights</h5>
+                        <p class="text-muted">Log more emotions to see personalized wellness insights.</p>
+                        <a href="/emotion-log" class="btn btn-clsu-green">
+                            <i class="fas fa-plus me-2"></i>Log Emotions
+                        </a>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-clsu-green">${data.most_common_emotion}</h3>
+                                    <p class="mb-0">Most Common Emotion</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-clsu-green">${data.avg_energy.toFixed(1)}/10</h3>
+                                    <p class="mb-0">Average Energy Level</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-clsu-green">${data.avg_sleep.toFixed(1)}h</h3>
+                                    <p class="mb-0">Average Sleep</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-clsu-green">${data.total_entries}</h3>
+                                    <p class="mb-0">Total Entries</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h6>Recent Emotion Trends</h6>
+                        <div class="row">
+                            ${data.emotion_counts.slice(0, 5).map(emotion => `
+                                <div class="col-md-4">
+                                    <div class="d-flex justify-content-between">
+                                        <span>${emotion.emotion}</span>
+                                        <span class="text-clsu-green fw-bold">${emotion.count}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Unable to load wellness insights. Please try again later.
+                </div>
+            `;
+        }
+    }
+
+    async function viewDASSInsights() {
+        const modal = new bootstrap.Modal(document.getElementById('dassModal'));
+        modal.show();
+        const content = document.getElementById('dassContent');
+        
+        // Show loading state
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Loading assessment results...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading your DASS-21 results...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/api/dass-results');
+            const results = await response.json();
+            
+            if (results.length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-brain fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No DASS-21 assessments completed</h5>
+                        <p class="text-muted">Complete the DASS-21 assessment when logging emotions to see results here.</p>
+                        <a href="/emotion-log" class="btn btn-clsu-green">Log Emotions & Take Assessment</a>
+                    </div>
+                `;
+                return;
+            }
+
+            const latestResult = results[0]; // Assuming results are ordered by date
+            
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h4>${latestResult.depression_score}</h4>
+                                <p class="mb-1">Depression Score</p>
+                                <small>${latestResult.depression_severity}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h4>${latestResult.anxiety_score}</h4>
+                                <p class="mb-1">Anxiety Score</p>
+                                <small>${latestResult.anxiety_severity}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <h4>${latestResult.stress_score}</h4>
+                                <p class="mb-1">Stress Score</p>
+                                <small>${latestResult.stress_severity}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-muted">Assessment completed on: ${new Date(latestResult.assessment_date).toLocaleDateString()}</p>
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> These results are for informational purposes only. If you're experiencing severe symptoms, please consult with a mental health professional.
+                    </div>
+                </div>
+            `;
+
+        } catch (error) {
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Unable to load DASS-21 results. Please try again later.
+                </div>
+            `;
+        }
+    }
+    
+    function groupLogsByDate(logs) {
+        return logs.reduce((groups, log) => {
+            const date = new Date(log.log_date).toDateString();
+            if (!groups[date]) {
+                groups[date] = [];
+            }
+            groups[date].push(log);
+            return groups;
+        }, {});
+    }
+    
+    function formatJournalDate(dateString) {
+        const date = new Date(dateString);
+        const today = new Date().toDateString();
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        
+        if (dateString === today) {
+            return 'Today';
+        } else if (dateString === yesterday) {
+            return 'Yesterday';
+        } else {
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
         }
     }
 </script>
