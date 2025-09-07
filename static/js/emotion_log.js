@@ -536,6 +536,7 @@ document.head.insertAdjacentHTML('beforeend', emotionLogStyles);
 function updateSaveButtonState() {
     const submitButton = document.getElementById('saveMoodLogBtn');
     const completionMessage = document.getElementById('completionMessage');
+    const form = document.getElementById('emotionForm');
     
     // Check if all required fields are filled
     const sleepInput = form.querySelector('input[name="sleep"]');

@@ -29,8 +29,7 @@
                 <!-- DASS-21 Form -->
                 <form method="POST" action="{{ url_for('main.process_dass21') }}" id="dass21Form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <input type="hidden" name="emotions" value="{{ emotions|tojson }}">
-
+    
                     {% for question in questions %}
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body p-4">
