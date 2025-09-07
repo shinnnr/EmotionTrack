@@ -116,14 +116,44 @@ def emotion_log():
     
     if form.validate_on_submit():
         try:
-            emotions_data = json.loads(form.emotions.data or '[]')
-            dass21_data = json.loads(request.form.get('dass21_responses', '{}'))
+            # Parse emotions data
+            try:
+                emotions_data = json.loads(form.emotions.data or '[]')
+            except json.JSONDecodeError:
+                flash('Invalid emotion selection. Please select your emotions again.', 'error')
+                return render_template('emotion_log.html', form=form)
+            
+            # Parse DASS-21 data
+            try:
+                dass21_data = json.loads(request.form.get('dass21_responses', '{}'))
+            except json.JSONDecodeError:
+                flash('Invalid assessment data. Please complete the DASS-21 assessment again.', 'error')
+                return render_template('emotion_log.html', form=form)
             
             print(f"Emotions data: {emotions_data}")
             print(f"DASS-21 data: {dass21_data}")
             
-            if not emotions_data:
-                flash('Please select at least one emotion.', 'error')
+            # Validate emotions selection
+            if not emotions_data or len(emotions_data) == 0:
+                flash('Please select at least one emotion before saving your mood log.', 'error')
+                return render_template('emotion_log.html', form=form)
+            
+            # Validate emotions are strings and not empty
+            if not all(isinstance(emotion, str) and emotion.strip() for emotion in emotions_data):
+                flash('Invalid emotion data. Please select valid emotions.', 'error')
+                return render_template('emotion_log.html', form=form)
+            
+            # Additional validation for required fields
+            if not form.sleep.data or form.sleep.data < 0 or form.sleep.data > 24:
+                flash('Please enter valid sleep hours (0-24).', 'error')
+                return render_template('emotion_log.html', form=form)
+            
+            if not form.energy.data or form.energy.data < 1 or form.energy.data > 10:
+                flash('Please enter a valid energy level (1-10).', 'error')
+                return render_template('emotion_log.html', form=form)
+            
+            if not form.triggers.data:
+                flash('Please select your main trigger/stressor.', 'error')
                 return render_template('emotion_log.html', form=form)
             
             # Create mood log entries for each selected emotion
@@ -138,8 +168,29 @@ def emotion_log():
                 mood_log.gratitude = form.gratitude.data
                 db.session.add(mood_log)
             
-            # Process DASS-21 assessment if provided (make it optional)
+            # Process DASS-21 assessment if provided
+            dass21_completed = False
             if dass21_data and len(dass21_data) >= 21:
+                # Validate DASS-21 responses
+                valid_dass21 = True
+                for i in range(1, 22):
+                    if str(i) not in dass21_data:
+                        valid_dass21 = False
+                        break
+                    try:
+                        score = int(dass21_data[str(i)])
+                        if score < 0 or score > 3:
+                            valid_dass21 = False
+                            break
+                    except (ValueError, TypeError):
+                        valid_dass21 = False
+                        break
+                
+                if not valid_dass21:
+                    flash('Invalid DASS-21 assessment data. Please complete all questions with valid responses (0-3).', 'error')
+                    return render_template('emotion_log.html', form=form)
+                
+                dass21_completed = True
                 # DASS-21 item mappings
                 depression_items = [3, 5, 10, 13, 16, 17, 21]
                 anxiety_items = [2, 4, 7, 9, 15, 19, 20]
@@ -197,14 +248,22 @@ def emotion_log():
                 db.session.add(dass_result)
             
             db.session.commit()
-            flash('Mood log and assessment saved successfully!', 'success')
+            
+            # Provide specific success message based on what was saved
+            if dass21_completed:
+                flash('Mood log and DASS-21 assessment saved successfully! Your data helps us provide better support.', 'success')
+            else:
+                flash('Mood log saved successfully! Consider completing the DASS-21 assessment for more comprehensive insights.', 'success')
+            
             return redirect(url_for('main.home'))
             
-        except json.JSONDecodeError:
-            flash('Invalid emotion data. Please try again.', 'error')
+        except ValueError as e:
+            db.session.rollback()
+            flash(f'Invalid data format: {str(e)}. Please check your input and try again.', 'error')
         except Exception as e:
             db.session.rollback()
-            flash('An error occurred while saving your log. Please try again.', 'error')
+            print(f"Error saving mood log: {str(e)}")  # For debugging
+            flash('An unexpected error occurred while saving your mood log. Please try again.', 'error')
     
     return render_template('emotion_log.html', form=form)
 
