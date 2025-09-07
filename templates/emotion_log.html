@@ -19,7 +19,21 @@
                 <form method="POST" action="{{ url_for('main.emotion_log') }}" id="emotionForm">
                     {{ form.hidden_tag() }}
                     {{ form.emotions() }}
-                    <input type="hidden" name="dass21_responses" id="dass21ResponsesInput">
+                    
+                    <!-- DASS-21 Assessment Notification -->
+                    <div class="alert alert-info border-0 shadow-sm mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-brain me-3 text-primary" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h6 class="alert-heading mb-1">Mental Wellness Assessment Available</h6>
+                                <p class="mb-2">Complete your weekly DASS-21 assessment to get personalized mental health insights.</p>
+                                <a href="{{ url_for('main.dass21_quiz') }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-clipboard-check me-1"></i>
+                                    Take DASS-21 Assessment
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Emotion Selection -->
                     <div class="card border-0 shadow-sm mb-4">
@@ -278,20 +292,6 @@
                         </div>
                     </div>
 
-                    <!-- DASS-21 Assessment (Initially Hidden) -->
-                    <div class="card border-0 shadow-sm mb-4" id="dass21Section" style="display: none;">
-                        <div class="card-body p-4">
-                            <h5 class="card-title fw-bold mb-4">
-                                <i class="fas fa-brain text-clsu-gold me-2"></i>
-                                Complete Your DASS-21 Assessment
-                            </h5>
-                            <p class="text-muted mb-4">Please complete this brief assessment to better understand your mental wellness. This helps provide more personalized support.</p>
-                            
-                            <div id="dass21Questions">
-                                <!-- DASS-21 questions will be loaded here -->
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Submit Button -->
                     <div class="text-center">
@@ -299,7 +299,7 @@
                             <i class="fas fa-save me-2"></i>
                             Save My Mood Log
                         </button>
-                        <p class="text-muted mt-2" id="completionMessage">Please select your emotions and complete the DASS-21 assessment to save your mood log.</p>
+                        <p class="text-muted mt-2" id="completionMessage">Please select your emotions and fill in the required details to save your mood log.</p>
                     </div>
                 </form>
             </div>

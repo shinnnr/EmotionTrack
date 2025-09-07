@@ -123,20 +123,8 @@ def emotion_log():
                 flash('Invalid emotion selection. Please select your emotions again.', 'error')
                 return render_template('emotion_log.html', form=form)
             
-            # Parse DASS-21 data
-            try:
-                dass21_raw = request.form.get('dass21_responses', '{}')
-                print(f"Raw DASS-21 form data: {dass21_raw}")
-                dass21_data = json.loads(dass21_raw) if dass21_raw.strip() else {}
-                print(f"Parsed DASS-21 data: {dass21_data}")
-            except json.JSONDecodeError as e:
-                print(f"JSON decode error for DASS-21 data: {e}")
-                print(f"Raw data was: {request.form.get('dass21_responses', 'None')}")
-                # Don't fail here - just set empty data and continue
-                dass21_data = {}
             
             print(f"Emotions data: {emotions_data}")
-            print(f"DASS-21 data: {dass21_data}")
             
             # Validate emotions selection
             if not emotions_data or len(emotions_data) == 0:
@@ -173,108 +161,10 @@ def emotion_log():
                 mood_log.gratitude = form.gratitude.data
                 db.session.add(mood_log)
             
-            # Process DASS-21 assessment if provided
-            dass21_completed = False
-            if dass21_data:
-                print(f"DASS-21 data keys: {list(dass21_data.keys())}")
-                print(f"DASS-21 data length: {len(dass21_data)}")
-                
-                # Check if we have responses for all 21 questions
-                if len(dass21_data) >= 21:
-                    # Validate DASS-21 responses - more flexible approach
-                    valid_dass21 = True
-                    missing_questions = []
-                    
-                    for i in range(1, 22):
-                        if str(i) not in dass21_data:
-                            valid_dass21 = False
-                            missing_questions.append(i)
-                        else:
-                            try:
-                                score = int(dass21_data[str(i)])
-                                if score < 0 or score > 3:
-                                    valid_dass21 = False
-                                    print(f"Invalid score for question {i}: {score}")
-                                    break
-                            except (ValueError, TypeError):
-                                valid_dass21 = False
-                                print(f"Invalid data type for question {i}: {dass21_data[str(i)]}")
-                                break
-                    
-                    if not valid_dass21:
-                        if missing_questions:
-                            flash(f'Please complete all DASS-21 questions. Missing questions: {missing_questions[:5]}...', 'error')
-                        else:
-                            flash('Invalid DASS-21 responses. Please check your answers (must be 0-3).', 'error')
-                        return render_template('emotion_log.html', form=form)
-                    
-                    dass21_completed = True
-                else:
-                    # If less than 21 responses, it's incomplete - just skip processing without error
-                    print(f"Incomplete DASS-21: only {len(dass21_data)} responses, skipping assessment processing")
-                # DASS-21 item mappings
-                depression_items = [3, 5, 10, 13, 16, 17, 21]
-                anxiety_items = [2, 4, 7, 9, 15, 19, 20]
-                stress_items = [1, 6, 8, 11, 12, 14, 18]
-                
-                # Initialize scores
-                depression_score = 0
-                anxiety_score = 0
-                stress_score = 0
-                
-                # Calculate raw scores
-                for i in range(1, 22):
-                    if str(i) in dass21_data:
-                        score = int(dass21_data[str(i)])
-                        
-                        if i in depression_items:
-                            depression_score += score
-                        elif i in anxiety_items:
-                            anxiety_score += score
-                        elif i in stress_items:
-                            stress_score += score
-                
-                # Multiply by 2 for DASS-21 final scores
-                depression_final = depression_score * 2
-                anxiety_final = anxiety_score * 2
-                stress_final = stress_score * 2
-                
-                # Determine severity levels
-                def get_severity(score, scale_type):
-                    thresholds = {
-                        'D': {'Normal': (0, 9), 'Mild': (10, 13), 'Moderate': (14, 20), 'Severe': (21, 27), 'Extremely Severe': (28, 100)},
-                        'A': {'Normal': (0, 7), 'Mild': (8, 9), 'Moderate': (10, 14), 'Severe': (15, 19), 'Extremely Severe': (20, 100)},
-                        'S': {'Normal': (0, 14), 'Mild': (15, 18), 'Moderate': (19, 25), 'Severe': (26, 33), 'Extremely Severe': (34, 100)}
-                    }
-                    
-                    for severity, (min_val, max_val) in thresholds[scale_type].items():
-                        if min_val <= score <= max_val:
-                            return severity
-                    return 'N/A'
-                
-                depression_severity = get_severity(depression_final, 'D')
-                anxiety_severity = get_severity(anxiety_final, 'A')
-                stress_severity = get_severity(stress_final, 'S')
-                
-                # Save DASS-21 results to database
-                dass_result = DASS21Result()
-                dass_result.user_id = current_user.id
-                dass_result.depression_score = depression_final
-                dass_result.anxiety_score = anxiety_final
-                dass_result.stress_score = stress_final
-                dass_result.depression_severity = depression_severity
-                dass_result.anxiety_severity = anxiety_severity
-                dass_result.stress_severity = stress_severity
-                
-                db.session.add(dass_result)
             
             db.session.commit()
             
-            # Provide specific success message based on what was saved
-            if dass21_completed:
-                flash('Mood log and DASS-21 assessment saved successfully! Your data helps us provide better support.', 'success')
-            else:
-                flash('Mood log saved successfully! Consider completing the DASS-21 assessment for more comprehensive insights.', 'success')
+            flash('Mood log saved successfully!', 'success')
             
             return redirect(url_for('main.home'))
             
@@ -291,8 +181,20 @@ def emotion_log():
 @main_bp.route('/dass21-quiz')
 @login_required
 def dass21_quiz():
-    # Get emotions from session if available
-    emotions = session.get('emotions', [])
+    # Check if user can take assessment (once per week)
+    from datetime import datetime, timedelta
+    
+    # Check for recent assessment (within last 7 days)
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    recent_assessment = DASS21Result.query.filter(
+        DASS21Result.user_id == current_user.id,
+        DASS21Result.created_at >= week_ago
+    ).first()
+    
+    if recent_assessment:
+        days_remaining = 7 - (datetime.utcnow() - recent_assessment.created_at).days
+        flash(f'You can take the DASS-21 assessment again in {days_remaining} day(s). You completed your last assessment on {recent_assessment.created_at.strftime("%B %d, %Y")}.', 'info')
+        return redirect(url_for('main.home'))
     
     # DASS-21 questions with their subscales
     dass21_questions = [
@@ -319,7 +221,7 @@ def dass21_quiz():
         {'id': 21, 'text': "I felt that life was meaningless.", 'scale': 'D'}
     ]
     
-    return render_template('dass21_quiz.html', questions=dass21_questions, emotions=emotions)
+    return render_template('dass21_quiz.html', questions=dass21_questions)
 
 @main_bp.route('/process-dass21', methods=['POST'])
 @login_required

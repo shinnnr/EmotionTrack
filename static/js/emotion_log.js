@@ -2,12 +2,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     initializeEmotionSelection();
     initializeFormValidation();
-    initializeDASS21Integration();
+    updateSaveButtonState();
 });
 
 let selectedEmotions = [];
-let dass21Completed = false;
-let dass21Responses = {};
 
 function initializeEmotionSelection() {
     const emotionItems = document.querySelectorAll('.emotion-item');
@@ -31,7 +29,7 @@ function initializeEmotionSelection() {
 
             updateSelectedEmotions();
             updateHiddenInput();
-            checkEmotionsAndShowDASS21();
+            updateSaveButtonState();
         });
     });
 
@@ -62,7 +60,7 @@ function initializeEmotionSelection() {
         selectedEmotions = selectedEmotions.filter(e => e !== emotion);
         updateSelectedEmotions();
         updateHiddenInput();
-        checkEmotionsAndShowDASS21();
+        updateSaveButtonState();
     };
 }
 
@@ -84,8 +82,7 @@ function initializeFormValidation() {
             return;
         }
 
-        // DASS-21 is now optional - don't block submission if not completed
-        // Users can choose to complete it or skip it
+// Form validation - no DASS-21 integration needed
 
         // Validate sleep hours
         const sleepInput = form.querySelector('input[name="sleep"]');
@@ -109,9 +106,7 @@ function initializeFormValidation() {
             return;
         }
 
-        // Add DASS-21 responses to form before submission
-        const dass21Input = document.getElementById('dass21ResponsesInput');
-        dass21Input.value = JSON.stringify(dass21Responses);
+// No DASS-21 data to add - form submits normally
 
         // Show loading state
         const hideLoading = MindTrack.showLoading(submitButton, 'Saving your mood log...');
