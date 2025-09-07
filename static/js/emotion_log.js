@@ -84,21 +84,8 @@ function initializeFormValidation() {
             return;
         }
 
-        // Validate DASS-21 completion
-        if (!dass21Completed) {
-            e.preventDefault();
-            MindTrack.showAlert('Please complete the DASS-21 assessment before saving your mood log.', 'warning');
-            
-            // Scroll to DASS-21 section
-            const dass21Section = document.getElementById('dass21Section');
-            if (dass21Section.style.display !== 'none') {
-                dass21Section.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-            }
-            return;
-        }
+        // DASS-21 is now optional - don't block submission if not completed
+        // Users can choose to complete it or skip it
 
         // Validate sleep hours
         const sleepInput = form.querySelector('input[name="sleep"]');
@@ -681,25 +668,23 @@ function updateSaveButtonState() {
     const saveBtn = document.getElementById('saveMoodLogBtn');
     const completionMessage = document.getElementById('completionMessage');
     
-    if (selectedEmotions.length > 0 && dass21Completed) {
+    if (selectedEmotions.length > 0) {
         saveBtn.disabled = false;
         saveBtn.classList.remove('btn-secondary');
         saveBtn.classList.add('btn-clsu-green');
-        completionMessage.textContent = 'Ready to save your mood log!';
+        
+        if (dass21Completed) {
+            completionMessage.textContent = 'Ready to save your mood log with DASS-21 assessment!';
+        } else {
+            completionMessage.textContent = 'Ready to save your mood log! (Optional: Complete DASS-21 for better insights)';
+        }
         completionMessage.classList.add('text-success');
         completionMessage.classList.remove('text-muted');
-    } else if (selectedEmotions.length > 0 && !dass21Completed) {
-        saveBtn.disabled = true;
-        saveBtn.classList.add('btn-secondary');
-        saveBtn.classList.remove('btn-clsu-green');
-        completionMessage.textContent = 'Please complete the DASS-21 assessment to save your mood log.';
-        completionMessage.classList.add('text-muted');
-        completionMessage.classList.remove('text-success');
     } else {
         saveBtn.disabled = true;
         saveBtn.classList.add('btn-secondary');
         saveBtn.classList.remove('btn-clsu-green');
-        completionMessage.textContent = 'Please select your emotions and complete the DASS-21 assessment to save your mood log.';
+        completionMessage.textContent = 'Please select your emotions to save your mood log.';
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
     }

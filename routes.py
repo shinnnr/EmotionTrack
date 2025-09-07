@@ -119,6 +119,13 @@ def emotion_log():
             emotions_data = json.loads(form.emotions.data or '[]')
             dass21_data = json.loads(request.form.get('dass21_responses', '{}'))
             
+            print(f"Emotions data: {emotions_data}")
+            print(f"DASS-21 data: {dass21_data}")
+            
+            if not emotions_data:
+                flash('Please select at least one emotion.', 'error')
+                return render_template('emotion_log.html', form=form)
+            
             # Create mood log entries for each selected emotion
             for emotion in emotions_data:
                 mood_log = MoodLog()
@@ -131,8 +138,8 @@ def emotion_log():
                 mood_log.gratitude = form.gratitude.data
                 db.session.add(mood_log)
             
-            # Process DASS-21 assessment if provided
-            if dass21_data and len(dass21_data) == 21:
+            # Process DASS-21 assessment if provided (make it optional)
+            if dass21_data and len(dass21_data) >= 21:
                 # DASS-21 item mappings
                 depression_items = [3, 5, 10, 13, 16, 17, 21]
                 anxiety_items = [2, 4, 7, 9, 15, 19, 20]
@@ -734,8 +741,8 @@ def get_suggested_responses(user_id):
     try:
         # Get recent DASS-21 results (within last 30 days)
         recent_dass = DASS21Result.query.filter_by(user_id=user_id).filter(
-            DASS21Result.assessment_date >= datetime.utcnow() - timedelta(days=30)
-        ).order_by(DASS21Result.assessment_date.desc()).first()
+            DASS21Result.created_at >= datetime.utcnow() - timedelta(days=30)
+        ).order_by(DASS21Result.created_at.desc()).first()
         
         # Get recent mood logs (within last 7 days)
         recent_moods = MoodLog.query.filter_by(id=user_id).filter(
