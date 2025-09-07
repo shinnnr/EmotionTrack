@@ -125,10 +125,15 @@ def emotion_log():
             
             # Parse DASS-21 data
             try:
-                dass21_data = json.loads(request.form.get('dass21_responses', '{}'))
-            except json.JSONDecodeError:
-                flash('Invalid assessment data. Please complete the DASS-21 assessment again.', 'error')
-                return render_template('emotion_log.html', form=form)
+                dass21_raw = request.form.get('dass21_responses', '{}')
+                print(f"Raw DASS-21 form data: {dass21_raw}")
+                dass21_data = json.loads(dass21_raw) if dass21_raw.strip() else {}
+                print(f"Parsed DASS-21 data: {dass21_data}")
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error for DASS-21 data: {e}")
+                print(f"Raw data was: {request.form.get('dass21_responses', 'None')}")
+                # Don't fail here - just set empty data and continue
+                dass21_data = {}
             
             print(f"Emotions data: {emotions_data}")
             print(f"DASS-21 data: {dass21_data}")
@@ -170,27 +175,43 @@ def emotion_log():
             
             # Process DASS-21 assessment if provided
             dass21_completed = False
-            if dass21_data and len(dass21_data) >= 21:
-                # Validate DASS-21 responses
-                valid_dass21 = True
-                for i in range(1, 22):
-                    if str(i) not in dass21_data:
-                        valid_dass21 = False
-                        break
-                    try:
-                        score = int(dass21_data[str(i)])
-                        if score < 0 or score > 3:
+            if dass21_data:
+                print(f"DASS-21 data keys: {list(dass21_data.keys())}")
+                print(f"DASS-21 data length: {len(dass21_data)}")
+                
+                # Check if we have responses for all 21 questions
+                if len(dass21_data) >= 21:
+                    # Validate DASS-21 responses - more flexible approach
+                    valid_dass21 = True
+                    missing_questions = []
+                    
+                    for i in range(1, 22):
+                        if str(i) not in dass21_data:
                             valid_dass21 = False
-                            break
-                    except (ValueError, TypeError):
-                        valid_dass21 = False
-                        break
-                
-                if not valid_dass21:
-                    flash('Invalid DASS-21 assessment data. Please complete all questions with valid responses (0-3).', 'error')
-                    return render_template('emotion_log.html', form=form)
-                
-                dass21_completed = True
+                            missing_questions.append(i)
+                        else:
+                            try:
+                                score = int(dass21_data[str(i)])
+                                if score < 0 or score > 3:
+                                    valid_dass21 = False
+                                    print(f"Invalid score for question {i}: {score}")
+                                    break
+                            except (ValueError, TypeError):
+                                valid_dass21 = False
+                                print(f"Invalid data type for question {i}: {dass21_data[str(i)]}")
+                                break
+                    
+                    if not valid_dass21:
+                        if missing_questions:
+                            flash(f'Please complete all DASS-21 questions. Missing questions: {missing_questions[:5]}...', 'error')
+                        else:
+                            flash('Invalid DASS-21 responses. Please check your answers (must be 0-3).', 'error')
+                        return render_template('emotion_log.html', form=form)
+                    
+                    dass21_completed = True
+                else:
+                    # If less than 21 responses, it's incomplete - just skip processing without error
+                    print(f"Incomplete DASS-21: only {len(dass21_data)} responses, skipping assessment processing")
                 # DASS-21 item mappings
                 depression_items = [3, 5, 10, 13, 16, 17, 21]
                 anxiety_items = [2, 4, 7, 9, 15, 19, 20]
