@@ -33,7 +33,7 @@ def home():
         return redirect(url_for('admin.dashboard'))
     
     # Get recent mood logs for user
-    recent_logs = MoodLog.query.filter_by(id=current_user.id).order_by(desc(MoodLog.log_date)).limit(5).all()
+    recent_logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(desc(MoodLog.log_date)).limit(5).all()
     
     # Get latest DASS-21 result
     latest_dass = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).first()
@@ -50,7 +50,7 @@ def profile():
 @login_required
 def get_mood_logs():
     try:
-        logs = MoodLog.query.filter_by(id=current_user.id).order_by(desc(MoodLog.log_date)).all()
+        logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(desc(MoodLog.log_date)).all()
         return jsonify([{
             'log_id': log.log_id,
             'emotion': log.emotion,
@@ -69,7 +69,7 @@ def get_mood_logs():
 @login_required
 def get_wellness_insights():
     try:
-        logs = MoodLog.query.filter_by(id=current_user.id).all()
+        logs = MoodLog.query.filter_by(user_id=current_user.id).all()
         if not logs:
             return jsonify({'has_data': False})
         
@@ -129,7 +129,7 @@ def emotion_log():
             # Create mood log entries for each selected emotion
             for emotion in emotions_data:
                 mood_log = MoodLog()
-                mood_log.id = current_user.id
+                mood_log.user_id = current_user.id
                 mood_log.emotion = emotion
                 mood_log.sleep = form.sleep.data
                 mood_log.energy = form.energy.data
@@ -439,7 +439,7 @@ def weekly_insights():
     # Get last 7 mood logs
     week_ago = datetime.utcnow() - timedelta(days=7)
     logs = MoodLog.query.filter(
-        MoodLog.id == current_user.id,
+        MoodLog.user_id == current_user.id,
         MoodLog.log_date >= week_ago
     ).all()
     
@@ -504,7 +504,7 @@ def dashboard():
     unread_messages = StudentMessage.query.filter_by(is_read=False).count()
     
     # Recent activity
-    recent_logs = db.session.query(MoodLog, User).join(User, MoodLog.id == User.id).order_by(desc(MoodLog.log_date)).limit(10).all()
+    recent_logs = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id).order_by(desc(MoodLog.log_date)).limit(10).all()
     
     # Get students with concerning DASS-21 scores
     concerning_students = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id).filter(
@@ -854,7 +854,7 @@ def export_data():
             writer = csv.writer(output)
             writer.writerow(['Log ID', 'User Email', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
             
-            logs = db.session.query(MoodLog, User).join(User, MoodLog.id == User.id).all()
+            logs = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id).all()
             for log, user in logs:
                 writer.writerow([
                     log.log_id, user.email, log.emotion, log.sleep, log.energy,
