@@ -80,6 +80,28 @@
                     {% endif %}
                 </div>
                 
+                <!-- Suggested Responses -->
+                <div class="suggested-responses-container" id="suggestedResponsesContainer">
+                    <div class="px-3 py-2 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold text-muted">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                Suggested Responses
+                            </h6>
+                            <button class="btn btn-sm btn-outline-secondary" id="refreshSuggestions" title="Refresh suggestions">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="suggested-responses-content" id="suggestedResponsesContent">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-muted" role="status">
+                                <span class="visually-hidden">Loading suggestions...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Message Input -->
                 <div class="message-input-container">
                     <form id="adminMessageForm" class="d-flex align-items-end gap-3">
@@ -192,11 +214,128 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Load suggested responses
+    loadSuggestedResponses();
+    
+    // Refresh suggestions handler
+    document.getElementById('refreshSuggestions').addEventListener('click', function() {
+        loadSuggestedResponses();
+    });
+    
     // Auto-scroll to bottom on page load
     setTimeout(() => {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }, 100);
 });
+
+async function loadSuggestedResponses() {
+    const suggestedResponsesContent = document.getElementById('suggestedResponsesContent');
+    const refreshBtn = document.getElementById('refreshSuggestions');
+    
+    // Show loading state
+    suggestedResponsesContent.innerHTML = `
+        <div class="text-center py-3">
+            <div class="spinner-border spinner-border-sm text-muted" role="status">
+                <span class="visually-hidden">Loading suggestions...</span>
+            </div>
+        </div>
+    `;
+    
+    // Disable refresh button
+    refreshBtn.disabled = true;
+    refreshBtn.querySelector('i').classList.add('fa-spin');
+    
+    try {
+        const response = await fetch(`{{ url_for('admin.get_suggested_responses', user_id=student.id) }}`, {
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.suggestions && data.suggestions.length > 0) {
+            let suggestionsHtml = '<div class="suggestions-list">';
+            
+            data.suggestions.forEach((suggestion, index) => {
+                suggestionsHtml += `
+                    <div class="suggestion-item" data-text="${suggestion.text.replace(/"/g, '&quot;')}">
+                        <div class="suggestion-content">
+                            <div class="suggestion-type">
+                                <span class="badge bg-${suggestion.type === 'crisis' ? 'danger' : suggestion.type === 'support' ? 'success' : suggestion.type === 'referral' ? 'warning' : 'info'}">
+                                    ${suggestion.category}
+                                </span>
+                            </div>
+                            <div class="suggestion-text">${suggestion.text}</div>
+                            ${suggestion.reason ? `<div class="suggestion-reason"><small class="text-muted">${suggestion.reason}</small></div>` : ''}
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary use-suggestion-btn" title="Use this response">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            
+            suggestionsHtml += '</div>';
+            suggestedResponsesContent.innerHTML = suggestionsHtml;
+            
+            // Add event listeners for suggestion buttons
+            suggestedResponsesContent.querySelectorAll('.use-suggestion-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const suggestionText = this.closest('.suggestion-item').dataset.text;
+                    const messageInput = document.getElementById('messageText');
+                    
+                    // Add the suggestion to the textarea
+                    if (messageInput.value.trim()) {
+                        messageInput.value += '\\n\\n' + suggestionText;
+                    } else {
+                        messageInput.value = suggestionText;
+                    }
+                    
+                    // Auto-expand textarea
+                    messageInput.style.height = 'auto';
+                    messageInput.style.height = messageInput.scrollHeight + 'px';
+                    
+                    // Focus on textarea
+                    messageInput.focus();
+                });
+            });
+            
+            // Allow clicking on suggestion items to use them
+            suggestedResponsesContent.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    this.querySelector('.use-suggestion-btn').click();
+                });
+            });
+            
+        } else {
+            suggestedResponsesContent.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle mb-2"></i>
+                        <p class="mb-0 small">No specific suggestions available at the moment</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('Error loading suggested responses:', error);
+        suggestedResponsesContent.innerHTML = `
+            <div class="text-center py-3">
+                <div class="text-muted">
+                    <i class="fas fa-exclamation-triangle mb-2"></i>
+                    <p class="mb-0 small">Error loading suggestions</p>
+                </div>
+            </div>
+        `;
+    } finally {
+        // Re-enable refresh button
+        refreshBtn.disabled = false;
+        refreshBtn.querySelector('i').classList.remove('fa-spin');
+    }
+}
 </script>
 
 {% endblock %}
@@ -370,6 +509,68 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .message-bubble {
     animation: messageSlideIn 0.3s ease-out;
+}
+
+/* Suggested Responses Styles */
+.suggested-responses-container {
+    border-top: 1px solid #e9ecef;
+    max-height: 250px;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #ffffff40;
+}
+
+.suggestion-item:hover {
+    background-color: rgba(45, 80, 22, 0.08);
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-content {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.suggestion-type {
+    margin-bottom: 0.375rem;
+}
+
+.suggestion-text {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin-bottom: 0.25rem;
+    color: #333;
+}
+
+.suggestion-reason {
+    font-style: italic;
+}
+
+.use-suggestion-btn {
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.suggestion-item:hover .use-suggestion-btn {
+    opacity: 1;
 }
 </style>
 

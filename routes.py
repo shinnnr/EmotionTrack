@@ -719,6 +719,134 @@ def send_message(user_id):
     
     return jsonify({'success': True, 'message': 'Message sent successfully'})
 
+@admin_bp.route('/suggested-responses/<int:user_id>')
+@login_required
+def get_suggested_responses(user_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+    
+    student = User.query.get_or_404(user_id)
+    if student.is_admin:
+        return jsonify({'success': False, 'message': 'Cannot get suggestions for admin users'})
+    
+    suggestions = []
+    
+    try:
+        # Get recent DASS-21 results (within last 30 days)
+        recent_dass = DASS21Result.query.filter_by(user_id=user_id).filter(
+            DASS21Result.assessment_date >= datetime.utcnow() - timedelta(days=30)
+        ).order_by(DASS21Result.assessment_date.desc()).first()
+        
+        # Get recent mood logs (within last 7 days)
+        recent_moods = MoodLog.query.filter_by(id=user_id).filter(
+            MoodLog.log_date >= datetime.utcnow() - timedelta(days=7)
+        ).order_by(MoodLog.log_date.desc()).limit(10).all()
+        
+        # Generate suggestions based on DASS-21 results
+        if recent_dass:
+            if recent_dass.depression_severity in ['Severe', 'Extremely Severe']:
+                suggestions.extend([
+                    {
+                        'type': 'support',
+                        'category': 'Mental Health',
+                        'text': "I'm concerned about how you've been feeling lately. Your wellbeing is important to us. Would you like to talk about what's been troubling you?",
+                        'reason': f'High depression score: {recent_dass.depression_score} ({recent_dass.depression_severity})'
+                    },
+                    {
+                        'type': 'referral',
+                        'category': 'Professional Help',
+                        'text': "I'd like to connect you with additional resources that might help. Our school psychologist is available for one-on-one sessions. Would you be interested in setting up an appointment?",
+                        'reason': f'Depression level requires professional attention'
+                    }
+                ])
+            
+            if recent_dass.anxiety_severity in ['Severe', 'Extremely Severe']:
+                suggestions.extend([
+                    {
+                        'type': 'support',
+                        'category': 'Anxiety Support',
+                        'text': "I notice you might be experiencing some anxiety. Let's work together on some coping strategies. Have you tried any breathing exercises or mindfulness techniques?",
+                        'reason': f'High anxiety score: {recent_dass.anxiety_score} ({recent_dass.anxiety_severity})'
+                    },
+                    {
+                        'type': 'coping',
+                        'category': 'Coping Strategies',
+                        'text': "Here's a simple breathing technique that might help: breathe in for 4 counts, hold for 4, breathe out for 6. Try this when you feel overwhelmed.",
+                        'reason': 'Practical coping strategy for anxiety'
+                    }
+                ])
+            
+            if recent_dass.stress_severity in ['Severe', 'Extremely Severe']:
+                suggestions.extend([
+                    {
+                        'type': 'support',
+                        'category': 'Stress Management',
+                        'text': "It sounds like you're dealing with a lot of stress. Let's identify what's causing this pressure and find ways to manage it better. What's been the most stressful part of your day lately?",
+                        'reason': f'High stress score: {recent_dass.stress_score} ({recent_dass.stress_severity})'
+                    },
+                    {
+                        'type': 'coping',
+                        'category': 'Time Management',
+                        'text': "Sometimes breaking things down into smaller, manageable tasks can help reduce stress. Would you like help creating a study schedule or priority list?",
+                        'reason': 'Practical stress management approach'
+                    }
+                ])
+        
+        # Generate suggestions based on recent mood patterns
+        if recent_moods:
+            negative_emotions = ['sad', 'angry', 'frustrated', 'anxious', 'lonely', 'depressed', 'overwhelmed']
+            recent_negative_moods = [mood for mood in recent_moods if mood.emotion.lower() in negative_emotions]
+            
+            if len(recent_negative_moods) >= 3:  # Pattern of negative emotions
+                suggestions.append({
+                    'type': 'support',
+                    'category': 'Emotional Support',
+                    'text': "I've noticed you've been experiencing some challenging emotions recently. Remember that it's completely normal to have ups and downs. I'm here to listen and support you through this.",
+                    'reason': f'Pattern of negative emotions in recent logs'
+                })
+            
+            # Check for low energy patterns
+            low_energy_logs = [mood for mood in recent_moods if mood.energy <= 3]
+            if len(low_energy_logs) >= 2:
+                suggestions.append({
+                    'type': 'wellness',
+                    'category': 'Self-Care',
+                    'text': "I see your energy levels have been low lately. Let's talk about your sleep schedule, eating habits, and physical activity. Sometimes small changes can make a big difference in how we feel.",
+                    'reason': 'Consistent low energy levels reported'
+                })
+        
+        # Add general supportive responses if no specific concerns detected
+        if not suggestions:
+            suggestions.extend([
+                {
+                    'type': 'general',
+                    'category': 'Check-in',
+                    'text': "How are you feeling today? I'm here to listen and support you in any way I can.",
+                    'reason': 'General supportive check-in'
+                },
+                {
+                    'type': 'general',
+                    'category': 'Academic Support',
+                    'text': "How are things going with your studies? If you're facing any academic challenges, I'm here to help you find solutions.",
+                    'reason': 'Academic wellness check'
+                },
+                {
+                    'type': 'general',
+                    'category': 'Social Support',
+                    'text': "How are your relationships with friends and family? Sometimes talking about our social connections can be really helpful.",
+                    'reason': 'Social wellness check'
+                }
+            ])
+        
+        # Limit to top 5 suggestions
+        suggestions = suggestions[:5]
+        
+        return jsonify({'success': True, 'suggestions': suggestions})
+        
+    except Exception as e:
+        print(f"Error generating suggested responses: {e}")
+        return jsonify({'success': False, 'suggestions': []})
+
 
 @main_bp.route('/api/change-password', methods=['POST'])
 @login_required
