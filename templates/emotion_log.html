@@ -19,6 +19,7 @@
                 <form method="POST" action="{{ url_for('main.emotion_log') }}" id="emotionForm">
                     {{ form.hidden_tag() }}
                     {{ form.emotions() }}
+                    <input type="hidden" name="dass21_responses" id="dass21ResponsesInput">
 
                     <!-- Emotion Selection -->
                     <div class="card border-0 shadow-sm mb-4">
@@ -277,12 +278,28 @@
                         </div>
                     </div>
 
+                    <!-- DASS-21 Assessment (Initially Hidden) -->
+                    <div class="card border-0 shadow-sm mb-4" id="dass21Section" style="display: none;">
+                        <div class="card-body p-4">
+                            <h5 class="card-title fw-bold mb-4">
+                                <i class="fas fa-brain text-clsu-gold me-2"></i>
+                                Complete Your DASS-21 Assessment
+                            </h5>
+                            <p class="text-muted mb-4">Please complete this brief assessment to better understand your mental wellness. This helps provide more personalized support.</p>
+                            
+                            <div id="dass21Questions">
+                                <!-- DASS-21 questions will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Submit Button -->
                     <div class="text-center">
-                        <button type="submit" class="btn btn-clsu-green btn-lg px-5">
+                        <button type="submit" class="btn btn-clsu-green btn-lg px-5" id="saveMoodLogBtn" disabled>
                             <i class="fas fa-save me-2"></i>
                             Save My Mood Log
                         </button>
+                        <p class="text-muted mt-2" id="completionMessage">Please select your emotions and complete the DASS-21 assessment to save your mood log.</p>
                     </div>
                 </form>
             </div>

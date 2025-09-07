@@ -2,9 +2,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     initializeEmotionSelection();
     initializeFormValidation();
+    initializeDASS21Integration();
 });
 
 let selectedEmotions = [];
+let dass21Completed = false;
+let dass21Responses = {};
 
 function initializeEmotionSelection() {
     const emotionItems = document.querySelectorAll('.emotion-item');
@@ -28,6 +31,7 @@ function initializeEmotionSelection() {
 
             updateSelectedEmotions();
             updateHiddenInput();
+            checkEmotionsAndShowDASS21();
         });
     });
 
@@ -58,6 +62,7 @@ function initializeEmotionSelection() {
         selectedEmotions = selectedEmotions.filter(e => e !== emotion);
         updateSelectedEmotions();
         updateHiddenInput();
+        checkEmotionsAndShowDASS21();
     };
 }
 
@@ -76,6 +81,22 @@ function initializeFormValidation() {
                 behavior: 'smooth',
                 block: 'center'
             });
+            return;
+        }
+
+        // Validate DASS-21 completion
+        if (!dass21Completed) {
+            e.preventDefault();
+            MindTrack.showAlert('Please complete the DASS-21 assessment before saving your mood log.', 'warning');
+            
+            // Scroll to DASS-21 section
+            const dass21Section = document.getElementById('dass21Section');
+            if (dass21Section.style.display !== 'none') {
+                dass21Section.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
             return;
         }
 
@@ -100,6 +121,10 @@ function initializeFormValidation() {
             energyInput.focus();
             return;
         }
+
+        // Add DASS-21 responses to form before submission
+        const dass21Input = document.getElementById('dass21ResponsesInput');
+        dass21Input.value = JSON.stringify(dass21Responses);
 
         // Show loading state
         const hideLoading = MindTrack.showLoading(submitButton, 'Saving your mood log...');
@@ -423,6 +448,62 @@ const emotionLogStyles = `
             background: rgba(0, 88, 0, 0.2);
         }
         
+        .dass21-question {
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .dass21-question:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .rating-option {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+        }
+        
+        .rating-option:hover {
+            border-color: var(--clsu-gold);
+            background: #fff8e1;
+        }
+        
+        .rating-option input[type="radio"] {
+            display: none;
+        }
+        
+        .rating-option input[type="radio"]:checked + .rating-label {
+            color: white;
+        }
+        
+        .rating-option:has(input[type="radio"]:checked) {
+            border-color: var(--clsu-green);
+            background: var(--clsu-green);
+            color: white;
+        }
+        
+        .rating-label {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 1.5rem;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
         @media (max-width: 768px) {
             .emotion-item {
                 min-height: 80px;
@@ -436,9 +517,190 @@ const emotionLogStyles = `
             .emotion-item span {
                 font-size: 0.8rem;
             }
+            
+            .rating-options {
+                justify-content: center;
+            }
+            
+            .rating-option {
+                min-width: 45px;
+                padding: 0.4rem 0.8rem;
+            }
         }
     </style>
 `;
 
 // Add emotion log specific styles to the document
 document.head.insertAdjacentHTML('beforeend', emotionLogStyles);
+
+// DASS-21 Integration Functions
+function initializeDASS21Integration() {
+    // Initialize DASS-21 functionality
+    updateSaveButtonState();
+}
+
+function checkEmotionsAndShowDASS21() {
+    const dass21Section = document.getElementById('dass21Section');
+    
+    if (selectedEmotions.length > 0) {
+        // Show DASS-21 section when emotions are selected
+        if (dass21Section.style.display === 'none') {
+            dass21Section.style.display = 'block';
+            loadDASS21Questions();
+            
+            // Scroll to DASS-21 section smoothly
+            setTimeout(() => {
+                dass21Section.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 300);
+        }
+    } else {
+        // Hide DASS-21 section when no emotions are selected
+        dass21Section.style.display = 'none';
+        dass21Completed = false;
+        dass21Responses = {};
+        updateSaveButtonState();
+    }
+    
+    updateSaveButtonState();
+}
+
+function loadDASS21Questions() {
+    const questionsContainer = document.getElementById('dass21Questions');
+    
+    // DASS-21 questions
+    const dass21Questions = [
+        {id: 1, text: "I found it hard to wind down.", scale: 'S'},
+        {id: 2, text: "I was aware of dryness of my mouth.", scale: 'A'},
+        {id: 3, text: "I couldn't seem to experience any positive feeling at all.", scale: 'D'},
+        {id: 4, text: "I experienced breathing difficulty (e.g., excessively rapid breathing, shortness of breath for no reason).", scale: 'A'},
+        {id: 5, text: "I found it difficult to get started on things.", scale: 'D'},
+        {id: 6, text: "I tended to over-react to situations.", scale: 'S'},
+        {id: 7, text: "I experienced trembling (e.g., in the hands).", scale: 'A'},
+        {id: 8, text: "I felt that I was using a lot of nervous energy.", scale: 'S'},
+        {id: 9, text: "I was worried about situations in which I might panic and make a fool of myself.", scale: 'A'},
+        {id: 10, text: "I felt that I had nothing to look forward to.", scale: 'D'},
+        {id: 11, text: "I found myself getting agitated.", scale: 'S'},
+        {id: 12, text: "I found it difficult to relax.", scale: 'S'},
+        {id: 13, text: "I felt down-hearted and blue.", scale: 'D'},
+        {id: 14, text: "I was intolerant of anything that kept me from getting on with what I was doing.", scale: 'S'},
+        {id: 15, text: "I felt I was close to panic.", scale: 'A'},
+        {id: 16, text: "I was unable to experience any positive feeling at all.", scale: 'D'},
+        {id: 17, text: "I felt that I wasn't worth much as a person.", scale: 'D'},
+        {id: 18, text: "I felt that I was rather touchy.", scale: 'S'},
+        {id: 19, text: "I was aware of the action of my heart in the absence of physical exertion (e.g., sense of heart rate increase, heart missing a beat).", scale: 'A'},
+        {id: 20, text: "I felt scared without any good reason.", scale: 'A'},
+        {id: 21, text: "I felt that life was meaningless.", scale: 'D'}
+    ];
+
+    let questionsHtml = `
+        <div class="dass21-intro mb-4">
+            <p class="text-muted">Please indicate how much each statement applied to you <strong>over the past week</strong>. There are no right or wrong answers.</p>
+            <div class="rating-scale d-flex flex-wrap justify-content-center gap-2 mb-3">
+                <span class="badge bg-light text-dark px-2 py-1">0: Did not apply to me at all</span>
+                <span class="badge bg-light text-dark px-2 py-1">1: Applied to some degree</span>
+                <span class="badge bg-light text-dark px-2 py-1">2: Applied considerably</span>
+                <span class="badge bg-light text-dark px-2 py-1">3: Applied very much</span>
+            </div>
+        </div>
+    `;
+    
+    dass21Questions.forEach((question, index) => {
+        questionsHtml += `
+            <div class="dass21-question mb-4 p-3 border rounded" data-question="${question.id}">
+                <div class="question-text mb-3">
+                    <strong>${question.id}.</strong> ${question.text}
+                </div>
+                <div class="rating-options d-flex flex-wrap gap-2">
+                    ${[0, 1, 2, 3].map(rating => `
+                        <label class="rating-option">
+                            <input type="radio" name="dass_q${question.id}" value="${rating}" 
+                                   onchange="updateDASS21Response(${question.id}, ${rating})">
+                            <span class="rating-label">${rating}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    });
+    
+    questionsContainer.innerHTML = questionsHtml;
+}
+
+window.updateDASS21Response = function(questionId, rating) {
+    dass21Responses[questionId] = rating;
+    
+    // Check if all questions are answered
+    const totalQuestions = 21;
+    const answeredQuestions = Object.keys(dass21Responses).length;
+    
+    if (answeredQuestions === totalQuestions) {
+        dass21Completed = true;
+    } else {
+        dass21Completed = false;
+    }
+    
+    updateSaveButtonState();
+    updateDASS21Progress(answeredQuestions, totalQuestions);
+};
+
+function updateDASS21Progress(answered, total) {
+    // Update progress indicator
+    const progress = (answered / total) * 100;
+    let progressIndicator = document.getElementById('dass21Progress');
+    
+    if (!progressIndicator) {
+        progressIndicator = document.createElement('div');
+        progressIndicator.id = 'dass21Progress';
+        progressIndicator.className = 'progress mb-3';
+        progressIndicator.innerHTML = `
+            <div class="progress-bar bg-clsu-green" role="progressbar" style="width: 0%">
+                <span class="progress-text">0/21 questions completed</span>
+            </div>
+        `;
+        
+        const questionsContainer = document.getElementById('dass21Questions');
+        questionsContainer.parentNode.insertBefore(progressIndicator, questionsContainer);
+    }
+    
+    const progressBar = progressIndicator.querySelector('.progress-bar');
+    const progressText = progressIndicator.querySelector('.progress-text');
+    
+    progressBar.style.width = progress + '%';
+    progressText.textContent = `${answered}/${total} questions completed`;
+    
+    if (progress === 100) {
+        progressBar.classList.add('bg-success');
+        progressText.textContent = 'Assessment Complete!';
+    }
+}
+
+function updateSaveButtonState() {
+    const saveBtn = document.getElementById('saveMoodLogBtn');
+    const completionMessage = document.getElementById('completionMessage');
+    
+    if (selectedEmotions.length > 0 && dass21Completed) {
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('btn-secondary');
+        saveBtn.classList.add('btn-clsu-green');
+        completionMessage.textContent = 'Ready to save your mood log!';
+        completionMessage.classList.add('text-success');
+        completionMessage.classList.remove('text-muted');
+    } else if (selectedEmotions.length > 0 && !dass21Completed) {
+        saveBtn.disabled = true;
+        saveBtn.classList.add('btn-secondary');
+        saveBtn.classList.remove('btn-clsu-green');
+        completionMessage.textContent = 'Please complete the DASS-21 assessment to save your mood log.';
+        completionMessage.classList.add('text-muted');
+        completionMessage.classList.remove('text-success');
+    } else {
+        saveBtn.disabled = true;
+        saveBtn.classList.add('btn-secondary');
+        saveBtn.classList.remove('btn-clsu-green');
+        completionMessage.textContent = 'Please select your emotions and complete the DASS-21 assessment to save your mood log.';
+        completionMessage.classList.add('text-muted');
+        completionMessage.classList.remove('text-success');
+    }
+}

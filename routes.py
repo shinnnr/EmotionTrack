@@ -117,6 +117,7 @@ def emotion_log():
     if form.validate_on_submit():
         try:
             emotions_data = json.loads(form.emotions.data or '[]')
+            dass21_data = json.loads(request.form.get('dass21_responses', '{}'))
             
             # Create mood log entries for each selected emotion
             for emotion in emotions_data:
@@ -130,8 +131,66 @@ def emotion_log():
                 mood_log.gratitude = form.gratitude.data
                 db.session.add(mood_log)
             
+            # Process DASS-21 assessment if provided
+            if dass21_data and len(dass21_data) == 21:
+                # DASS-21 item mappings
+                depression_items = [3, 5, 10, 13, 16, 17, 21]
+                anxiety_items = [2, 4, 7, 9, 15, 19, 20]
+                stress_items = [1, 6, 8, 11, 12, 14, 18]
+                
+                # Initialize scores
+                depression_score = 0
+                anxiety_score = 0
+                stress_score = 0
+                
+                # Calculate raw scores
+                for i in range(1, 22):
+                    if str(i) in dass21_data:
+                        score = int(dass21_data[str(i)])
+                        
+                        if i in depression_items:
+                            depression_score += score
+                        elif i in anxiety_items:
+                            anxiety_score += score
+                        elif i in stress_items:
+                            stress_score += score
+                
+                # Multiply by 2 for DASS-21 final scores
+                depression_final = depression_score * 2
+                anxiety_final = anxiety_score * 2
+                stress_final = stress_score * 2
+                
+                # Determine severity levels
+                def get_severity(score, scale_type):
+                    thresholds = {
+                        'D': {'Normal': (0, 9), 'Mild': (10, 13), 'Moderate': (14, 20), 'Severe': (21, 27), 'Extremely Severe': (28, 100)},
+                        'A': {'Normal': (0, 7), 'Mild': (8, 9), 'Moderate': (10, 14), 'Severe': (15, 19), 'Extremely Severe': (20, 100)},
+                        'S': {'Normal': (0, 14), 'Mild': (15, 18), 'Moderate': (19, 25), 'Severe': (26, 33), 'Extremely Severe': (34, 100)}
+                    }
+                    
+                    for severity, (min_val, max_val) in thresholds[scale_type].items():
+                        if min_val <= score <= max_val:
+                            return severity
+                    return 'N/A'
+                
+                depression_severity = get_severity(depression_final, 'D')
+                anxiety_severity = get_severity(anxiety_final, 'A')
+                stress_severity = get_severity(stress_final, 'S')
+                
+                # Save DASS-21 results to database
+                dass_result = DASS21Result()
+                dass_result.user_id = current_user.id
+                dass_result.depression_score = depression_final
+                dass_result.anxiety_score = anxiety_final
+                dass_result.stress_score = stress_final
+                dass_result.depression_severity = depression_severity
+                dass_result.anxiety_severity = anxiety_severity
+                dass_result.stress_severity = stress_severity
+                
+                db.session.add(dass_result)
+            
             db.session.commit()
-            flash('Mood log saved successfully!', 'success')
+            flash('Mood log and assessment saved successfully!', 'success')
             return redirect(url_for('main.home'))
             
         except json.JSONDecodeError:
