@@ -1,0 +1,31 @@
+Can you modify and improve my existing Emotion Track website built with Python to fix current bugs and implement the missing features described below? Please carefully review the requirements and ensure the system will work 100% smoothly before deployment:
+________________________________________
+Student Side Fixes
+1.	Profile Page Buttons Bug
+o	Currently, none of the buttons inside the Student Profile page are opening/working.
+o	Fix this so that all buttons properly trigger their respective actions or open the correct pages.
+2.	Dass-21 Assessment Integration in Log Emotions Page
+o	On the Log Emotions page, after the student selects their emotions, the Dass-21 Assessment should appear automatically.
+o	Students must complete the Dass-21 assessment before the "Save my Mood Log" button is enabled.
+o	Once completed, they can then click "Save my Mood Log" to submit both the emotion log and Dass-21 results together.
+3.	View Insights Modal Bug
+o	In the View Insights feature, when the insights window is opened, it cannot be closed.
+o	Fix this so the insights view has a working close button (X) that properly closes the modal/window without requiring a page refresh.
+________________________________________
+Admin Side Fixes
+1.	Chat System Improvements
+o	The Admin-to-Student chat system should provide detailed suggested messages/responses for the admin.
+o	Suggested responses should be dynamic and depend on the student’s latest mood log and Dass-21 results.
+o	Examples:
+	If a student logs “stressed” with high Dass-21 stress score, suggest supportive responses such as stress management tips.
+	If a student logs “sad” with high depression score, suggest empathetic and encouraging messages.
+	If a student logs “happy,” suggest positive reinforcement messages.
+o	Ensure that each student can receive different suggested responses depending on their unique well-being state.
+________________________________________
+General Requirements
+•	Make sure all the above fixes are implemented cleanly without breaking other existing functionality.
+•	Ensure all modals, buttons, and chat features work smoothly across both student and admin dashboards.
+•	Keep the code organized, maintainable, and well-documented with comments so future updates will be easier.
+________________________________________
+👉 Please implement all of these fixes and improvements step by step, ensuring the website becomes fully functional and bug-free before deployment.
+

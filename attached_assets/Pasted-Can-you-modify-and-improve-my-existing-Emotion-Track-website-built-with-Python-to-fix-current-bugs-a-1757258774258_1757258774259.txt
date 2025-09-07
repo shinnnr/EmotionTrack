@@ -1,0 +1,51 @@
+Can you modify and improve my existing Emotion Track website built with Python to fix current bugs and implement the missing features described below? Please carefully review the requirements and ensure the system will work 100% smoothly before deployment:
+
+Student Side Fixes
+
+Profile Page Buttons Bug
+
+Currently, none of the buttons inside the Student Profile page are opening/working.
+
+Fix this so that all buttons properly trigger their respective actions or open the correct pages.
+
+Dass-21 Assessment Integration in Log Emotions Page
+
+On the Log Emotions page, after the student selects their emotions, the Dass-21 Assessment should appear automatically.
+
+Students must complete the Dass-21 assessment before the "Save my Mood Log" button is enabled.
+
+Once completed, they can then click "Save my Mood Log" to submit both the emotion log and Dass-21 results together.
+
+View Insights Modal Bug
+
+In the View Insights feature, when the insights window is opened, it cannot be closed.
+
+Fix this so the insights view has a working close button (X) that properly closes the modal/window without requiring a page refresh.
+
+Admin Side Fixes
+
+Chat System Improvements
+
+The Admin-to-Student chat system should provide detailed suggested messages/responses for the admin.
+
+Suggested responses should be dynamic and depend on the student’s latest mood log and Dass-21 results.
+
+Examples:
+
+If a student logs “stressed” with high Dass-21 stress score, suggest supportive responses such as stress management tips.
+
+If a student logs “sad” with high depression score, suggest empathetic and encouraging messages.
+
+If a student logs “happy,” suggest positive reinforcement messages.
+
+Ensure that each student can receive different suggested responses depending on their unique well-being state.
+
+General Requirements
+
+Make sure all the above fixes are implemented cleanly without breaking other existing functionality.
+
+Ensure all modals, buttons, and chat features work smoothly across both student and admin dashboards.
+
+Keep the code organized, maintainable, and well-documented with comments so future updates will be easier.
+
+👉 Please implement all of these fixes and improvements step by step, ensuring the website becomes fully functional and bug-free before deployment.
