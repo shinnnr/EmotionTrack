@@ -662,6 +662,7 @@ function updateSaveButtonState() {
     const form = document.getElementById('emotionForm');
     
     if (!submitButton || !completionMessage || !form) {
+        console.warn('Missing elements for save button validation');
         return;
     }
     
@@ -673,14 +674,26 @@ function updateSaveButtonState() {
     // Emotion validation - this should be first and most important
     const hasEmotions = selectedEmotions && selectedEmotions.length > 0;
     
-    // Other field validations - only check if emotions are selected
+    // Other field validations - get current values
     const sleepValue = sleepInput ? parseFloat(sleepInput.value) : NaN;
     const hasSleep = sleepInput && sleepInput.value.trim() !== '' && !isNaN(sleepValue) && sleepValue >= 0 && sleepValue <= 24;
     
     const energyValue = energyInput ? parseInt(energyInput.value) : NaN;
     const hasEnergy = energyInput && energyInput.value.trim() !== '' && !isNaN(energyValue) && energyValue >= 1 && energyValue <= 10;
     
-    const hasTriggers = triggersInput && triggersInput.value && triggersInput.value !== '';
+    const hasTriggers = triggersInput && triggersInput.value && triggersInput.value !== '' && triggersInput.value !== null;
+    
+    // Debug logging to track validation state
+    console.log('Validation check:', {
+        hasEmotions,
+        hasSleep,
+        hasEnergy,
+        hasTriggers,
+        sleepValue: sleepInput?.value,
+        energyValue: energyInput?.value,
+        triggersValue: triggersInput?.value,
+        selectedEmotions: selectedEmotions.length
+    });
     
     // Priority-based messaging and validation
     if (!hasEmotions) {
@@ -691,6 +704,7 @@ function updateSaveButtonState() {
         completionMessage.textContent = 'Please select at least one emotion to continue.';
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
+        console.log('Save button disabled: No emotions selected');
     } else if (hasEmotions && (!hasSleep || !hasEnergy || !hasTriggers)) {
         // Second priority: fill other required fields
         submitButton.disabled = true;
@@ -705,6 +719,7 @@ function updateSaveButtonState() {
         completionMessage.textContent = `Great! Now please fill in: ${missingFields.join(', ')}.`;
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
+        console.log('Save button disabled: Missing fields:', missingFields);
     } else {
         // All fields completed
         submitButton.disabled = false;
@@ -713,5 +728,6 @@ function updateSaveButtonState() {
         completionMessage.textContent = 'Perfect! Ready to save your mood log.';
         completionMessage.classList.add('text-success');
         completionMessage.classList.remove('text-muted');
+        console.log('Save button ENABLED: All fields complete');
     }
 }
