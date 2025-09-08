@@ -7,14 +7,57 @@ document.addEventListener('DOMContentLoaded', function() {
 
 let selectedEmotions = [];
 
+// Global variables and functions for emotion selection
+let emotionsInput;
+let selectedEmotionsContainer;
+let selectedList;
+
+function updateSelectedEmotions() {
+    if (selectedEmotions.length > 0) {
+        selectedEmotionsContainer.style.display = 'block';
+        selectedList.innerHTML = selectedEmotions.map(emotion => `
+            <span class="badge bg-clsu-green me-2 mb-2 p-2">
+                ${getEmotionIcon(emotion)} ${emotion}
+                <button type="button" class="btn-close btn-close-white ms-2" onclick="removeEmotion('${emotion}')"></button>
+            </span>
+        `).join('');
+    } else {
+        selectedEmotionsContainer.style.display = 'none';
+    }
+}
+
+function updateHiddenInput() {
+    if (emotionsInput) {
+        emotionsInput.value = JSON.stringify(selectedEmotions);
+    }
+}
+
+// Global function to remove emotions from badges
+window.removeEmotion = function(emotion) {
+    const emotionItem = document.querySelector(`[data-emotion="${emotion}"]`);
+    if (emotionItem) {
+        emotionItem.classList.remove('selected');
+    }
+    selectedEmotions = selectedEmotions.filter(e => e !== emotion);
+    updateSelectedEmotions();
+    updateHiddenInput();
+    updateSaveButtonState();
+};
+
 function initializeEmotionSelection() {
     const emotionItems = document.querySelectorAll('.emotion-item');
-    const emotionsInput = document.querySelector('input[name="emotions"]');
-    const selectedEmotionsContainer = document.getElementById('selectedEmotions');
-    const selectedList = selectedEmotionsContainer.querySelector('.selected-list');
+    emotionsInput = document.querySelector('input[name="emotions"]');
+    selectedEmotionsContainer = document.getElementById('selectedEmotions');
+    
+    if (selectedEmotionsContainer) {
+        selectedList = selectedEmotionsContainer.querySelector('.selected-list');
+    }
 
-    emotionItems.forEach(item => {
-        item.addEventListener('click', function() {
+    emotionItems.forEach((item, index) => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
             const emotion = this.dataset.emotion;
             
             if (this.classList.contains('selected')) {
@@ -32,36 +75,6 @@ function initializeEmotionSelection() {
             updateSaveButtonState();
         });
     });
-
-    function updateSelectedEmotions() {
-        if (selectedEmotions.length > 0) {
-            selectedEmotionsContainer.style.display = 'block';
-            selectedList.innerHTML = selectedEmotions.map(emotion => `
-                <span class="badge bg-clsu-green me-2 mb-2 p-2">
-                    ${getEmotionIcon(emotion)} ${emotion}
-                    <button type="button" class="btn-close btn-close-white ms-2" onclick="removeEmotion('${emotion}')"></button>
-                </span>
-            `).join('');
-        } else {
-            selectedEmotionsContainer.style.display = 'none';
-        }
-    }
-
-    function updateHiddenInput() {
-        emotionsInput.value = JSON.stringify(selectedEmotions);
-    }
-
-    // Global function to remove emotions from badges
-    window.removeEmotion = function(emotion) {
-        const emotionItem = document.querySelector(`[data-emotion="${emotion}"]`);
-        if (emotionItem) {
-            emotionItem.classList.remove('selected');
-        }
-        selectedEmotions = selectedEmotions.filter(e => e !== emotion);
-        updateSelectedEmotions();
-        updateHiddenInput();
-        updateSaveButtonState();
-    };
 }
 
 function initializeFormValidation() {
@@ -72,7 +85,7 @@ function initializeFormValidation() {
         // Validate emotions selection
         if (selectedEmotions.length === 0) {
             e.preventDefault();
-            MindTrack.showAlert('Please select at least one emotion.', 'warning');
+            alert('Please select at least one emotion.');
             
             // Scroll to emotions section
             document.querySelector('.emotion-grid').scrollIntoView({
@@ -90,7 +103,7 @@ function initializeFormValidation() {
         
         if (!sleepValue || sleepValue < 0 || sleepValue > 24) {
             e.preventDefault();
-            MindTrack.showAlert('Please enter a valid number of sleep hours (0-24).', 'warning');
+            alert('Please enter a valid number of sleep hours (0-24).');
             sleepInput.focus();
             return;
         }
@@ -101,7 +114,7 @@ function initializeFormValidation() {
         
         if (!energyValue || energyValue < 1 || energyValue > 10) {
             e.preventDefault();
-            MindTrack.showAlert('Please enter a valid energy level (1-10).', 'warning');
+            alert('Please enter a valid energy level (1-10).');
             energyInput.focus();
             return;
         }
@@ -109,11 +122,15 @@ function initializeFormValidation() {
 // No DASS-21 data to add - form submits normally
 
         // Show loading state
-        const hideLoading = MindTrack.showLoading(submitButton, 'Saving your mood log...');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving your mood log...';
         
-        // Form will submit normally, but we can add a timeout to hide loading if needed
+        // Form will submit normally, but we can add a timeout to re-enable if needed
         setTimeout(() => {
-            hideLoading();
+            if (submitButton.disabled) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-save me-2"></i>Save My Mood Log';
+            }
         }, 10000); // 10 second timeout
     });
 
@@ -342,8 +359,8 @@ function initializeCorrelationHints() {
         `;
     }
 
-    sleepInput.addEventListener('input', MindTrack.debounce(updateHints, 500));
-    energyInput.addEventListener('input', MindTrack.debounce(updateHints, 500));
+    sleepInput.addEventListener('input', debounce(updateHints, 500));
+    energyInput.addEventListener('input', debounce(updateHints, 500));
 }
 
 // Progressive enhancement for better UX
@@ -544,6 +561,45 @@ const emotionLogStyles = `
     </style>
 `;
 
+// Add custom emotion functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const customEmotionInput = document.getElementById('customEmotion');
+    const addCustomEmotionBtn = document.getElementById('addCustomEmotion');
+    
+    if (customEmotionInput && addCustomEmotionBtn) {
+        addCustomEmotionBtn.addEventListener('click', function() {
+            const customEmotion = customEmotionInput.value.trim();
+            if (customEmotion && !selectedEmotions.includes(customEmotion)) {
+                selectedEmotions.push(customEmotion);
+                customEmotionInput.value = '';
+                updateSelectedEmotions();
+                updateHiddenInput();
+                updateSaveButtonState();
+            }
+        });
+        
+        customEmotionInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addCustomEmotionBtn.click();
+            }
+        });
+    }
+});
+
+// Simple debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 // Add emotion log specific styles to the document
 document.head.insertAdjacentHTML('beforeend', emotionLogStyles);
 
@@ -577,7 +633,6 @@ function updateSaveButtonState() {
     
     const hasTriggers = triggersInput && triggersInput.value && triggersInput.value !== '';
     
-    console.log('Form validation status:', { hasEmotions, hasSleep, hasEnergy, hasTriggers, sleepValue, energyValue, triggersValue: triggersInput?.value });
     
     if (hasEmotions && hasSleep && hasEnergy && hasTriggers) {
         submitButton.disabled = false;
