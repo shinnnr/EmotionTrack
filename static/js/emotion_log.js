@@ -182,7 +182,6 @@ function initializeFormValidation() {
     // Add comprehensive event listeners for all form fields
     const triggersSelect = form.querySelector('select[name="triggers"]');
     const copingSelect = form.querySelector('select[name="coping"]');
-    const gratitudeTextarea = form.querySelector('textarea[name="gratitude"]');
     
     // Add multiple event types to catch all possible changes
     if (triggersSelect) {
