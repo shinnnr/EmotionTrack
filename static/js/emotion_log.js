@@ -2,6 +2,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     initializeEmotionSelection();
     initializeFormValidation();
+    // Set up comprehensive form monitoring
+    setupFormMonitoring();
     updateSaveButtonState();
 });
 
@@ -202,6 +204,54 @@ function initializeFormValidation() {
     
     // Call updateSaveButtonState after a short delay to handle any pre-filled values
     setTimeout(updateSaveButtonState, 100);
+}
+
+// Comprehensive form monitoring to fix save button validation
+function setupFormMonitoring() {
+    const form = document.getElementById('emotionForm');
+    if (!form) return;
+    
+    // Get all form elements that affect validation
+    const sleepInput = form.querySelector('input[name="sleep"]');
+    const energyInput = form.querySelector('input[name="energy"]');
+    const triggersSelect = form.querySelector('select[name="triggers"]');
+    const copingSelect = form.querySelector('select[name="coping"]');
+    const gratitudeTextarea = form.querySelector('textarea[name="gratitude"]');
+    
+    // Add multiple event types to ensure we catch all changes
+    const eventTypes = ['input', 'change', 'blur', 'keyup', 'paste'];
+    
+    function addComprehensiveListeners(element, description) {
+        if (!element) return;
+        
+        eventTypes.forEach(eventType => {
+            element.addEventListener(eventType, function() {
+                console.log(`${description} ${eventType} event triggered`);
+                // Small delay to ensure the value has been updated
+                setTimeout(updateSaveButtonState, 10);
+            });
+        });
+    }
+    
+    // Apply listeners to all relevant form fields
+    addComprehensiveListeners(sleepInput, 'Sleep input');
+    addComprehensiveListeners(energyInput, 'Energy input');
+    addComprehensiveListeners(triggersSelect, 'Triggers select');
+    addComprehensiveListeners(copingSelect, 'Coping select');
+    addComprehensiveListeners(gratitudeTextarea, 'Gratitude textarea');
+    
+    // Also monitor any changes to the form as a whole
+    form.addEventListener('input', function(e) {
+        console.log('Form input event:', e.target.name, e.target.value);
+        setTimeout(updateSaveButtonState, 10);
+    });
+    
+    form.addEventListener('change', function(e) {
+        console.log('Form change event:', e.target.name, e.target.value);
+        setTimeout(updateSaveButtonState, 10);
+    });
+    
+    console.log('Form monitoring setup complete');
 }
 
 function getEmotionIcon(emotion) {
