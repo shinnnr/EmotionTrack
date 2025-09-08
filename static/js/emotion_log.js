@@ -612,7 +612,6 @@ function updateSaveButtonState() {
     const form = document.getElementById('emotionForm');
     
     if (!submitButton || !completionMessage || !form) {
-        console.warn('Required form elements not found');
         return;
     }
     
@@ -621,9 +620,10 @@ function updateSaveButtonState() {
     const energyInput = form.querySelector('input[name="energy"]');
     const triggersInput = form.querySelector('select[name="triggers"]');
     
-    // More robust validation checks
+    // Emotion validation - this should be first and most important
     const hasEmotions = selectedEmotions && selectedEmotions.length > 0;
     
+    // Other field validations - only check if emotions are selected
     const sleepValue = sleepInput ? parseFloat(sleepInput.value) : NaN;
     const hasSleep = sleepInput && sleepInput.value.trim() !== '' && !isNaN(sleepValue) && sleepValue >= 0 && sleepValue <= 24;
     
@@ -632,33 +632,36 @@ function updateSaveButtonState() {
     
     const hasTriggers = triggersInput && triggersInput.value && triggersInput.value !== '';
     
-    
-    if (hasEmotions && hasSleep && hasEnergy && hasTriggers) {
-        submitButton.disabled = false;
-        submitButton.classList.remove('btn-secondary');
-        submitButton.classList.add('btn-clsu-green');
-        completionMessage.textContent = 'Ready to save your mood log!';
-        completionMessage.classList.add('text-success');
-        completionMessage.classList.remove('text-muted');
-    } else {
+    // Priority-based messaging and validation
+    if (!hasEmotions) {
+        // First priority: select emotions
+        submitButton.disabled = true;
+        submitButton.classList.add('btn-secondary');
+        submitButton.classList.remove('btn-clsu-green');
+        completionMessage.textContent = 'Please select at least one emotion to continue.';
+        completionMessage.classList.add('text-muted');
+        completionMessage.classList.remove('text-success');
+    } else if (hasEmotions && (!hasSleep || !hasEnergy || !hasTriggers)) {
+        // Second priority: fill other required fields
         submitButton.disabled = true;
         submitButton.classList.add('btn-secondary');
         submitButton.classList.remove('btn-clsu-green');
         
-        // More specific completion message
         let missingFields = [];
-        if (!hasEmotions) missingFields.push('select emotions');
-        if (!hasSleep) missingFields.push('enter sleep hours');
-        if (!hasEnergy) missingFields.push('set energy level');
-        if (!hasTriggers) missingFields.push('select triggers');
+        if (!hasSleep) missingFields.push('sleep hours');
+        if (!hasEnergy) missingFields.push('energy level');
+        if (!hasTriggers) missingFields.push('main trigger');
         
-        if (missingFields.length > 0) {
-            completionMessage.textContent = `Please ${missingFields.join(', ')} to save your mood log.`;
-        } else {
-            completionMessage.textContent = 'Please complete all required fields to save your mood log.';
-        }
-        
+        completionMessage.textContent = `Great! Now please fill in: ${missingFields.join(', ')}.`;
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
+    } else {
+        // All fields completed
+        submitButton.disabled = false;
+        submitButton.classList.remove('btn-secondary');
+        submitButton.classList.add('btn-clsu-green');
+        completionMessage.textContent = 'Perfect! Ready to save your mood log.';
+        completionMessage.classList.add('text-success');
+        completionMessage.classList.remove('text-muted');
     }
 }
