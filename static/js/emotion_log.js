@@ -123,9 +123,8 @@ function initializeFormValidation() {
 
     sleepInput.addEventListener('input', function() {
         const value = parseFloat(this.value);
-        const feedback = this.nextElementSibling;
         
-        if (value < 0 || value > 24) {
+        if (value < 0 || value > 24 || isNaN(value)) {
             this.classList.add('is-invalid');
             this.classList.remove('is-valid');
         } else if (value >= 0 && value <= 24) {
@@ -134,11 +133,14 @@ function initializeFormValidation() {
         }
         updateSaveButtonState();
     });
+    
+    sleepInput.addEventListener('change', updateSaveButtonState);
+    sleepInput.addEventListener('blur', updateSaveButtonState);
 
     energyInput.addEventListener('input', function() {
         const value = parseInt(this.value);
         
-        if (value < 1 || value > 10) {
+        if (value < 1 || value > 10 || isNaN(value)) {
             this.classList.add('is-invalid');
             this.classList.remove('is-valid');
         } else if (value >= 1 && value <= 10) {
@@ -147,6 +149,9 @@ function initializeFormValidation() {
         }
         updateSaveButtonState();
     });
+    
+    energyInput.addEventListener('change', updateSaveButtonState);
+    energyInput.addEventListener('blur', updateSaveButtonState);
 
     // Auto-resize gratitude textarea
     const gratitudeTextarea = form.querySelector('textarea[name="gratitude"]');
@@ -157,17 +162,30 @@ function initializeFormValidation() {
         });
     }
     
-    // Add event listeners for form validation
+    // Add comprehensive event listeners for all form fields
     const triggersSelect = form.querySelector('select[name="triggers"]');
     const copingSelect = form.querySelector('select[name="coping"]');
+    const gratitudeTextarea = form.querySelector('textarea[name="gratitude"]');
     
+    // Add multiple event types to catch all possible changes
     if (triggersSelect) {
         triggersSelect.addEventListener('change', updateSaveButtonState);
+        triggersSelect.addEventListener('input', updateSaveButtonState);
     }
     
     if (copingSelect) {
         copingSelect.addEventListener('change', updateSaveButtonState);
+        copingSelect.addEventListener('input', updateSaveButtonState);
     }
+    
+    // Also listen to textarea changes in case they affect validation
+    if (gratitudeTextarea) {
+        gratitudeTextarea.addEventListener('input', updateSaveButtonState);
+        gratitudeTextarea.addEventListener('change', updateSaveButtonState);
+    }
+    
+    // Call updateSaveButtonState after a short delay to handle any pre-filled values
+    setTimeout(updateSaveButtonState, 100);
 }
 
 function getEmotionIcon(emotion) {
@@ -538,15 +556,28 @@ function updateSaveButtonState() {
     const completionMessage = document.getElementById('completionMessage');
     const form = document.getElementById('emotionForm');
     
+    if (!submitButton || !completionMessage || !form) {
+        console.warn('Required form elements not found');
+        return;
+    }
+    
     // Check if all required fields are filled
     const sleepInput = form.querySelector('input[name="sleep"]');
     const energyInput = form.querySelector('input[name="energy"]');
     const triggersInput = form.querySelector('select[name="triggers"]');
     
-    const hasEmotions = selectedEmotions.length > 0;
-    const hasSleep = sleepInput && sleepInput.value && parseFloat(sleepInput.value) >= 0 && parseFloat(sleepInput.value) <= 24;
-    const hasEnergy = energyInput && energyInput.value && parseInt(energyInput.value) >= 1 && parseInt(energyInput.value) <= 10;
-    const hasTriggers = triggersInput && triggersInput.value;
+    // More robust validation checks
+    const hasEmotions = selectedEmotions && selectedEmotions.length > 0;
+    
+    const sleepValue = sleepInput ? parseFloat(sleepInput.value) : NaN;
+    const hasSleep = sleepInput && sleepInput.value.trim() !== '' && !isNaN(sleepValue) && sleepValue >= 0 && sleepValue <= 24;
+    
+    const energyValue = energyInput ? parseInt(energyInput.value) : NaN;
+    const hasEnergy = energyInput && energyInput.value.trim() !== '' && !isNaN(energyValue) && energyValue >= 1 && energyValue <= 10;
+    
+    const hasTriggers = triggersInput && triggersInput.value && triggersInput.value !== '';
+    
+    console.log('Form validation status:', { hasEmotions, hasSleep, hasEnergy, hasTriggers, sleepValue, energyValue, triggersValue: triggersInput?.value });
     
     if (hasEmotions && hasSleep && hasEnergy && hasTriggers) {
         submitButton.disabled = false;
@@ -559,7 +590,20 @@ function updateSaveButtonState() {
         submitButton.disabled = true;
         submitButton.classList.add('btn-secondary');
         submitButton.classList.remove('btn-clsu-green');
-        completionMessage.textContent = 'Please select your emotions and fill in the required details to save your mood log.';
+        
+        // More specific completion message
+        let missingFields = [];
+        if (!hasEmotions) missingFields.push('select emotions');
+        if (!hasSleep) missingFields.push('enter sleep hours');
+        if (!hasEnergy) missingFields.push('set energy level');
+        if (!hasTriggers) missingFields.push('select triggers');
+        
+        if (missingFields.length > 0) {
+            completionMessage.textContent = `Please ${missingFields.join(', ')} to save your mood log.`;
+        } else {
+            completionMessage.textContent = 'Please complete all required fields to save your mood log.';
+        }
+        
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
     }
