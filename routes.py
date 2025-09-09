@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
-from app import db
+from app import db, csrf
 from models import User, MoodLog, DASS21Result, StudentMessage
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm
 
@@ -888,6 +888,7 @@ def get_student_profile(user_id):
 
 @admin_bp.route('/api/export-data', methods=['GET', 'POST'])
 @login_required
+@csrf.exempt  
 def export_data():
     if not current_user.is_admin:
         return jsonify({'error': 'Access denied'}), 403
@@ -902,6 +903,8 @@ def export_data():
         # Get export parameters from request
         if request.method == 'POST':
             data = request.get_json()
+            if not data:
+                return jsonify({'error': 'No data provided'}), 400
             export_types = data.get('types', [])
             start_date = data.get('start_date')
             end_date = data.get('end_date')
@@ -913,6 +916,10 @@ def export_data():
             start_date = None
             end_date = None
             export_format = 'csv'
+        
+        # Validate export types
+        if not export_types:
+            return jsonify({'error': 'No export types specified'}), 400
         
         # Convert date strings to datetime objects
         start_datetime = None

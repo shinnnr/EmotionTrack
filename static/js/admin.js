@@ -387,9 +387,35 @@ function copySuggestion(text) {
     });
 }
 
+// Simple alert function for admin panel
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 1060; max-width: 400px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.classList.remove('show');
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 150);
+        }
+    }, 5000);
+}
+
 // Make functions available globally
 window.viewStudentProfile = viewStudentProfile;
 window.getSuggestedResponses = getSuggestedResponses;
+window.showAlert = showAlert;
 
 function initializeAdminDashboard() {
     setupStatCards();
@@ -778,6 +804,17 @@ async function performDataExport(options) {
             throw new Error('Please select at least one data type to export');
         }
         
+        // Get CSRF token from meta tag or form
+        let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+            // Try to get from hidden input
+            const csrfInput = document.querySelector('input[name="csrf_token"]') || 
+                             document.querySelector('[name="csrf_token"]');
+            if (csrfInput) {
+                csrfToken = csrfInput.value;
+            }
+        }
+        
         // Prepare request data
         const requestData = {
             types: exportTypes,
@@ -786,17 +823,34 @@ async function performDataExport(options) {
             format: options.format || 'csv'
         };
         
+        // Prepare headers
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+        
+        // Add CSRF token if available
+        if (csrfToken) {
+            headers['X-CSRFToken'] = csrfToken;
+        }
+        
         // Send POST request with export options
         const response = await fetch('/admin/api/export-data', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
             body: JSON.stringify(requestData)
         });
         
         if (!response.ok) {
-            throw new Error('Export failed');
+            const errorData = await response.json().catch(() => ({ error: 'Export failed' }));
+            throw new Error(errorData.error || `Export failed with status: ${response.status}`);
+        }
+        
+        // Check if response is JSON (error) or binary (file)
+        const contentType = response.headers.get('Content-Type');
+        if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Export failed');
         }
         
         // Get filename from response headers
@@ -821,8 +875,12 @@ async function performDataExport(options) {
         // Clean up
         window.URL.revokeObjectURL(url);
         
+        // Show success message
+        showAlert('Data exported successfully!', 'success');
+        
     } catch (error) {
         console.error('Export error:', error);
+        showAlert(`Export failed: ${error.message}`, 'danger');
         throw error;
     }
 }
@@ -830,29 +888,41 @@ async function performDataExport(options) {
 function initializeAnalytics() {
     window.generateReport = async function() {
         const reportBtn = document.querySelector('.btn-outline-info');
-        const hideLoading = MindTrack.showLoading(reportBtn, 'Generating...');
+        let hideLoading = null;
+        
+        if (reportBtn && typeof showLoading === 'function') {
+            hideLoading = showLoading(reportBtn, 'Generating...');
+        }
         
         try {
             await showReportGenerationModal();
         } catch (error) {
             console.error('Report generation error:', error);
-            MindTrack.showAlert('Report generation failed. Please try again.', 'danger');
+            showAlert('Report generation failed. Please try again.', 'danger');
         } finally {
-            hideLoading();
+            if (hideLoading && typeof hideLoading === 'function') {
+                hideLoading();
+            }
         }
     };
     
     window.viewAnalytics = async function() {
         const analyticsBtn = document.querySelector('.btn-outline-warning');
-        const hideLoading = MindTrack.showLoading(analyticsBtn, 'Loading...');
+        let hideLoading = null;
+        
+        if (analyticsBtn && typeof showLoading === 'function') {
+            hideLoading = showLoading(analyticsBtn, 'Loading...');
+        }
         
         try {
             await showAnalyticsModal();
         } catch (error) {
             console.error('Analytics error:', error);
-            MindTrack.showAlert('Failed to load analytics. Please try again.', 'danger');
+            showAlert('Failed to load analytics. Please try again.', 'danger');
         } finally {
-            hideLoading();
+            if (hideLoading && typeof hideLoading === 'function') {
+                hideLoading();
+            }
         }
     };
 }
