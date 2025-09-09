@@ -886,7 +886,7 @@ def get_student_profile(user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@admin_bp.route('/api/export-data')
+@admin_bp.route('/api/export-data', methods=['GET', 'POST'])
 @login_required
 def export_data():
     if not current_user.is_admin:
@@ -896,56 +896,196 @@ def export_data():
         from flask import Response
         import csv
         import io
+        import zipfile
+        from datetime import datetime, timedelta
         
-        # Get export type from query params
-        export_type = request.args.get('type', 'all')
+        # Get export parameters from request
+        if request.method == 'POST':
+            data = request.get_json()
+            export_types = data.get('types', [])
+            start_date = data.get('start_date')
+            end_date = data.get('end_date')
+            export_format = data.get('format', 'csv')
+        else:
+            # Fallback to old method for backward compatibility
+            export_type = request.args.get('type', 'all')
+            export_types = [export_type] if export_type != 'all' else ['users', 'mood_logs', 'dass21']
+            start_date = None
+            end_date = None
+            export_format = 'csv'
         
-        output = io.StringIO()
+        # Convert date strings to datetime objects
+        start_datetime = None
+        end_datetime = None
+        if start_date:
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+        if end_date:
+            end_datetime = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)  # Include end date
         
-        if export_type == 'users' or export_type == 'all':
-            writer = csv.writer(output)
-            writer.writerow(['ID', 'First Name', 'Last Name', 'Email', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'])
+        # If only one type is selected, return single CSV
+        if len(export_types) == 1:
+            output = io.StringIO()
+            export_type = export_types[0]
             
-            users = User.query.filter_by(is_admin=False).all()
-            for user in users:
-                writer.writerow([
-                    user.id, user.firstname, user.lastname, user.email, 
-                    user.gender, user.strand, user.grade_level, user.section,
-                    user.created_at.strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
-                ])
-        
-        elif export_type == 'mood_logs':
-            writer = csv.writer(output)
-            writer.writerow(['Log ID', 'User Email', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
+            if export_type == 'users':
+                writer = csv.writer(output)
+                writer.writerow(['ID', 'First Name', 'Last Name', 'Email', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'])
+                
+                query = User.query.filter_by(is_admin=False)
+                if start_datetime and end_datetime:
+                    query = query.filter(User.created_at >= start_datetime, User.created_at < end_datetime)
+                users = query.all()
+                
+                for user in users:
+                    writer.writerow([
+                        user.id, user.firstname, user.lastname, user.email, 
+                        user.gender, user.strand, user.grade_level, user.section,
+                        user.created_at.strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
+                    ])
             
-            logs = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id).all()
-            for log, user in logs:
-                writer.writerow([
-                    log.log_id, user.email, log.emotion, log.sleep, log.energy,
-                    log.triggers, log.coping, log.gratitude,
-                    log.log_date.strftime('%Y-%m-%d %H:%M:%S') if log.log_date else ''
-                ])
-        
-        elif export_type == 'dass21':
-            writer = csv.writer(output)
-            writer.writerow(['ID', 'User Email', 'Depression Score', 'Anxiety Score', 'Stress Score', 
-                           'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'])
+            elif export_type == 'mood_logs':
+                writer = csv.writer(output)
+                writer.writerow(['Log ID', 'User Email', 'User Name', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
+                
+                query = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id)
+                if start_datetime and end_datetime:
+                    query = query.filter(MoodLog.log_date >= start_datetime, MoodLog.log_date < end_datetime)
+                logs = query.all()
+                
+                for log, user in logs:
+                    writer.writerow([
+                        log.log_id, user.email, user.full_name, log.emotion, log.sleep, log.energy,
+                        log.triggers or '', log.coping or '', log.gratitude or '',
+                        log.log_date.strftime('%Y-%m-%d %H:%M:%S') if log.log_date else ''
+                    ])
             
-            results = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id).all()
-            for result, user in results:
-                writer.writerow([
-                    result.id, user.email, result.depression_score, result.anxiety_score, result.stress_score,
-                    result.depression_severity, result.anxiety_severity, result.stress_severity,
-                    result.created_at.strftime('%Y-%m-%d %H:%M:%S') if result.created_at else ''
-                ])
+            elif export_type == 'dass21':
+                writer = csv.writer(output)
+                writer.writerow(['ID', 'User Email', 'User Name', 'Depression Score', 'Anxiety Score', 'Stress Score', 
+                               'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'])
+                
+                query = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id)
+                if start_datetime and end_datetime:
+                    query = query.filter(DASS21Result.created_at >= start_datetime, DASS21Result.created_at < end_datetime)
+                results = query.all()
+                
+                for result, user in results:
+                    writer.writerow([
+                        result.id, user.email, user.full_name, result.depression_score, result.anxiety_score, result.stress_score,
+                        result.depression_severity, result.anxiety_severity, result.stress_severity,
+                        result.created_at.strftime('%Y-%m-%d %H:%M:%S') if result.created_at else ''
+                    ])
+            
+            elif export_type == 'messages':
+                writer = csv.writer(output)
+                writer.writerow(['ID', 'Student Email', 'Student Name', 'Message Text', 'Admin Response', 'Is Read', 'Created At', 'Responded At'])
+                
+                query = db.session.query(StudentMessage, User).join(User, StudentMessage.sender_user_id == User.id)
+                if start_datetime and end_datetime:
+                    query = query.filter(StudentMessage.created_at >= start_datetime, StudentMessage.created_at < end_datetime)
+                messages = query.all()
+                
+                for message, user in messages:
+                    writer.writerow([
+                        message.id, user.email, user.full_name, message.message_text or '', message.admin_response or '',
+                        message.is_read, 
+                        message.created_at.strftime('%Y-%m-%d %H:%M:%S') if message.created_at else '',
+                        message.responded_at.strftime('%Y-%m-%d %H:%M:%S') if message.responded_at else ''
+                    ])
+            
+            output.seek(0)
+            
+            return Response(
+                output.getvalue(),
+                mimetype='text/csv',
+                headers={'Content-Disposition': f'attachment; filename=emotiontrack_{export_type}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'}
+            )
         
-        output.seek(0)
-        
-        return Response(
-            output.getvalue(),
-            mimetype='text/csv',
-            headers={'Content-Disposition': f'attachment; filename=mindtrack_{export_type}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'}
-        )
+        # Multiple types selected - create ZIP file
+        else:
+            zip_buffer = io.BytesIO()
+            
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                for export_type in export_types:
+                    output = io.StringIO()
+                    
+                    if export_type == 'users':
+                        writer = csv.writer(output)
+                        writer.writerow(['ID', 'First Name', 'Last Name', 'Email', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'])
+                        
+                        query = User.query.filter_by(is_admin=False)
+                        if start_datetime and end_datetime:
+                            query = query.filter(User.created_at >= start_datetime, User.created_at < end_datetime)
+                        users = query.all()
+                        
+                        for user in users:
+                            writer.writerow([
+                                user.id, user.firstname, user.lastname, user.email, 
+                                user.gender, user.strand, user.grade_level, user.section,
+                                user.created_at.strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
+                            ])
+                    
+                    elif export_type == 'mood_logs':
+                        writer = csv.writer(output)
+                        writer.writerow(['Log ID', 'User Email', 'User Name', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
+                        
+                        query = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id)
+                        if start_datetime and end_datetime:
+                            query = query.filter(MoodLog.log_date >= start_datetime, MoodLog.log_date < end_datetime)
+                        logs = query.all()
+                        
+                        for log, user in logs:
+                            writer.writerow([
+                                log.log_id, user.email, user.full_name, log.emotion, log.sleep, log.energy,
+                                log.triggers or '', log.coping or '', log.gratitude or '',
+                                log.log_date.strftime('%Y-%m-%d %H:%M:%S') if log.log_date else ''
+                            ])
+                    
+                    elif export_type == 'dass21':
+                        writer = csv.writer(output)
+                        writer.writerow(['ID', 'User Email', 'User Name', 'Depression Score', 'Anxiety Score', 'Stress Score', 
+                                       'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'])
+                        
+                        query = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id)
+                        if start_datetime and end_datetime:
+                            query = query.filter(DASS21Result.created_at >= start_datetime, DASS21Result.created_at < end_datetime)
+                        results = query.all()
+                        
+                        for result, user in results:
+                            writer.writerow([
+                                result.id, user.email, user.full_name, result.depression_score, result.anxiety_score, result.stress_score,
+                                result.depression_severity, result.anxiety_severity, result.stress_severity,
+                                result.created_at.strftime('%Y-%m-%d %H:%M:%S') if result.created_at else ''
+                            ])
+                    
+                    elif export_type == 'messages':
+                        writer = csv.writer(output)
+                        writer.writerow(['ID', 'Student Email', 'Student Name', 'Message Text', 'Admin Response', 'Is Read', 'Created At', 'Responded At'])
+                        
+                        query = db.session.query(StudentMessage, User).join(User, StudentMessage.sender_user_id == User.id)
+                        if start_datetime and end_datetime:
+                            query = query.filter(StudentMessage.created_at >= start_datetime, StudentMessage.created_at < end_datetime)
+                        messages = query.all()
+                        
+                        for message, user in messages:
+                            writer.writerow([
+                                message.id, user.email, user.full_name, message.message_text or '', message.admin_response or '',
+                                message.is_read, 
+                                message.created_at.strftime('%Y-%m-%d %H:%M:%S') if message.created_at else '',
+                                message.responded_at.strftime('%Y-%m-%d %H:%M:%S') if message.responded_at else ''
+                            ])
+                    
+                    # Add CSV to ZIP
+                    filename = f'emotiontrack_{export_type}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+                    zip_file.writestr(filename, output.getvalue())
+            
+            zip_buffer.seek(0)
+            
+            return Response(
+                zip_buffer.getvalue(),
+                mimetype='application/zip',
+                headers={'Content-Disposition': f'attachment; filename=emotiontrack_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip'}
+            )
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

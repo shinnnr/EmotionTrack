@@ -746,20 +746,54 @@ async function performDataExport(options) {
         if (options.users) exportTypes.push('users');
         if (options.logs) exportTypes.push('mood_logs');
         if (options.dass) exportTypes.push('dass21');
+        if (options.messages) exportTypes.push('messages');
         
-        // For now, export each type separately
-        for (const type of exportTypes) {
-            const url = `/admin/api/export-data?type=${type}`;
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `mindtrack_${type}_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Small delay between downloads
-            await new Promise(resolve => setTimeout(resolve, 500));
+        if (exportTypes.length === 0) {
+            throw new Error('Please select at least one data type to export');
         }
+        
+        // Prepare request data
+        const requestData = {
+            types: exportTypes,
+            start_date: options.startDate,
+            end_date: options.endDate,
+            format: options.format || 'csv'
+        };
+        
+        // Send POST request with export options
+        const response = await fetch('/admin/api/export-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Export failed');
+        }
+        
+        // Get filename from response headers
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'emotiontrack_export.csv';
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename="?([^"]+)"?/);
+            if (match) filename = match[1];
+        }
+        
+        // Create blob and download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up
+        window.URL.revokeObjectURL(url);
         
     } catch (error) {
         console.error('Export error:', error);
