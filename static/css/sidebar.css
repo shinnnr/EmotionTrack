@@ -30,7 +30,8 @@
     width: 32px;
     height: 32px;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-header h5 {
