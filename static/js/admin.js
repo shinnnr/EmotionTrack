@@ -7,6 +7,212 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeRealTimeUpdates();
 });
 
+// Student Profile Viewing Function
+async function viewStudentProfile(userId) {
+    try {
+        const modal = document.getElementById('studentProfileModal');
+        const content = document.getElementById('studentProfileContent');
+        
+        // Show loading
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading profile...</p>
+            </div>
+        `;
+        
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+        
+        // Fetch student profile data
+        const response = await fetch(`/admin/api/student-profile/${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch profile');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            content.innerHTML = generateProfileHTML(data.data);
+        } else {
+            throw new Error(data.error || 'Failed to load profile');
+        }
+        
+    } catch (error) {
+        console.error('Error loading student profile:', error);
+        document.getElementById('studentProfileContent').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Profile</h5>
+                <p class="text-muted">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function generateProfileHTML(data) {
+    const student = data.student;
+    const dass21Results = data.dass21_results;
+    const moodLogs = data.mood_logs;
+    const messages = data.recent_messages;
+    
+    return `
+        <div class="student-profile">
+            <!-- Student Basic Info -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold text-primary">
+                                <i class="fas fa-user me-2"></i>${student.full_name}
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Email:</strong> ${student.email}</p>
+                                    <p class="mb-1"><strong>Gender:</strong> ${student.gender || 'Not specified'}</p>
+                                    <p class="mb-1"><strong>Strand:</strong> ${student.strand || 'Not specified'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Grade Level:</strong> ${student.grade_level || 'Not specified'}</p>
+                                    <p class="mb-1"><strong>Section:</strong> ${student.section || 'Not specified'}</p>
+                                    <p class="mb-1"><strong>Joined:</strong> ${student.created_at}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabs for different sections -->
+            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dass-tab" data-bs-toggle="tab" data-bs-target="#dass-content" type="button" role="tab">
+                        <i class="fas fa-brain me-2"></i>DASS-21 Results (${dass21Results.length})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="mood-tab" data-bs-toggle="tab" data-bs-target="#mood-content" type="button" role="tab">
+                        <i class="fas fa-heart me-2"></i>Mood Logs (${moodLogs.length})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages-content" type="button" role="tab">
+                        <i class="fas fa-comments me-2"></i>Messages (${messages.length})
+                    </button>
+                </li>
+            </ul>
+            
+            <!-- Tab content -->
+            <div class="tab-content" id="profileTabContent">
+                <!-- DASS-21 Results -->
+                <div class="tab-pane fade show active" id="dass-content" role="tabpanel">
+                    <div class="mt-3">
+                        ${dass21Results.length ? dass21Results.map(result => `
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="fw-bold">${result.created_at}</h6>
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="mb-2">
+                                                        <span class="badge bg-danger">Depression: ${result.depression_score}</span>
+                                                        <br><small class="text-muted">${result.depression_severity}</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="mb-2">
+                                                        <span class="badge bg-warning">Anxiety: ${result.anxiety_score}</span>
+                                                        <br><small class="text-muted">${result.anxiety_severity}</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="mb-2">
+                                                        <span class="badge bg-info">Stress: ${result.stress_score}</span>
+                                                        <br><small class="text-muted">${result.stress_severity}</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('') : '<p class="mt-3 text-muted">No DASS-21 assessments completed yet.</p>'}
+                    </div>
+                </div>
+                
+                <!-- Mood Logs -->
+                <div class="tab-pane fade" id="mood-content" role="tabpanel">
+                    <div class="mt-3">
+                        ${moodLogs.length ? moodLogs.map(log => `
+                            <div class="card mb-2">
+                                <div class="card-body py-3">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-3">
+                                            <strong>${log.emotion}</strong>
+                                            <br><small class="text-muted">${log.log_date}</small>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="badge bg-light text-dark">Sleep: ${log.sleep}h</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="badge bg-light text-dark">Energy: ${log.energy}/10</span>
+                                        </div>
+                                        <div class="col-md-5">
+                                            ${log.triggers ? `<small><strong>Triggers:</strong> ${log.triggers}</small><br>` : ''}
+                                            ${log.coping ? `<small><strong>Coping:</strong> ${log.coping}</small>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('') : '<p class="mt-3 text-muted">No mood logs recorded yet.</p>'}
+                    </div>
+                </div>
+                
+                <!-- Messages -->
+                <div class="tab-pane fade" id="messages-content" role="tabpanel">
+                    <div class="mt-3">
+                        ${messages.length ? messages.map(msg => `
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    ${msg.message_text ? `
+                                        <div class="mb-2">
+                                            <strong>Student:</strong> ${msg.message_text}
+                                        </div>
+                                    ` : ''}
+                                    ${msg.admin_response ? `
+                                        <div class="text-primary">
+                                            <strong>Admin Response:</strong> ${msg.admin_response}
+                                        </div>
+                                    ` : ''}
+                                    <small class="text-muted">${msg.created_at}</small>
+                                </div>
+                            </div>
+                        `).join('') : '<p class="mt-3 text-muted">No messages yet.</p>'}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="mt-4 text-end">
+                <button class="btn btn-primary me-2" onclick="openChat(${student.id})">
+                    <i class="fas fa-comments me-1"></i>Send Message
+                </button>
+                <button class="btn btn-outline-success" onclick="getSuggestedResponses(${student.id})">
+                    <i class="fas fa-lightbulb me-1"></i>Get Suggestions
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function openChat(userId) {
+    window.location.href = `/admin/student-chat/${userId}`;
+}
+
+// Make the function available globally
+window.viewStudentProfile = viewStudentProfile;
+
 function initializeAdminDashboard() {
     setupStatCards();
     initializeQuickActions();

@@ -822,6 +822,70 @@ def get_dashboard_stats():
         'concerning_students': concerning_count
     })
 
+@admin_bp.route('/api/student-profile/<int:user_id>')
+@login_required
+def get_student_profile(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        # Get student details
+        student = User.query.get_or_404(user_id)
+        if student.is_admin:
+            return jsonify({'error': 'Cannot view admin profiles'}), 400
+        
+        # Get recent DASS-21 results
+        dass21_results = DASS21Result.query.filter_by(user_id=user_id).order_by(DASS21Result.created_at.desc()).limit(5).all()
+        
+        # Get recent mood logs
+        mood_logs = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.desc()).limit(10).all()
+        
+        # Get recent messages
+        messages = StudentMessage.query.filter_by(sender_user_id=user_id).order_by(StudentMessage.created_at.desc()).limit(5).all()
+        
+        # Format the data
+        profile_data = {
+            'student': {
+                'id': student.id,
+                'full_name': student.full_name,
+                'email': student.email,
+                'gender': student.gender,
+                'strand': student.strand,
+                'grade_level': student.grade_level,
+                'section': student.section,
+                'created_at': student.created_at.strftime('%B %d, %Y') if student.created_at else ''
+            },
+            'dass21_results': [{
+                'depression_score': result.depression_score,
+                'anxiety_score': result.anxiety_score,
+                'stress_score': result.stress_score,
+                'depression_severity': result.depression_severity,
+                'anxiety_severity': result.anxiety_severity,
+                'stress_severity': result.stress_severity,
+                'created_at': result.created_at.strftime('%B %d, %Y') if result.created_at else ''
+            } for result in dass21_results],
+            'mood_logs': [{
+                'emotion': log.emotion,
+                'sleep': log.sleep,
+                'energy': log.energy,
+                'triggers': log.triggers,
+                'coping': log.coping,
+                'gratitude': log.gratitude,
+                'log_date': log.log_date.strftime('%B %d, %Y') if log.log_date else ''
+            } for log in mood_logs],
+            'recent_messages': [{
+                'message_text': msg.message_text,
+                'admin_response': msg.admin_response,
+                'created_at': msg.created_at.strftime('%B %d, %Y at %I:%M %p') if msg.created_at else '',
+                'is_read': msg.is_read
+            } for msg in messages]
+        }
+        
+        return jsonify({'success': True, 'data': profile_data})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @admin_bp.route('/api/export-data')
 @login_required
 def export_data():
