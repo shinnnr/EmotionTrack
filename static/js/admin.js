@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Student Profile Viewing Function
 async function viewStudentProfile(userId) {
     try {
-        const modal = document.getElementById('studentProfileModal');
+        const overlay = document.getElementById('studentProfileOverlay');
         const content = document.getElementById('studentProfileContent');
         
         // Show loading
@@ -23,8 +23,9 @@ async function viewStudentProfile(userId) {
             </div>
         `;
         
-        const bootstrapModal = new bootstrap.Modal(modal);
-        bootstrapModal.show();
+        // Show modal
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
         
         // Fetch student profile data
         const response = await fetch(`/admin/api/student-profile/${userId}`);
@@ -49,6 +50,21 @@ async function viewStudentProfile(userId) {
         `;
     }
 }
+
+// Close student profile modal
+function closeStudentProfileModal() {
+    const overlay = document.getElementById('studentProfileOverlay');
+    overlay.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    const overlay = document.getElementById('studentProfileOverlay');
+    if (e.target === overlay) {
+        closeStudentProfileModal();
+    }
+});
 
 function generateProfileHTML(data) {
     const student = data.student;
@@ -213,33 +229,45 @@ function openChat(userId) {
 // Suggested Responses Function
 async function getSuggestedResponses(userId) {
     try {
+        // Remove any existing suggestions modal
+        const existingSuggestionsModal = document.getElementById('suggestedResponsesOverlay');
+        if (existingSuggestionsModal) {
+            existingSuggestionsModal.remove();
+        }
+        
         const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.id = 'suggestedResponsesModal';
+        modal.className = 'suggestions-modal-overlay';
+        modal.id = 'suggestedResponsesOverlay';
         modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-lightbulb me-2"></i>Suggested Responses
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body" id="suggestedResponsesContent">
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-success" role="status">
-                                <span class="visually-hidden">Loading suggestions...</span>
-                            </div>
-                            <p class="mt-2 text-muted">Analyzing student data...</p>
+            <div class="suggestions-modal">
+                <div class="suggestions-modal-header">
+                    <h5 class="custom-modal-title">
+                        <i class="fas fa-lightbulb me-2"></i>Suggested Responses
+                    </h5>
+                    <button type="button" class="custom-modal-close" onclick="closeSuggestionsModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="suggestions-modal-body" id="suggestedResponsesContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading suggestions...</span>
                         </div>
+                        <p class="mt-2 text-muted">Analyzing student data...</p>
                     </div>
                 </div>
             </div>
         `;
         
         document.body.appendChild(modal);
-        const bootstrapModal = new bootstrap.Modal(modal);
-        bootstrapModal.show();
+        document.body.style.overflow = 'hidden';
+        
+        // Close on overlay click
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeSuggestionsModal();
+            }
+        });
         
         // Fetch suggested responses
         const response = await fetch(`/admin/suggested-responses/${userId}`);
@@ -253,21 +281,28 @@ async function getSuggestedResponses(userId) {
             throw new Error(data.message || 'Failed to generate suggestions');
         }
         
-        // Cleanup when modal is closed
-        modal.addEventListener('hidden.bs.modal', () => {
-            document.body.removeChild(modal);
-        });
-        
     } catch (error) {
         console.error('Error loading suggested responses:', error);
-        document.getElementById('suggestedResponsesContent').innerHTML = `
-            <div class="text-center py-4">
-                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-                <h5 class="text-danger">Error Loading Suggestions</h5>
-                <p class="text-muted">${error.message}</p>
-            </div>
-        `;
+        const content = document.getElementById('suggestedResponsesContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                    <h5 class="text-danger">Error Loading Suggestions</h5>
+                    <p class="text-muted">${error.message}</p>
+                </div>
+            `;
+        }
     }
+}
+
+// Close suggestions modal
+function closeSuggestionsModal() {
+    const modal = document.getElementById('suggestedResponsesOverlay');
+    if (modal) {
+        modal.remove();
+    }
+    document.body.style.overflow = 'auto';
 }
 
 function generateSuggestionsHTML(suggestions) {
@@ -450,12 +485,7 @@ function setupActivityFeed() {
             item.style.transform = 'translateX(0)';
         }, index * 100);
         
-        // Add click handler for detailed view
-        item.addEventListener('click', function() {
-            const studentName = this.querySelector('h6').textContent;
-            const emotion = this.querySelector('strong').textContent;
-            showActivityDetails(studentName, emotion, this);
-        });
+        // Remove click handler for activity details - no longer showing profiles from recent activity
         
         // Add hover effect
         item.addEventListener('mouseenter', function() {
@@ -495,11 +525,7 @@ function initializeRiskAssessment() {
             }
         }
         
-        // Add click handler for detailed student view
-        item.addEventListener('click', function() {
-            const studentName = this.querySelector('h6').textContent;
-            showStudentProfile(studentName);
-        });
+        // View profile button click is handled by the button itself, not the whole card
         
         // Staggered animation
         item.style.opacity = '0';
