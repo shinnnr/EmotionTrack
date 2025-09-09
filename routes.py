@@ -649,7 +649,7 @@ def get_suggested_responses(user_id):
         ).order_by(DASS21Result.created_at.desc()).first()
         
         # Get recent mood logs (within last 7 days)
-        recent_moods = MoodLog.query.filter_by(id=user_id).filter(
+        recent_moods = MoodLog.query.filter_by(user_id=user_id).filter(
             MoodLog.log_date >= datetime.utcnow() - timedelta(days=7)
         ).order_by(MoodLog.log_date.desc()).limit(10).all()
         

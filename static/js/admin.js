@@ -210,8 +210,151 @@ function openChat(userId) {
     window.location.href = `/admin/student-chat/${userId}`;
 }
 
-// Make the function available globally
+// Suggested Responses Function
+async function getSuggestedResponses(userId) {
+    try {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'suggestedResponsesModal';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-lightbulb me-2"></i>Suggested Responses
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="suggestedResponsesContent">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Loading suggestions...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Analyzing student data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+        
+        // Fetch suggested responses
+        const response = await fetch(`/admin/suggested-responses/${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch suggestions');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('suggestedResponsesContent').innerHTML = generateSuggestionsHTML(data.suggestions);
+        } else {
+            throw new Error(data.message || 'Failed to generate suggestions');
+        }
+        
+        // Cleanup when modal is closed
+        modal.addEventListener('hidden.bs.modal', () => {
+            document.body.removeChild(modal);
+        });
+        
+    } catch (error) {
+        console.error('Error loading suggested responses:', error);
+        document.getElementById('suggestedResponsesContent').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Suggestions</h5>
+                <p class="text-muted">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function generateSuggestionsHTML(suggestions) {
+    if (!suggestions || suggestions.length === 0) {
+        return `
+            <div class="text-center py-4">
+                <i class="fas fa-info-circle fa-3x text-info mb-3"></i>
+                <h5 class="text-info">No Specific Suggestions</h5>
+                <p class="text-muted">No concerning patterns detected. Consider general wellness check-in responses.</p>
+            </div>
+        `;
+    }
+    
+    // Group suggestions by category
+    const grouped = suggestions.reduce((acc, suggestion) => {
+        const category = suggestion.category || 'General';
+        if (!acc[category]) acc[category] = [];
+        acc[category].push(suggestion);
+        return acc;
+    }, {});
+    
+    return `
+        <div class="suggestions-container">
+            <div class="alert alert-info border-0 mb-4">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>How to use:</strong> Click on any suggestion to copy it to your clipboard, then paste it in your response.
+            </div>
+            
+            ${Object.entries(grouped).map(([category, categoryMentions]) => `
+                <div class="category-section mb-4">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-tag me-2"></i>${category}
+                    </h6>
+                    <div class="suggestions-list">
+                        ${categoryMentions.map((suggestion, index) => `
+                            <div class="suggestion-card card mb-2 border-0 shadow-sm">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="suggestion-text mb-2">
+                                                ${suggestion.text}
+                                            </div>
+                                            ${suggestion.reason ? `
+                                                <small class="text-muted">
+                                                    <i class="fas fa-info-circle me-1"></i>
+                                                    Based on: ${suggestion.reason}
+                                                </small>
+                                            ` : ''}
+                                        </div>
+                                        <button class="btn btn-outline-primary btn-sm ms-3" 
+                                                onclick="copySuggestion('${suggestion.text.replace(/'/g, "\\'")}')">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function copySuggestion(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show success feedback
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed bg-success text-white p-3 rounded shadow';
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 1070;';
+        toast.innerHTML = `
+            <i class="fas fa-check me-2"></i>Suggestion copied to clipboard!
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 3000);
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy suggestion. Please try again.');
+    });
+}
+
+// Make functions available globally
 window.viewStudentProfile = viewStudentProfile;
+window.getSuggestedResponses = getSuggestedResponses;
 
 function initializeAdminDashboard() {
     setupStatCards();
