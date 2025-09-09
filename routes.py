@@ -38,7 +38,25 @@ def home():
     # Get latest DASS-21 result
     latest_dass = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).first()
     
-    return render_template('home.html', recent_logs=recent_logs, latest_dass=latest_dass)
+    # Check DASS-21 status (weekly assessment)
+    from datetime import datetime, timedelta
+    dass21_status = {
+        'can_take': True,
+        'days_remaining': 0,
+        'next_available_date': None,
+        'last_taken_date': None
+    }
+    
+    if latest_dass:
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        if latest_dass.created_at > week_ago:
+            days_passed = (datetime.utcnow() - latest_dass.created_at).days
+            dass21_status['can_take'] = False
+            dass21_status['days_remaining'] = 7 - days_passed
+            dass21_status['next_available_date'] = latest_dass.created_at + timedelta(days=7)
+            dass21_status['last_taken_date'] = latest_dass.created_at
+    
+    return render_template('home.html', recent_logs=recent_logs, latest_dass=latest_dass, dass21_status=dass21_status)
 
 @main_bp.route('/profile')
 @login_required

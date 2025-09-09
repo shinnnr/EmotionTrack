@@ -13,6 +13,68 @@
         </div>
     </div>
 
+    <!-- DASS-21 Status Notification -->
+    {% if not dass21_status.can_take %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info border-0 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle fa-2x text-info me-3"></i>
+                    <div class="flex-grow-1">
+                        <h6 class="alert-heading fw-bold mb-1">DASS-21 Assessment Status</h6>
+                        <p class="mb-1">
+                            You completed your DASS-21 assessment on {{ dass21_status.last_taken_date.strftime('%B %d, %Y') }}.
+                            You can take your next assessment in <strong>{{ dass21_status.days_remaining }} day{% if dass21_status.days_remaining != 1 %}s{% endif %}</strong>.
+                        </p>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            Next available: {{ dass21_status.next_available_date.strftime('%B %d, %Y') }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif not latest_dass %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success border-0 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-brain fa-2x text-success me-3"></i>
+                    <div class="flex-grow-1">
+                        <h6 class="alert-heading fw-bold mb-1">Ready for Your First DASS-21 Assessment!</h6>
+                        <p class="mb-1">
+                            Take your first mental wellness assessment to establish your baseline and start tracking your progress.
+                        </p>
+                        <a href="{{ url_for('main.dass21_quiz') }}" class="btn btn-success btn-sm mt-2">
+                            <i class="fas fa-play me-1"></i>Take Assessment Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-primary border-0 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle fa-2x text-primary me-3"></i>
+                    <div class="flex-grow-1">
+                        <h6 class="alert-heading fw-bold mb-1">DASS-21 Assessment Available</h6>
+                        <p class="mb-1">
+                            It's been a week since your last assessment. You can now take your weekly DASS-21 assessment.
+                        </p>
+                        <a href="{{ url_for('main.dass21_quiz') }}" class="btn btn-primary btn-sm mt-2">
+                            <i class="fas fa-brain me-1"></i>Take Weekly Assessment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row g-4">
         <!-- Quick Actions -->
         <div class="col-lg-8">
@@ -37,15 +99,27 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <a href="{{ url_for('main.dass21_quiz') }}" class="quick-action-card">
-                                <div class="card bg-gradient-info text-white h-100">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-brain fa-2x mb-3"></i>
-                                        <h6 class="card-title">DASS-21 Assessment</h6>
-                                        <p class="card-text small">Evaluate your mental wellness</p>
+                            {% if dass21_status.can_take %}
+                                <a href="{{ url_for('main.dass21_quiz') }}" class="quick-action-card">
+                                    <div class="card bg-gradient-info text-white h-100">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-brain fa-2x mb-3"></i>
+                                            <h6 class="card-title">DASS-21 Assessment</h6>
+                                            <p class="card-text small">Evaluate your mental wellness</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% else %}
+                                <div class="quick-action-card disabled-card">
+                                    <div class="card bg-secondary text-white h-100 opacity-75">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-brain fa-2x mb-3"></i>
+                                            <h6 class="card-title">DASS-21 Assessment</h6>
+                                            <p class="card-text small">Available in {{ dass21_status.days_remaining }} day{% if dass21_status.days_remaining != 1 %}s{% endif %}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </a>
+                            {% endif %}
                         </div>
                         
                         <div class="col-md-6">
@@ -262,6 +336,10 @@ function viewInsights() {
 
 .quick-action-card:hover {
     transform: translateY(-2px);
+}
+
+.disabled-card {
+    cursor: not-allowed;
 }
 
 .insights-card {
