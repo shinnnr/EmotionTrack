@@ -135,7 +135,7 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <button class="quick-action-card w-100 border-0" data-bs-toggle="modal" data-bs-target="#insightsModal">
+                            <button class="quick-action-card w-100 border-0" onclick="openInsightsModal()">
                                 <div class="card bg-gradient-warning text-white h-100">
                                     <div class="card-body text-center">
                                         <i class="fas fa-chart-line fa-2x mb-3"></i>
@@ -244,34 +244,50 @@
     {% endif %}
 </div>
 
-<!-- Insights Modal -->
-<div class="modal fade" id="insightsModal" tabindex="-1" aria-labelledby="insightsModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-clsu-green text-white">
-                <h5 class="modal-title" id="insightsModalLabel">
-                    <i class="fas fa-chart-line me-2"></i>
-                    Your Wellness Insights
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="insightsContent">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-clsu-green" role="status">
-                            <span class="visually-hidden">Loading insights...</span>
-                        </div>
+<!-- Custom Insights Modal -->
+<div id="insightsModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-overlay" onclick="closeInsightsModal()"></div>
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-chart-line me-2"></i>
+                Your Wellness Insights
+            </h5>
+            <button type="button" class="custom-close-btn" onclick="closeInsightsModal()" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body">
+            <div id="insightsContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-clsu-green" role="status">
+                        <span class="visually-hidden">Loading insights...</span>
                     </div>
+                    <p class="mt-2 text-muted">Analyzing your wellness data...</p>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
+        </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeInsightsModal()">Close</button>
         </div>
     </div>
 </div>
 
 <script>
+// Custom modal functions
+function openInsightsModal() {
+    const modal = document.getElementById('insightsModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    loadInsights();
+}
+
+function closeInsightsModal() {
+    const modal = document.getElementById('insightsModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = ''; // Restore scrolling
+}
+
 function loadInsights() {
     // Reset modal content to loading state
     const content = document.getElementById('insightsContent');
@@ -365,24 +381,13 @@ function loadInsights() {
     });
 }
 
-// Ensure modal backdrop is properly cleaned up
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('insightsModal');
-    if (modal) {
-        modal.addEventListener('hidden.bs.modal', function () {
-            // Clean up any lingering backdrop
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => backdrop.remove());
-            
-            // Remove modal-open class from body
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-        });
-        
-        modal.addEventListener('show.bs.modal', function () {
-            // Reset content when modal is about to show
-            loadInsights();
-        });
+// Close modal when pressing Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const modal = document.getElementById('insightsModal');
+        if (modal && modal.style.display === 'flex') {
+            closeInsightsModal();
+        }
     }
 });
 </script>
@@ -403,36 +408,120 @@ document.addEventListener('DOMContentLoaded', function() {
     cursor: not-allowed;
 }
 
-/* Modal improvements */
-.modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.5);
+/* Custom Modal Styles */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.15s ease-out;
 }
 
-.modal-content {
-    border: none;
+.custom-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+}
+
+.custom-modal-content {
+    position: relative;
+    background: #ffffff;
     border-radius: 0.5rem;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1051;
+    animation: slideIn 0.2s ease-out;
 }
 
-.modal-header.bg-clsu-green {
+.custom-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: #2c5234;
+    color: white;
     border-top-left-radius: 0.5rem;
     border-top-right-radius: 0.5rem;
 }
 
-.btn-close-white {
-    filter: invert(1) grayscale(100%) brightness(200%);
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.custom-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.custom-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.custom-modal-body {
+    padding: 1.5rem;
+}
+
+.custom-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
 }
 
 /* Insights cards styling */
 .insights-card {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    height: 100%;
     transition: transform 0.2s ease-in-out;
 }
 
 .insights-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: scale(0.9) translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
 }
 
 .severity-Normal { background-color: #28a745; }
