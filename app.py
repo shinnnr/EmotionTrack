@@ -40,6 +40,14 @@ def create_app():
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
+        "pool_timeout": 20,
+        "pool_size": 5,
+        "max_overflow": 10,
+        "connect_args": {
+            "sslmode": "prefer",
+            "connect_timeout": 10,
+            "application_name": "emotiontrack_app"
+        }
     }
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
