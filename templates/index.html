@@ -290,8 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Trigger validation display update
-                confirmPasswordField.reportValidity();
+                // Don't call reportValidity() as it causes focus to jump
             }
             
             // Remove any existing listeners first
