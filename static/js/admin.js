@@ -101,10 +101,18 @@ async function loadNavigationLevel(level, selectedValue = null) {
         studentList.style.display = 'none';
         
         // Update state based on level
-        if (level === 'grades') {
+        if (level === 'strands') {
+            // Reset to root level
+            currentNavigationState = { strand: null, grade: null, section: null };
+        } else if (level === 'grades') {
+            // Reset grade and section when selecting strand
             currentNavigationState.strand = selectedValue;
+            currentNavigationState.grade = null;
+            currentNavigationState.section = null;
         } else if (level === 'sections') {
+            // Reset section when selecting grade
             currentNavigationState.grade = selectedValue;
+            currentNavigationState.section = null;
         } else if (level === 'students') {
             currentNavigationState.section = selectedValue;
         }
