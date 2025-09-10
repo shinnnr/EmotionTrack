@@ -1143,11 +1143,22 @@ def get_analytics_data():
             db.func.count(MoodLog.emotion).label('count')
         ).group_by(MoodLog.emotion).all()
         
-        # DASS-21 severity distribution
+        # DASS-21 severity distribution (based on most recent assessment only)
+        latest_dass_subquery_analytics = db.session.query(
+            DASS21Result.user_id,
+            func.max(DASS21Result.created_at).label('max_created_at')
+        ).group_by(DASS21Result.user_id).subquery()
+        
+        latest_dass_results_analytics = db.session.query(DASS21Result).join(
+            latest_dass_subquery_analytics,
+            (DASS21Result.user_id == latest_dass_subquery_analytics.c.user_id) &
+            (DASS21Result.created_at == latest_dass_subquery_analytics.c.max_created_at)
+        ).subquery()
+        
         dass_data = db.session.query(
-            DASS21Result.depression_severity,
-            db.func.count(DASS21Result.depression_severity).label('count')
-        ).group_by(DASS21Result.depression_severity).all()
+            latest_dass_results_analytics.c.depression_severity,
+            db.func.count(latest_dass_results_analytics.c.depression_severity).label('count')
+        ).group_by(latest_dass_results_analytics.c.depression_severity).all()
         
         # Monthly activity
         monthly_logs = db.session.query(
