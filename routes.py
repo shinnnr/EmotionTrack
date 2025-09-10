@@ -217,6 +217,19 @@ def emotion_log():
                 flash('Please select your main trigger/stressor.', 'error')
                 return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
             
+            # Validate custom inputs when "Other" is selected
+            if form.triggers.data == 'Other' and not form.custom_trigger.data:
+                flash('Please specify your trigger/stressor when selecting "Other".', 'error')
+                return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
+                
+            if form.coping.data == 'Other' and not form.custom_coping.data:
+                flash('Please specify your coping strategy when selecting "Other".', 'error')
+                return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
+            
+            # Determine final values for triggers and coping
+            final_trigger = form.custom_trigger.data if form.triggers.data == 'Other' else form.triggers.data
+            final_coping = form.custom_coping.data if form.coping.data == 'Other' else form.coping.data
+            
             # Create mood log entries for each selected emotion
             for emotion in emotions_data:
                 mood_log = MoodLog()
@@ -225,8 +238,8 @@ def emotion_log():
                 mood_log.intensity = 5  # Default intensity value (1-10 scale)
                 mood_log.sleep = form.sleep.data
                 mood_log.energy = form.energy.data
-                mood_log.triggers = form.triggers.data
-                mood_log.coping = form.coping.data
+                mood_log.triggers = final_trigger
+                mood_log.coping = final_coping
                 mood_log.gratitude = form.gratitude.data
                 db.session.add(mood_log)
             

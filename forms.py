@@ -36,11 +36,13 @@ class EmotionLogForm(FlaskForm):
         ('Friends', 'Friends'), ('Health', 'Health'), ('Money', 'Money'),
         ('Relationship', 'Relationship'), ('Other', 'Other')
     ])
+    custom_trigger = StringField('Specify Other Trigger', validators=[Length(max=100)])
     coping = SelectField('Coping Strategy', choices=[
         ('Music', 'Music'), ('Exercise', 'Exercise'), ('Talking', 'Talking'),
         ('Meditation', 'Meditation'), ('Gaming', 'Gaming'), ('Reading', 'Reading'),
         ('Sleeping', 'Sleeping'), ('Socializing', 'Socializing'), ('Other', 'Other')
     ])
+    custom_coping = StringField('Specify Other Coping Strategy', validators=[Length(max=100)])
     gratitude = TextAreaField('Gratitude Note', validators=[Length(max=500)])
 
 class ConsultationForm(FlaskForm):

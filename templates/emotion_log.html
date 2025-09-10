@@ -287,14 +287,22 @@
                                     <label for="{{ form.triggers.id }}" class="form-label fw-bold">
                                         <i class="fas fa-exclamation-triangle me-2"></i>Main Trigger/Stressor
                                     </label>
-                                    {{ form.triggers(class="form-select") }}
+                                    {{ form.triggers(class="form-select", id="triggersSelect") }}
+                                    <div id="customTriggerDiv" class="mt-2" style="display: none;">
+                                        {{ form.custom_trigger(class="form-control", placeholder="Please specify your trigger/stressor...") }}
+                                        <small class="form-text text-muted">Describe what caused stress or triggered your emotions</small>
+                                    </div>
                                 </div>
                                 
                                 <div class="col-md-6">
                                     <label for="{{ form.coping.id }}" class="form-label fw-bold">
                                         <i class="fas fa-heart me-2"></i>Coping Strategy Used
                                     </label>
-                                    {{ form.coping(class="form-select") }}
+                                    {{ form.coping(class="form-select", id="copingSelect") }}
+                                    <div id="customCopingDiv" class="mt-2" style="display: none;">
+                                        {{ form.custom_coping(class="form-control", placeholder="Please specify your coping strategy...") }}
+                                        <small class="form-text text-muted">Describe how you handled or coped with your emotions</small>
+                                    </div>
                                 </div>
                                 
                                 <div class="col-12">
@@ -324,6 +332,53 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/emotion_log.js') }}"></script>
+
+<script>
+// Show/hide custom input fields when "Other" is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const triggersSelect = document.getElementById('triggersSelect');
+    const copingSelect = document.getElementById('copingSelect');
+    const customTriggerDiv = document.getElementById('customTriggerDiv');
+    const customCopingDiv = document.getElementById('customCopingDiv');
+    const customTriggerInput = document.querySelector('#customTriggerDiv input');
+    const customCopingInput = document.querySelector('#customCopingDiv input');
+    
+    // Handle triggers dropdown change
+    triggersSelect.addEventListener('change', function() {
+        if (this.value === 'Other') {
+            customTriggerDiv.style.display = 'block';
+            customTriggerInput.required = true;
+        } else {
+            customTriggerDiv.style.display = 'none';
+            customTriggerInput.required = false;
+            customTriggerInput.value = '';
+        }
+    });
+    
+    // Handle coping dropdown change
+    copingSelect.addEventListener('change', function() {
+        if (this.value === 'Other') {
+            customCopingDiv.style.display = 'block';
+            customCopingInput.required = true;
+        } else {
+            customCopingDiv.style.display = 'none';
+            customCopingInput.required = false;
+            customCopingInput.value = '';
+        }
+    });
+    
+    // Check initial state on page load
+    if (triggersSelect.value === 'Other') {
+        customTriggerDiv.style.display = 'block';
+        customTriggerInput.required = true;
+    }
+    
+    if (copingSelect.value === 'Other') {
+        customCopingDiv.style.display = 'block';
+        customCopingInput.required = true;
+    }
+});
+</script>
 {% endblock %}
 
 {% block extra_css %}
