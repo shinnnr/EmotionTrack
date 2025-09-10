@@ -235,10 +235,7 @@ function togglePassword(fieldId, button) {
     const passwordField = document.getElementById(fieldId);
     const icon = button.querySelector('i');
     
-    console.log('Toggle password called for:', fieldId, passwordField);
-    
     if (!passwordField) {
-        console.error('Password field not found:', fieldId);
         return;
     }
     
