@@ -644,14 +644,15 @@ async function viewJournalEntries() {
     );
     
     try {
-        const logs = await apiCall('/api/mood-logs');
+        const response = await apiCall('/api/mood-logs');
+        const logs = response.logs || [];
         
         let content;
         if (logs.length === 0) {
             content = `
                 <div class="text-center py-5">
                     <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">No journal entries yet</h5>
+                    <h5 class="text-muted">No Logged Emotions Yet</h5>
                     <p class="text-muted">Start logging your emotions to see them here!</p>
                     <a href="/emotion-log" class="btn btn-clsu-green">
                         <i class="fas fa-plus me-2"></i>Log Your First Entry
@@ -806,14 +807,15 @@ async function viewDASSResults() {
     );
     
     try {
-        const results = await apiCall('/api/dass21-results');
+        const response = await apiCall('/api/dass21-results');
+        const results = response.results || [];
         
         let content;
         if (results.length === 0) {
             content = `
                 <div class="text-center py-5">
                     <i class="fas fa-brain fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">No DASS-21 results found</h5>
+                    <h5 class="text-muted">No Assessment Submitted</h5>
                     <p class="text-muted">Take the DASS-21 assessment to see your mental health insights.</p>
                     <a href="/dass21-quiz" class="btn btn-clsu-green">
                         <i class="fas fa-clipboard-check me-2"></i>Take Assessment
