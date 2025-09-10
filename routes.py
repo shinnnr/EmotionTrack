@@ -523,8 +523,25 @@ def dashboard():
     # Recent activity
     recent_logs = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id).order_by(desc(MoodLog.log_date)).limit(10).all()
     
-    # Get students with concerning DASS-21 scores
-    concerning_students = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id).filter(
+    # Get students with concerning DASS-21 scores (based on most recent assessment only)
+    # First, get the most recent DASS21Result ID for each user
+    latest_dass_subquery = db.session.query(
+        DASS21Result.user_id,
+        func.max(DASS21Result.created_at).label('max_created_at')
+    ).group_by(DASS21Result.user_id).subquery()
+    
+    # Then get the actual DASS21Result records that match the latest assessment for each user
+    latest_dass_results = db.session.query(DASS21Result).join(
+        latest_dass_subquery,
+        (DASS21Result.user_id == latest_dass_subquery.c.user_id) &
+        (DASS21Result.created_at == latest_dass_subquery.c.max_created_at)
+    ).subquery()
+    
+    # Finally, get users whose LATEST assessment shows concerning scores
+    concerning_students = db.session.query(DASS21Result, User).join(
+        latest_dass_results,
+        DASS21Result.id == latest_dass_results.c.id
+    ).join(User, DASS21Result.user_id == User.id).filter(
         (DASS21Result.depression_severity.in_(['Severe', 'Extremely Severe'])) |
         (DASS21Result.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
         (DASS21Result.stress_severity.in_(['Severe', 'Extremely Severe']))
@@ -1141,7 +1158,22 @@ def get_analytics_data():
         # Additional stats for analytics
         total_users = User.query.filter_by(is_admin=False).count()
         average_energy = db.session.query(db.func.avg(MoodLog.energy)).scalar()
-        concerning_students = db.session.query(DASS21Result).join(User, DASS21Result.user_id == User.id).filter(
+        # Get concerning students count (based on most recent assessment only)
+        latest_dass_subquery = db.session.query(
+            DASS21Result.user_id,
+            func.max(DASS21Result.created_at).label('max_created_at')
+        ).group_by(DASS21Result.user_id).subquery()
+        
+        latest_dass_results = db.session.query(DASS21Result).join(
+            latest_dass_subquery,
+            (DASS21Result.user_id == latest_dass_subquery.c.user_id) &
+            (DASS21Result.created_at == latest_dass_subquery.c.max_created_at)
+        ).subquery()
+        
+        concerning_students = db.session.query(DASS21Result).join(
+            latest_dass_results,
+            DASS21Result.id == latest_dass_results.c.id
+        ).filter(
             (DASS21Result.depression_severity.in_(['Severe', 'Extremely Severe'])) |
             (DASS21Result.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
             (DASS21Result.stress_severity.in_(['Severe', 'Extremely Severe']))
