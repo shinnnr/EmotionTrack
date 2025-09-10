@@ -57,7 +57,7 @@
                                     <i class="fas fa-lock me-2"></i>Password
                                 </label>
                                 <div class="password-input-group">
-                                    {{ login_form.password(class="form-control password-field") }}
+                                    {{ login_form.password(class="form-control password-field", placeholder=" ") }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ login_form.password.id }}', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -107,7 +107,7 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Password</label>
                                     <div class="password-input-group">
-                                        {{ register_form.password(class="form-control password-field") }}
+                                        {{ register_form.password(class="form-control password-field", placeholder=" ") }}
                                         <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.password.id }}', this)">
                                             <i class="fas fa-eye"></i>
                                         </button>
@@ -116,7 +116,7 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Confirm Password</label>
                                     <div class="password-input-group">
-                                        {{ register_form.confirm_password(class="form-control password-field") }}
+                                        {{ register_form.confirm_password(class="form-control password-field", placeholder=" ") }}
                                         <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.confirm_password.id }}', this)">
                                             <i class="fas fa-eye"></i>
                                         </button>
@@ -189,6 +189,13 @@
     padding: 5px;
     z-index: 10;
     transition: all 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.password-input-group .password-field:not(:placeholder-shown) + .password-toggle-btn {
+    opacity: 1;
+    visibility: visible;
 }
 
 .password-input-group .password-field:valid + .password-toggle-btn {
