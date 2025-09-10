@@ -285,7 +285,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Only validate if confirm password has content
                 if (confirmPasswordField.value.length > 0) {
-                    if (passwordField.value !== confirmPasswordField.value) {
+                    if (confirmPasswordField.value.length < 6) {
+                        confirmPasswordField.setCustomValidity('Password must be at least 6 characters long');
+                    } else if (passwordField.value !== confirmPasswordField.value) {
                         confirmPasswordField.setCustomValidity('Passwords do not match');
                     }
                 }
