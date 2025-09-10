@@ -65,6 +65,12 @@
     font-size: 1rem;
     position: relative;
     overflow: hidden;
+    border: none;
+    background: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
 }
 
 .sidebar-link:before {
