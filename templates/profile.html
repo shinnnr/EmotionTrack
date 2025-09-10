@@ -252,7 +252,7 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 99999 !important;
+    z-index: 999999 !important;
     animation: fadeIn 0.3s ease;
 }
 
@@ -271,7 +271,7 @@
     overflow-y: auto;
     animation: slideIn 0.3s ease;
     position: relative;
-    z-index: 100000 !important;
+    z-index: 9999999 !important;
 }
 
 .custom-modal-header {
@@ -385,15 +385,9 @@ body.modal-open {
     overflow: hidden !important;
 }
 
-body.modal-open .sidebar,
-body.modal-open .sidebar-toggle,
-body.modal-open .sidebar-overlay {
-    display: none !important;
-}
-
 /* Force modal above everything */
 .custom-modal.show {
-    z-index: 99999 !important;
+    z-index: 999999 !important;
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -473,27 +467,11 @@ function showModal(modalId, size = '') {
         document.body.style.overflow = 'hidden';
         
         // Force modal above everything with maximum z-index
-        modal.style.zIndex = '99999';
+        modal.style.zIndex = '999999';
         modal.style.position = 'fixed';
         
-        // Hide sidebar completely when modal opens (all screen sizes)
-        const sidebar = document.querySelector('.sidebar');
-        const sidebarToggle = document.querySelector('.sidebar-toggle');
-        const sidebarOverlay = document.querySelector('.sidebar-overlay');
-        
-        if (sidebar) {
-            sidebar.style.display = 'none';
-        }
-        if (sidebarToggle) {
-            sidebarToggle.style.display = 'none';
-        }
-        if (sidebarOverlay) {
-            sidebarOverlay.style.display = 'none';
-        }
-        
-        // Mark body to indicate modal is open
+        // Mark body to indicate modal is open (but keep sidebar visible)
         document.body.classList.add('modal-open');
-        document.body.classList.remove('sidebar-open');
     }
 }
 
@@ -507,21 +485,6 @@ function closeModal(modalId) {
         modal.style.zIndex = '';
         modal.style.position = '';
         
-        // Restore sidebar visibility
-        const sidebar = document.querySelector('.sidebar');
-        const sidebarToggle = document.querySelector('.sidebar-toggle');
-        const sidebarOverlay = document.querySelector('.sidebar-overlay');
-        
-        if (sidebar) {
-            sidebar.style.display = '';
-        }
-        if (sidebarToggle) {
-            sidebarToggle.style.display = '';
-        }
-        if (sidebarOverlay) {
-            sidebarOverlay.style.display = '';
-        }
-        
         // Remove modal state from body
         document.body.classList.remove('modal-open');
     }
@@ -532,7 +495,7 @@ function createModal(title, content, size = '') {
     const modal = document.createElement('div');
     modal.id = modalId;
     modal.className = 'custom-modal';
-    modal.style.zIndex = '99999'; // Force above everything
+    modal.style.zIndex = '999999'; // Force above everything
     modal.style.position = 'fixed';
     
     modal.innerHTML = `
@@ -979,7 +942,7 @@ function showAlert(message, type = 'info') {
     
     const alert = document.createElement('div');
     alert.className = 'position-fixed top-0 end-0 m-3';
-    alert.style.zIndex = '100001';
+    alert.style.zIndex = '9999999';
     alert.innerHTML = `
         <div class="alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show" role="alert">
             <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
