@@ -1609,7 +1609,7 @@ function setupWebSocketConnection() {
 
 // Utility functions for admin dashboard
 function showStudentManagement() {
-    MindTrack.showAlert('Student management interface would open here', 'info');
+    // Student management interface functionality removed - using modal instead
 }
 
 function showMoodLogsAnalysis() {

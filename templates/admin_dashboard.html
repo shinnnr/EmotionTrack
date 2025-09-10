@@ -327,11 +327,12 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 1050;
+    z-index: 1070;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
+    padding-left: 300px; /* Account for sidebar width */
 }
 
 .custom-modal {
@@ -339,7 +340,7 @@
     border-radius: 10px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     width: 100%;
-    max-width: 800px;
+    max-width: calc(100vw - 350px);
     max-height: 90vh;
     overflow: hidden;
     position: relative;
@@ -403,11 +404,12 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 1050;
+    z-index: 1070;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
+    padding-left: 300px; /* Account for sidebar width */
 }
 
 .suggestions-modal {
@@ -435,6 +437,21 @@
     padding: 1.5rem;
     max-height: calc(90vh - 80px);
     overflow-y: auto;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 991px) {
+    .custom-modal-overlay {
+        padding-left: 20px;
+    }
+    
+    .custom-modal {
+        max-width: calc(100vw - 40px);
+    }
+    
+    .suggestions-modal-overlay {
+        padding-left: 20px;
+    }
 }
 </style>
 {% endblock %}
