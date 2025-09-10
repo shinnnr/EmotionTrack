@@ -16,60 +16,69 @@
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Profile Information Card -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
+    <!-- Profile Information Card -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <h5 class="card-title fw-bold mb-4">
                         <i class="fas fa-id-card text-clsu-green me-2"></i>
                         Profile Information
                     </h5>
                     
-                    <div class="profile-info">
-                        <div class="info-item mb-3">
-                            <label class="fw-bold text-muted small">Full Name</label>
-                            <p class="mb-0 h6">{{ user.firstname }} {{ user.lastname }}</p>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="profile-info">
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted small">Full Name</label>
+                                    <p class="mb-0 h6">{{ user.firstname }} {{ user.lastname }}</p>
+                                </div>
+                                
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted small">Email Address</label>
+                                    <p class="mb-0">{{ user.email }}</p>
+                                </div>
+                                
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted small">Gender</label>
+                                    <p class="mb-0">{{ user.gender or 'Not specified' }}</p>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="info-item mb-3">
-                            <label class="fw-bold text-muted small">Email Address</label>
-                            <p class="mb-0">{{ user.email }}</p>
-                        </div>
-                        
-                        <div class="info-item mb-3">
-                            <label class="fw-bold text-muted small">Gender</label>
-                            <p class="mb-0">{{ user.gender or 'Not specified' }}</p>
-                        </div>
-                        
-                        <div class="info-item mb-3">
-                            <label class="fw-bold text-muted small">Academic Information</label>
-                            <p class="mb-0">
-                                Grade {{ user.grade_level or 'N/A' }} - {{ user.strand or 'N/A' }}<br>
-                                <small class="text-muted">Section: {{ user.section or 'N/A' }}</small>
-                            </p>
-                        </div>
-                        
-                        <div class="info-item">
-                            <label class="fw-bold text-muted small">Member Since</label>
-                            <p class="mb-0">{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                        <div class="col-lg-6">
+                            <div class="profile-info">
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted small">Academic Information</label>
+                                    <p class="mb-0">
+                                        Grade {{ user.grade_level or 'N/A' }} - {{ user.strand or 'N/A' }}<br>
+                                        <small class="text-muted">Section: {{ user.section or 'N/A' }}</small>
+                                    </p>
+                                </div>
+                                
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted small">Member Since</label>
+                                    <p class="mb-0">{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                                </div>
+                                
+                                <div class="info-item">
+                                    <!-- Change Password Button -->
+                                    <button class="btn btn-outline-warning" id="changePasswordBtn">
+                                        <i class="fas fa-key me-2"></i>
+                                        Change Password
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <hr class="my-4">
-                    
-                    <!-- Change Password Button -->
-                    <button class="btn btn-outline-warning w-100" id="changePasswordBtn">
-                        <i class="fas fa-key me-2"></i>
-                        Change Password
-                    </button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Profile Actions -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm h-100">
+    <!-- Wellness Dashboard -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <h5 class="card-title fw-bold mb-4">
                         <i class="fas fa-chart-line text-clsu-green me-2"></i>
@@ -77,7 +86,7 @@
                     </h5>
                     
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-6 col-lg-3">
                             <div class="action-card" id="journalEntriesBtn">
                                 <div class="action-icon">
                                     <i class="fas fa-book-open"></i>
@@ -92,7 +101,7 @@
                             </div>
                         </div>
                         
-                        <div class="col-md-6">
+                        <div class="col-md-6 col-lg-3">
                             <div class="action-card" id="wellnessInsightsBtn">
                                 <div class="action-icon bg-info">
                                     <i class="fas fa-chart-pie"></i>
@@ -107,7 +116,7 @@
                             </div>
                         </div>
                         
-                        <div class="col-md-6">
+                        <div class="col-md-6 col-lg-3">
                             <div class="action-card" id="dassResultsBtn">
                                 <div class="action-icon bg-success">
                                     <i class="fas fa-brain"></i>
@@ -122,7 +131,7 @@
                             </div>
                         </div>
                         
-                        <div class="col-md-6">
+                        <div class="col-md-6 col-lg-3">
                             <div class="action-card" onclick="window.location.href='/consultation'">
                                 <div class="action-icon bg-warning">
                                     <i class="fas fa-comments"></i>

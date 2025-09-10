@@ -75,9 +75,9 @@
     </div>
     {% endif %}
 
-    <div class="row g-4">
-        <!-- Quick Actions -->
-        <div class="col-lg-8">
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <h5 class="card-title fw-bold mb-4">
@@ -86,7 +86,7 @@
                     </h5>
                     
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-6 col-lg-3">
                             <a href="{{ url_for('main.emotion_log') }}" class="quick-action-card">
                                 <div class="card bg-gradient-primary text-white h-100">
                                     <div class="card-body text-center">
@@ -98,7 +98,7 @@
                             </a>
                         </div>
                         
-                        <div class="col-md-6">
+                        <div class="col-md-6 col-lg-3">
                             {% if dass21_status.can_take %}
                                 <a href="{{ url_for('main.dass21_quiz') }}" class="quick-action-card">
                                     <div class="card bg-gradient-info text-white h-100">
@@ -122,7 +122,7 @@
                             {% endif %}
                         </div>
                         
-                        <div class="col-md-6">
+                        <div class="col-md-6 col-lg-3">
                             <a href="{{ url_for('main.consultation') }}" class="quick-action-card">
                                 <div class="card bg-gradient-success text-white h-100">
                                     <div class="card-body text-center">
@@ -134,7 +134,7 @@
                             </a>
                         </div>
                         
-                        <div class="col-md-6">
+                        <div class="col-md-6 col-lg-3">
                             <button class="quick-action-card w-100 border-0" onclick="openInsightsModal()">
                                 <div class="card bg-gradient-warning text-white h-100">
                                     <div class="card-body text-center">
@@ -149,9 +149,11 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Recent Activity -->
-        <div class="col-lg-4">
+    <!-- Recent Activity -->
+    <div class="row g-4">
+        <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <h5 class="card-title fw-bold mb-4">
@@ -161,21 +163,25 @@
                     
                     {% if recent_logs %}
                         <div class="recent-logs">
-                            {% for log in recent_logs %}
-                                <div class="recent-log-item mb-3 p-3 rounded bg-light">
-                                    <div class="d-flex align-items-center">
-                                        <div class="emotion-icon me-3">
-                                            <i class="fas fa-heart text-clsu-gold"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1 fw-bold">{{ log.emotion }}</h6>
-                                            <small class="text-muted">
-                                                {{ log.log_date.strftime('%B %d, %Y at %I:%M %p') }}
-                                            </small>
+                            <div class="row g-3">
+                                {% for log in recent_logs %}
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="recent-log-item p-3 rounded bg-light h-100">
+                                            <div class="d-flex align-items-center">
+                                                <div class="emotion-icon me-3">
+                                                    <i class="fas fa-heart text-clsu-gold"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1 fw-bold">{{ log.emotion }}</h6>
+                                                    <small class="text-muted">
+                                                        {{ log.log_date.strftime('%B %d, %Y at %I:%M %p') }}
+                                                    </small>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            {% endfor %}
+                                {% endfor %}
+                            </div>
                         </div>
                     {% else %}
                         <div class="text-center py-4">
