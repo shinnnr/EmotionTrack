@@ -50,13 +50,6 @@
                             <!-- Admin Response -->
                             {% if message.admin_response %}
                                 <div class="message-bubble admin-message">
-                                    <div class="message-avatar">
-                                        <div class="avatar-sm">
-                                            <div class="avatar-title rounded-circle bg-clsu-green text-white">
-                                                GC
-                                            </div>
-                                        </div>
-                                    </div>
                                     <div class="message-content">
                                         <div class="message-sender">Guidance Counselor</div>
                                         <div class="message-text">{{ message.admin_response }}</div>
@@ -64,6 +57,13 @@
                                             {% if message.responded_at %}
                                                 {{ message.responded_at.strftime('%I:%M %p') }}
                                             {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="message-avatar">
+                                        <div class="avatar-sm">
+                                            <div class="avatar-title rounded-circle bg-clsu-green text-white">
+                                                GC
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -167,19 +167,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Add message to chat immediately
                 const messageHtml = `
                     <div class="message-bubble admin-message">
-                        <div class="message-avatar">
-                            <div class="avatar-sm">
-                                <div class="avatar-title rounded-circle bg-success text-white">
-                                    GC
-                                </div>
-                            </div>
-                        </div>
                         <div class="message-content">
                             <div class="message-sender">You (Guidance Counselor)</div>
                             <div class="message-text">${messageText}</div>
                             <div class="message-time">
                                 ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                 <br><small class="text-muted">${new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})}</small>
+                            </div>
+                        </div>
+                        <div class="message-avatar">
+                            <div class="avatar-sm">
+                                <div class="avatar-title rounded-circle bg-clsu-green text-white">
+                                    GC
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -399,7 +399,8 @@ async function loadSuggestedResponses() {
 
 .admin-message {
     justify-content: flex-end;
-    flex-direction: row-reverse;
+    margin-left: auto;
+    max-width: 85%;
 }
 
 .admin-message .message-content {
@@ -409,6 +410,13 @@ async function loadSuggestedResponses() {
     border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
     max-width: 70%;
     box-shadow: 0 2px 8px rgba(45, 80, 22, 0.2);
+    margin-left: auto;
+}
+
+.admin-message .message-avatar {
+    order: 2;
+    margin-left: 0.75rem;
+    margin-right: 0;
 }
 
 .message-text {
@@ -425,6 +433,10 @@ async function loadSuggestedResponses() {
 }
 
 .admin-message .message-time {
+    text-align: right;
+}
+
+.admin-message .message-content {
     text-align: right;
 }
 
