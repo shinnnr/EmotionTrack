@@ -44,6 +44,7 @@ class MoodLog(db.Model):
     log_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     emotion = db.Column(db.String(50), nullable=False)
+    intensity = db.Column(db.Integer, nullable=False, default=5)
     sleep = db.Column(db.Float, nullable=False)
     energy = db.Column(db.Integer, nullable=False)
     triggers = db.Column(db.String(50), nullable=False)

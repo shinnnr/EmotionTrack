@@ -222,6 +222,7 @@ def emotion_log():
                 mood_log = MoodLog()
                 mood_log.user_id = current_user.id
                 mood_log.emotion = emotion
+                mood_log.intensity = 5  # Default intensity value (1-10 scale)
                 mood_log.sleep = form.sleep.data
                 mood_log.energy = form.energy.data
                 mood_log.triggers = form.triggers.data
