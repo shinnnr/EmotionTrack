@@ -265,13 +265,15 @@
 .custom-modal-content {
     background: white;
     border-radius: 12px;
-    max-width: 90vw;
+    max-width: 70vw;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
     animation: slideIn 0.3s ease;
     position: relative;
     z-index: 9999999 !important;
+    margin-left: auto;
+    margin-right: 2rem;
 }
 
 .custom-modal-header {
@@ -311,11 +313,11 @@
 }
 
 .modal-lg .custom-modal-content {
-    max-width: 800px;
+    max-width: 600px;
 }
 
 .modal-xl .custom-modal-content {
-    max-width: 1140px;
+    max-width: 800px;
 }
 
 @keyframes fadeIn {
@@ -395,11 +397,41 @@ body.modal-open {
     height: 100vh !important;
 }
 
-/* Responsive design */
+/* Desktop modal positioning */
+@media (min-width: 992px) {
+    .custom-modal-content {
+        max-width: 60vw;
+        margin-left: 280px;
+        margin-right: 2rem;
+    }
+    
+    .modal-lg .custom-modal-content {
+        max-width: 50vw;
+        margin-left: 280px;
+    }
+    
+    .modal-xl .custom-modal-content {
+        max-width: 65vw;
+        margin-left: 280px;
+    }
+}
+
+/* Tablet modal positioning */
+@media (min-width: 769px) and (max-width: 991px) {
+    .custom-modal-content {
+        max-width: 75vw;
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
+}
+
+/* Mobile responsive design */
 @media (max-width: 768px) {
     .custom-modal-content {
         margin: 1rem;
         max-width: calc(100vw - 2rem);
+        margin-left: 1rem;
+        margin-right: 1rem;
     }
     
     .action-card {
