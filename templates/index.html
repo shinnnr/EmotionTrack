@@ -56,7 +56,12 @@
                                 <label for="{{ login_form.password.id }}" class="form-label">
                                     <i class="fas fa-lock me-2"></i>Password
                                 </label>
-                                {{ login_form.password(class="form-control") }}
+                                <div class="password-input-group">
+                                    {{ login_form.password(class="form-control password-field") }}
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ login_form.password.id }}', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             
                             <button type="submit" class="btn btn-clsu-green w-100 mb-3">
@@ -101,11 +106,21 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Password</label>
-                                    {{ register_form.password(class="form-control") }}
+                                    <div class="password-input-group">
+                                        {{ register_form.password(class="form-control password-field") }}
+                                        <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.password.id }}', this)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Confirm Password</label>
-                                    {{ register_form.confirm_password(class="form-control") }}
+                                    <div class="password-input-group">
+                                        {{ register_form.confirm_password(class="form-control password-field") }}
+                                        <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.confirm_password.id }}', this)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -146,6 +161,42 @@
     </div>
 </div>
 
+<style>
+/* Password Input Group Styles */
+.password-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-group .password-field {
+    padding-right: 45px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 5px;
+    z-index: 10;
+    transition: color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+    color: var(--clsu-green);
+}
+
+.password-toggle-btn:focus {
+    outline: none;
+    color: var(--clsu-green);
+}
+</style>
+
 <script>
 function showRegisterForm() {
     document.getElementById('loginForm').style.display = 'none';
@@ -155,6 +206,23 @@ function showRegisterForm() {
 function showLoginForm() {
     document.getElementById('registerForm').style.display = 'none';
     document.getElementById('loginForm').style.display = 'block';
+}
+
+function togglePassword(fieldId, button) {
+    const passwordField = document.getElementById(fieldId);
+    const icon = button.querySelector('i');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+        button.setAttribute('title', 'Hide password');
+    } else {
+        passwordField.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+        button.setAttribute('title', 'Show password');
+    }
 }
 </script>
 {% endblock %}

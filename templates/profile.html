@@ -163,15 +163,30 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="mb-3">
                     <label for="currentPassword" class="form-label">Current Password</label>
-                    <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                    <div class="password-input-group">
+                        <input type="password" class="form-control password-field" id="currentPassword" name="current_password" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('currentPassword', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="newPassword" class="form-label">New Password</label>
-                    <input type="password" class="form-control" id="newPassword" name="new_password" required minlength="6">
+                    <div class="password-input-group">
+                        <input type="password" class="form-control password-field" id="newPassword" name="new_password" required minlength="6">
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('newPassword', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="confirmPassword" class="form-label">Confirm New Password</label>
-                    <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required minlength="6">
+                    <div class="password-input-group">
+                        <input type="password" class="form-control password-field" id="confirmPassword" name="confirm_password" required minlength="6">
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('confirmPassword', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="d-flex justify-content-end gap-2">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('changePasswordModal')">Cancel</button>
@@ -185,6 +200,40 @@
 </div>
 
 <style>
+/* Password Input Group Styles */
+.password-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-group .password-field {
+    padding-right: 45px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 5px;
+    z-index: 10;
+    transition: color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+    color: var(--clsu-green);
+}
+
+.password-toggle-btn:focus {
+    outline: none;
+    color: var(--clsu-green);
+}
+
 /* Professional Profile Styles */
 .action-card {
     background: #f8f9fa;
@@ -988,6 +1037,23 @@ function showAlert(message, type = 'info') {
     setTimeout(() => {
         alert.remove();
     }, 5000);
+}
+
+function togglePassword(fieldId, button) {
+    const passwordField = document.getElementById(fieldId);
+    const icon = button.querySelector('i');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+        button.setAttribute('title', 'Hide password');
+    } else {
+        passwordField.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+        button.setAttribute('title', 'Show password');
+    }
 }
 </script>
 {% endblock %}
