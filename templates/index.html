@@ -232,30 +232,12 @@ function showLoginForm() {
 }
 
 function togglePassword(fieldId, button) {
-    // Try both the exact fieldId and also common IDs
-    let passwordField = document.getElementById(fieldId);
-    
-    // If not found by exact ID, try common field names
-    if (!passwordField) {
-        const possibleIds = [fieldId, 'password', 'confirm_password'];
-        for (let id of possibleIds) {
-            passwordField = document.getElementById(id);
-            if (passwordField && passwordField.type === 'password') {
-                break;
-            }
-        }
-    }
-    
-    // If still not found, look for password fields in the parent container
-    if (!passwordField) {
-        const parentContainer = button.closest('.password-input-group');
-        if (parentContainer) {
-            passwordField = parentContainer.querySelector('input[type="password"], input[type="text"]');
-        }
-    }
+    // Find the password field in the same container as the button
+    const parentContainer = button.closest('.password-input-group');
+    const passwordField = parentContainer.querySelector('input.password-field');
     
     if (!passwordField) {
-        console.error('Could not find password field for ID:', fieldId);
+        console.error('Could not find password field');
         return;
     }
     
@@ -276,27 +258,61 @@ function togglePassword(fieldId, button) {
 
 // Password matching validation
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait for all forms to be loaded
-    setTimeout(function() {
-        const passwordField = document.getElementById('password');
-        const confirmPasswordField = document.getElementById('confirm_password');
+    // Setup validation when register form is visible
+    function setupPasswordValidation() {
+        const registerForm = document.getElementById('registerForm');
+        if (!registerForm || registerForm.style.display === 'none') {
+            return;
+        }
+        
+        const passwordFields = registerForm.querySelectorAll('input[type="password"], input[type="text"]');
+        let passwordField = null;
+        let confirmPasswordField = null;
+        
+        // Find password and confirm password fields
+        passwordFields.forEach(field => {
+            if (field.name === 'password' || field.id === 'password') {
+                passwordField = field;
+            } else if (field.name === 'confirm_password' || field.id === 'confirm_password') {
+                confirmPasswordField = field;
+            }
+        });
         
         if (passwordField && confirmPasswordField) {
             function validatePasswordMatch() {
-                if (confirmPasswordField.value === '') {
-                    confirmPasswordField.setCustomValidity('');
-                } else if (passwordField.value !== confirmPasswordField.value) {
-                    confirmPasswordField.setCustomValidity('Passwords do not match');
-                } else {
-                    confirmPasswordField.setCustomValidity('');
+                // Clear any existing custom validity first
+                confirmPasswordField.setCustomValidity('');
+                
+                // Only validate if confirm password has content
+                if (confirmPasswordField.value.length > 0) {
+                    if (passwordField.value !== confirmPasswordField.value) {
+                        confirmPasswordField.setCustomValidity('Passwords do not match');
+                    }
                 }
+                
+                // Trigger validation display update
+                confirmPasswordField.reportValidity();
             }
             
+            // Remove any existing listeners first
+            passwordField.removeEventListener('input', validatePasswordMatch);
+            confirmPasswordField.removeEventListener('input', validatePasswordMatch);
+            
+            // Add new listeners
             passwordField.addEventListener('input', validatePasswordMatch);
             confirmPasswordField.addEventListener('input', validatePasswordMatch);
-            confirmPasswordField.addEventListener('blur', validatePasswordMatch);
         }
-    }, 100);
+    }
+    
+    // Setup validation initially and when switching to register form
+    setupPasswordValidation();
+    
+    // Re-setup when register form becomes visible
+    const originalShowRegisterForm = window.showRegisterForm;
+    window.showRegisterForm = function() {
+        originalShowRegisterForm();
+        setTimeout(setupPasswordValidation, 100);
+    };
 });
 </script>
 {% endblock %}
