@@ -28,85 +28,35 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    {% if student_conversations %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Student</th>
-                                        <th>Last Message</th>
-                                        <th>Last Activity</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for conversation in student_conversations %}
-                                    <tr class="{% if conversation.has_unread %}table-warning{% endif %}">
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm me-3">
-                                                    <div class="avatar-title rounded-circle bg-primary text-white">
-                                                        {{ conversation.user.firstname[0] }}{{ conversation.user.lastname[0] }}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <h6 class="mb-0">{{ conversation.user.full_name }}</h6>
-                                                    <small class="text-muted">{{ conversation.user.email }}</small>
-                                                    <div class="small text-muted">
-                                                        {{ conversation.user.strand }} - Grade {{ conversation.user.grade_level }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style="max-width: 250px;">
-                                            <div class="message-preview text-truncate">
-                                                {% if conversation.latest_message %}
-                                                    {{ conversation.latest_message.message_text[:50] }}
-                                                    {% if conversation.latest_message.message_text|length > 50 %}...{% endif %}
-                                                {% else %}
-                                                    <em class="text-muted">No messages yet</em>
-                                                {% endif %}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {% if conversation.latest_message %}
-                                                <small class="text-muted">
-                                                    {{ conversation.latest_message.created_at.strftime('%B %d, %Y at %I:%M %p') if conversation.latest_message.created_at else 'Unknown' }}
-                                                </small>
-                                            {% else %}
-                                                <small class="text-muted">Never</small>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if conversation.has_unread %}
-                                                <span class="badge bg-warning">New Messages</span>
-                                            {% elif conversation.latest_message and conversation.latest_message.admin_response %}
-                                                <span class="badge bg-success">Responded</span>
-                                            {% elif conversation.latest_message %}
-                                                <span class="badge bg-secondary">Pending</span>
-                                            {% else %}
-                                                <span class="badge bg-light text-dark">No Activity</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <a href="{{ url_for('admin.student_chat', user_id=conversation.user.id) }}" class="btn btn-sm btn-success">
-                                                <i class="fas fa-comments"></i>
-                                                Chat
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="text-muted mb-0">
+                            <span id="messageCount">Loading...</span> student conversations
+                        </p>
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="perPageSelect" class="form-label small mb-0">Per page:</label>
+                            <select id="perPageSelect" class="form-select form-select-sm" style="width: auto;" onchange="changePerPage()">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
                         </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                            <h4 class="text-muted">No Messages</h4>
-                            <p class="text-muted">No student messages have been received yet.</p>
+                    </div>
+                    
+                    <div class="table-responsive" id="messagesTableContainer">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading messages...</p>
                         </div>
-                    {% endif %}
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <nav aria-label="Messages pagination" id="messagesPagination" style="display: none;">
+                        <ul class="pagination justify-content-center">
+                            <!-- Pagination will be generated by JavaScript -->
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -211,4 +161,181 @@ async function sendResponse() {
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+let currentPage = 1;
+let perPage = 10;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadMessages();
+});
+
+async function loadMessages(page = 1) {
+    try {
+        currentPage = page;
+        const container = document.getElementById('messagesTableContainer');
+        const pagination = document.getElementById('messagesPagination');
+        const messageCount = document.getElementById('messageCount');
+        
+        // Show loading
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading messages...</p>
+            </div>
+        `;
+        
+        const response = await fetch(`/admin/api/admin-messages?page=${page}&per_page=${perPage}`);
+        if (!response.ok) throw new Error('Failed to fetch messages');
+        
+        const data = await response.json();
+        
+        if (data.conversations && data.conversations.length > 0) {
+            // Generate table HTML
+            let tableHTML = `
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Last Message</th>
+                            <th>Last Activity</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            data.conversations.forEach(conversation => {
+                const hasUnread = conversation.has_unread;
+                const user = conversation.user;
+                const latestMessage = conversation.latest_message;
+                
+                tableHTML += `
+                    <tr class="${hasUnread ? 'table-warning' : ''}">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-3">
+                                    <div class="avatar-title rounded-circle bg-primary text-white">
+                                        ${user.firstname[0] || ''}${user.lastname[0] || ''}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">${user.full_name}</h6>
+                                    <small class="text-muted">${user.email}</small>
+                                    <div class="small text-muted">
+                                        ${user.strand || 'N/A'} - Grade ${user.grade_level || 'N/A'}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="max-width: 250px;">
+                            <div class="message-preview text-truncate">
+                                ${latestMessage && latestMessage.message_text ? 
+                                    (latestMessage.message_text.length > 50 ? 
+                                        latestMessage.message_text.substring(0, 50) + '...' : 
+                                        latestMessage.message_text) 
+                                    : '<em class="text-muted">No messages yet</em>'}
+                            </div>
+                        </td>
+                        <td>
+                            ${latestMessage && latestMessage.created_at ? 
+                                `<small class="text-muted">${latestMessage.created_at}</small>` : 
+                                '<small class="text-muted">Never</small>'}
+                        </td>
+                        <td>
+                            ${hasUnread ? 
+                                '<span class="badge bg-warning">New Messages</span>' : 
+                                latestMessage && latestMessage.admin_response ? 
+                                    '<span class="badge bg-success">Responded</span>' : 
+                                    latestMessage ? 
+                                        '<span class="badge bg-secondary">Pending</span>' : 
+                                        '<span class="badge bg-light text-dark">No Activity</span>'}
+                        </td>
+                        <td>
+                            <a href="/admin/student-chat/${user.id}" class="btn btn-sm btn-success">
+                                <i class="fas fa-comments"></i> Chat
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += '</tbody></table>';
+            container.innerHTML = tableHTML;
+            
+            // Update message count
+            messageCount.textContent = `${data.pagination.total}`;
+            
+            // Generate pagination
+            generatePagination(data.pagination);
+            pagination.style.display = 'block';
+            
+        } else {
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Messages</h4>
+                    <p class="text-muted">No student messages have been received yet.</p>
+                </div>
+            `;
+            messageCount.textContent = '0';
+            pagination.style.display = 'none';
+        }
+        
+    } catch (error) {
+        console.error('Error loading messages:', error);
+        document.getElementById('messagesTableContainer').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Messages</h5>
+                <p class="text-muted">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function generatePagination(pagination) {
+    const paginationContainer = document.querySelector('#messagesPagination .pagination');
+    let html = '';
+    
+    // Previous button
+    html += `
+        <li class="page-item ${!pagination.has_prev ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="${pagination.has_prev ? `loadMessages(${pagination.prev_num})` : 'return false'}">
+                <i class="fas fa-chevron-left"></i> Previous
+            </a>
+        </li>
+    `;
+    
+    // Page numbers
+    const startPage = Math.max(1, pagination.page - 2);
+    const endPage = Math.min(pagination.pages, pagination.page + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        html += `
+            <li class="page-item ${i === pagination.page ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="loadMessages(${i})">${i}</a>
+            </li>
+        `;
+    }
+    
+    // Next button
+    html += `
+        <li class="page-item ${!pagination.has_next ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="${pagination.has_next ? `loadMessages(${pagination.next_num})` : 'return false'}">
+                Next <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+    `;
+    
+    paginationContainer.innerHTML = html;
+}
+
+function changePerPage() {
+    perPage = parseInt(document.getElementById('perPageSelect').value);
+    loadMessages(1); // Reset to first page
+}
+</script>
 {% endblock %}

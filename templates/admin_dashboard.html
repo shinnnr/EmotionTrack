@@ -20,13 +20,16 @@
     <!-- Statistics Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="stat-card card border-0 shadow-sm">
+            <div class="stat-card card border-0 shadow-sm clickable-stat" onclick="openStudentNavigationModal()">
                 <div class="card-body text-center p-4">
                     <div class="stat-icon mb-3">
                         <i class="fas fa-users fa-3x text-primary"></i>
                     </div>
                     <h3 class="fw-bold">{{ total_users }}</h3>
                     <p class="text-muted mb-0">Total Students</p>
+                    <small class="text-primary">
+                        <i class="fas fa-search me-1"></i>Browse by Category
+                    </small>
                 </div>
             </div>
         </div>
@@ -182,6 +185,58 @@
     </div>
 </div>
 
+<!-- Student Navigation Modal -->
+<div class="custom-modal-overlay" id="studentNavigationOverlay" style="display: none;">
+    <div class="custom-modal student-navigation-modal">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-sitemap me-2"></i>
+                <span id="navigationTitle">Browse Students</span>
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeStudentNavigationModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body" id="studentNavigationContent">
+            <!-- Breadcrumb Navigation -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb" id="navigationBreadcrumb">
+                    <li class="breadcrumb-item active">Students</li>
+                </ol>
+            </nav>
+            
+            <div class="text-center py-4" id="loadingIndicator">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading...</p>
+            </div>
+            
+            <!-- Navigation Grid -->
+            <div class="row g-3" id="navigationGrid" style="display: none;">
+            </div>
+            
+            <!-- Student List -->
+            <div id="studentList" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th>Joined Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %}
 
@@ -193,6 +248,63 @@
 
 .stat-card:hover {
     transform: translateY(-5px);
+}
+
+.clickable-stat {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clickable-stat:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.student-navigation-modal {
+    max-width: 900px;
+}
+
+.navigation-card {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 120px;
+    justify-content: center;
+}
+
+.navigation-card:hover {
+    background: #fff;
+    border-color: #0d6efd;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.navigation-card i {
+    font-size: 2rem;
+    color: #0d6efd;
+}
+
+.navigation-card h6 {
+    margin: 0;
+    font-weight: bold;
+    color: #212529;
+}
+
+.navigation-card small {
+    color: #6c757d;
+    margin: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
 }
 
 .activity-item:last-child {

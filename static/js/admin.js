@@ -51,6 +51,217 @@ async function viewStudentProfile(userId) {
     }
 }
 
+// Student Navigation Modal Functions
+let currentNavigationState = {
+    strand: null,
+    grade: null,
+    section: null
+};
+
+async function openStudentNavigationModal() {
+    try {
+        const overlay = document.getElementById('studentNavigationOverlay');
+        const content = document.getElementById('studentNavigationContent');
+        
+        // Reset state
+        currentNavigationState = { strand: null, grade: null, section: null };
+        
+        // Show modal
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Load initial strands
+        await loadNavigationLevel('strands');
+        
+    } catch (error) {
+        console.error('Error opening student navigation modal:', error);
+    }
+}
+
+function closeStudentNavigationModal() {
+    const overlay = document.getElementById('studentNavigationOverlay');
+    overlay.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    
+    // Reset state
+    currentNavigationState = { strand: null, grade: null, section: null };
+}
+
+async function loadNavigationLevel(level, selectedValue = null) {
+    try {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const navigationGrid = document.getElementById('navigationGrid');
+        const studentList = document.getElementById('studentList');
+        const breadcrumb = document.getElementById('navigationBreadcrumb');
+        const title = document.getElementById('navigationTitle');
+        
+        // Show loading
+        loadingIndicator.style.display = 'block';
+        navigationGrid.style.display = 'none';
+        studentList.style.display = 'none';
+        
+        // Update state based on level
+        if (level === 'grades') {
+            currentNavigationState.strand = selectedValue;
+        } else if (level === 'sections') {
+            currentNavigationState.grade = selectedValue;
+        } else if (level === 'students') {
+            currentNavigationState.section = selectedValue;
+        }
+        
+        // Build API URL
+        let apiUrl = '/admin/api/students-by-hierarchy?';
+        if (currentNavigationState.strand) apiUrl += `strand=${encodeURIComponent(currentNavigationState.strand)}&`;
+        if (currentNavigationState.grade) apiUrl += `grade=${encodeURIComponent(currentNavigationState.grade)}&`;
+        if (currentNavigationState.section) apiUrl += `section=${encodeURIComponent(currentNavigationState.section)}&`;
+        
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error('Failed to fetch data');
+        
+        const data = await response.json();
+        
+        // Update breadcrumb and title
+        updateBreadcrumb();
+        updateTitle();
+        
+        // Hide loading
+        loadingIndicator.style.display = 'none';
+        
+        if (data.type === 'students') {
+            // Show student list
+            displayStudentList(data.data);
+        } else {
+            // Show navigation grid
+            displayNavigationGrid(data.data, data.type);
+        }
+        
+    } catch (error) {
+        console.error('Error loading navigation level:', error);
+        document.getElementById('loadingIndicator').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Data</h5>
+                <p class="text-muted">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function displayNavigationGrid(items, type) {
+    const grid = document.getElementById('navigationGrid');
+    const iconMap = {
+        'strands': 'fas fa-graduation-cap',
+        'grades': 'fas fa-layer-group',
+        'sections': 'fas fa-users'
+    };
+    
+    grid.innerHTML = '';
+    grid.style.display = 'flex';
+    
+    items.forEach(item => {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 col-sm-6';
+        
+        col.innerHTML = `
+            <div class="navigation-card" onclick="handleNavigationClick('${type}', '${item}')">
+                <i class="${iconMap[type]}"></i>
+                <h6>${item}</h6>
+                <small>Click to continue</small>
+            </div>
+        `;
+        
+        grid.appendChild(col);
+    });
+}
+
+function displayStudentList(students) {
+    const studentList = document.getElementById('studentList');
+    const tableBody = document.getElementById('studentTableBody');
+    
+    tableBody.innerHTML = '';
+    
+    students.forEach(student => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm me-3">
+                        <div class="avatar-title rounded-circle bg-primary text-white">
+                            ${student.full_name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        <h6 class="mb-0">${student.full_name}</h6>
+                    </div>
+                </div>
+            </td>
+            <td>${student.email}</td>
+            <td>${student.created_at}</td>
+            <td>
+                <button class="btn btn-sm btn-success me-2" onclick="goToStudentChat(${student.id})">
+                    <i class="fas fa-comments"></i> Chat
+                </button>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewStudentProfile(${student.id})">
+                    <i class="fas fa-user"></i> Profile
+                </button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+    
+    studentList.style.display = 'block';
+}
+
+function handleNavigationClick(type, value) {
+    if (type === 'strands') {
+        loadNavigationLevel('grades', value);
+    } else if (type === 'grades') {
+        loadNavigationLevel('sections', value);
+    } else if (type === 'sections') {
+        loadNavigationLevel('students', value);
+    }
+}
+
+function updateBreadcrumb() {
+    const breadcrumb = document.getElementById('navigationBreadcrumb');
+    let html = '<li class="breadcrumb-item"><a href="#" onclick="loadNavigationLevel(\'strands\')">Students</a></li>';
+    
+    if (currentNavigationState.strand) {
+        html += `<li class="breadcrumb-item"><a href="#" onclick="loadNavigationLevel('grades', '${currentNavigationState.strand}')">${currentNavigationState.strand}</a></li>`;
+    }
+    
+    if (currentNavigationState.grade) {
+        html += `<li class="breadcrumb-item"><a href="#" onclick="loadNavigationLevel('sections', '${currentNavigationState.grade}')">Grade ${currentNavigationState.grade}</a></li>`;
+    }
+    
+    if (currentNavigationState.section) {
+        html += `<li class="breadcrumb-item active">${currentNavigationState.section}</li>`;
+    }
+    
+    breadcrumb.innerHTML = html;
+}
+
+function updateTitle() {
+    const title = document.getElementById('navigationTitle');
+    
+    if (currentNavigationState.section) {
+        title.textContent = `Students in ${currentNavigationState.strand} - Grade ${currentNavigationState.grade} - ${currentNavigationState.section}`;
+    } else if (currentNavigationState.grade) {
+        title.textContent = `Sections in ${currentNavigationState.strand} - Grade ${currentNavigationState.grade}`;
+    } else if (currentNavigationState.strand) {
+        title.textContent = `Grade Levels in ${currentNavigationState.strand}`;
+    } else {
+        title.textContent = 'Browse Students by Strand';
+    }
+}
+
+function goToStudentChat(studentId) {
+    // Close the navigation modal first
+    closeStudentNavigationModal();
+    // Navigate to the chat page
+    window.location.href = `/admin/student-chat/${studentId}`;
+}
+
 // Close student profile modal
 function closeStudentProfileModal() {
     const overlay = document.getElementById('studentProfileOverlay');
