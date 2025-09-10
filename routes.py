@@ -68,17 +68,34 @@ def profile():
 @login_required
 def get_mood_logs():
     try:
-        logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(desc(MoodLog.log_date)).all()
-        return jsonify([{
-            'log_id': log.log_id,
-            'emotion': log.emotion,
-            'energy': log.energy,
-            'sleep': log.sleep,
-            'triggers': log.triggers,
-            'coping': log.coping,
-            'gratitude': log.gratitude,
-            'log_date': log.log_date.isoformat() if log.log_date else None
-        } for log in logs])
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        logs_query = MoodLog.query.filter_by(user_id=current_user.id).order_by(desc(MoodLog.log_date))
+        logs_paginated = logs_query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        return jsonify({
+            'logs': [{
+                'log_id': log.log_id,
+                'emotion': log.emotion,
+                'energy': log.energy,
+                'sleep': log.sleep,
+                'triggers': log.triggers,
+                'coping': log.coping,
+                'gratitude': log.gratitude,
+                'log_date': log.log_date.isoformat() if log.log_date else None
+            } for log in logs_paginated.items],
+            'pagination': {
+                'page': logs_paginated.page,
+                'pages': logs_paginated.pages,
+                'per_page': logs_paginated.per_page,
+                'total': logs_paginated.total,
+                'has_prev': logs_paginated.has_prev,
+                'has_next': logs_paginated.has_next,
+                'prev_num': logs_paginated.prev_num,
+                'next_num': logs_paginated.next_num
+            }
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -112,17 +129,34 @@ def get_wellness_insights():
 @login_required
 def get_dass21_results():
     try:
-        results = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).all()
-        return jsonify([{
-            'id': result.id,
-            'depression_score': result.depression_score,
-            'anxiety_score': result.anxiety_score,
-            'stress_score': result.stress_score,
-            'depression_severity': result.depression_severity,
-            'anxiety_severity': result.anxiety_severity,
-            'stress_severity': result.stress_severity,
-            'created_at': result.created_at.isoformat() if result.created_at else None
-        } for result in results])
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        results_query = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at))
+        results_paginated = results_query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        return jsonify({
+            'results': [{
+                'id': result.id,
+                'depression_score': result.depression_score,
+                'anxiety_score': result.anxiety_score,
+                'stress_score': result.stress_score,
+                'depression_severity': result.depression_severity,
+                'anxiety_severity': result.anxiety_severity,
+                'stress_severity': result.stress_severity,
+                'created_at': result.created_at.isoformat() if result.created_at else None
+            } for result in results_paginated.items],
+            'pagination': {
+                'page': results_paginated.page,
+                'pages': results_paginated.pages,
+                'per_page': results_paginated.per_page,
+                'total': results_paginated.total,
+                'has_prev': results_paginated.has_prev,
+                'has_next': results_paginated.has_next,
+                'prev_num': results_paginated.prev_num,
+                'next_num': results_paginated.next_num
+            }
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -1122,5 +1156,127 @@ def get_analytics_data():
             'concerning_students': concerning_students
         })
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Admin-specific paginated endpoints
+@admin_bp.route('/api/admin-messages')
+@login_required
+def get_admin_messages():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # Get all students with their latest message
+        students_with_messages = db.session.query(User).filter_by(is_admin=False).all()
+        
+        conversations = []
+        for student in students_with_messages:
+            latest_message = StudentMessage.query.filter_by(sender_user_id=student.id).order_by(desc(StudentMessage.created_at)).first()
+            has_unread = StudentMessage.query.filter_by(sender_user_id=student.id, is_read=False).count() > 0
+            
+            conversations.append({
+                'user': student,
+                'latest_message': latest_message,
+                'has_unread': has_unread
+            })
+        
+        # Sort by latest message date
+        conversations.sort(key=lambda x: x['latest_message'].created_at if x['latest_message'] else datetime.min, reverse=True)
+        
+        # Manual pagination
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_conversations = conversations[start:end]
+        
+        total = len(conversations)
+        pages = (total + per_page - 1) // per_page
+        
+        return jsonify({
+            'conversations': [{
+                'user': {
+                    'id': conv['user'].id,
+                    'full_name': conv['user'].full_name,
+                    'email': conv['user'].email,
+                    'strand': conv['user'].strand,
+                    'grade_level': conv['user'].grade_level,
+                    'firstname': conv['user'].firstname,
+                    'lastname': conv['user'].lastname
+                },
+                'latest_message': {
+                    'message_text': conv['latest_message'].message_text if conv['latest_message'] else None,
+                    'created_at': conv['latest_message'].created_at.strftime('%B %d, %Y at %I:%M %p') if conv['latest_message'] and conv['latest_message'].created_at else None,
+                    'admin_response': conv['latest_message'].admin_response if conv['latest_message'] else None
+                } if conv['latest_message'] else None,
+                'has_unread': conv['has_unread']
+            } for conv in paginated_conversations],
+            'pagination': {
+                'page': page,
+                'pages': pages,
+                'per_page': per_page,
+                'total': total,
+                'has_prev': page > 1,
+                'has_next': page < pages,
+                'prev_num': page - 1 if page > 1 else None,
+                'next_num': page + 1 if page < pages else None
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/api/students-by-hierarchy')
+@login_required
+def get_students_by_hierarchy():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        strand = request.args.get('strand')
+        grade = request.args.get('grade')
+        section = request.args.get('section')
+        
+        if not strand and not grade and not section:
+            # Return all strands
+            strands = db.session.query(User.strand).filter(User.strand.isnot(None), User.is_admin == False).distinct().all()
+            return jsonify({
+                'type': 'strands',
+                'data': [s[0] for s in strands if s[0]]
+            })
+        
+        elif strand and not grade and not section:
+            # Return grades for this strand
+            grades = db.session.query(User.grade_level).filter_by(strand=strand, is_admin=False).filter(User.grade_level.isnot(None)).distinct().all()
+            return jsonify({
+                'type': 'grades',
+                'data': [g[0] for g in grades if g[0]]
+            })
+        
+        elif strand and grade and not section:
+            # Return sections for this strand and grade
+            sections = db.session.query(User.section).filter_by(strand=strand, grade_level=grade, is_admin=False).filter(User.section.isnot(None)).distinct().all()
+            return jsonify({
+                'type': 'sections',
+                'data': [s[0] for s in sections if s[0]]
+            })
+        
+        elif strand and grade and section:
+            # Return students for this strand, grade, and section
+            students = User.query.filter_by(strand=strand, grade_level=grade, section=section, is_admin=False).all()
+            return jsonify({
+                'type': 'students',
+                'data': [{
+                    'id': student.id,
+                    'full_name': student.full_name,
+                    'email': student.email,
+                    'created_at': student.created_at.strftime('%B %d, %Y') if student.created_at else ''
+                } for student in students]
+            })
+        
+        else:
+            return jsonify({'error': 'Invalid parameters'}), 400
+            
     except Exception as e:
         return jsonify({'error': str(e)}), 500
