@@ -166,6 +166,23 @@ def get_dass21_results():
 def emotion_log():
     form = EmotionLogForm()
     
+    # Check DASS-21 status (weekly assessment)
+    latest_dass = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).first()
+    dass21_status = {
+        'can_take': True,
+        'days_remaining': 0,
+        'next_available_date': None,
+        'last_taken_date': None
+    }
+    
+    if latest_dass:
+        days_passed = (datetime.now() - latest_dass.created_at).days
+        if days_passed < 7:
+            dass21_status['can_take'] = False
+            dass21_status['days_remaining'] = 7 - days_passed
+            dass21_status['next_available_date'] = latest_dass.created_at + timedelta(days=7)
+            dass21_status['last_taken_date'] = latest_dass.created_at
+    
     if form.validate_on_submit():
         try:
             # Parse emotions data
@@ -173,32 +190,32 @@ def emotion_log():
                 emotions_data = json.loads(form.emotions.data or '[]')
             except json.JSONDecodeError:
                 flash('Invalid emotion selection. Please select your emotions again.', 'error')
-                return render_template('emotion_log.html', form=form)
+                return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
             
             
             
             # Validate emotions selection
             if not emotions_data or len(emotions_data) == 0:
                 flash('Please select at least one emotion before saving your mood log.', 'error')
-                return render_template('emotion_log.html', form=form)
+                return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
             
             # Validate emotions are strings and not empty
             if not all(isinstance(emotion, str) and emotion.strip() for emotion in emotions_data):
                 flash('Invalid emotion data. Please select valid emotions.', 'error')
-                return render_template('emotion_log.html', form=form)
+                return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
             
             # Additional validation for required fields
             if not form.sleep.data or form.sleep.data < 0 or form.sleep.data > 24:
                 flash('Please enter valid sleep hours (0-24).', 'error')
-                return render_template('emotion_log.html', form=form)
+                return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
             
             if not form.energy.data or form.energy.data < 1 or form.energy.data > 10:
                 flash('Please enter a valid energy level (1-10).', 'error')
-                return render_template('emotion_log.html', form=form)
+                return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
             
             if not form.triggers.data:
                 flash('Please select your main trigger/stressor.', 'error')
-                return render_template('emotion_log.html', form=form)
+                return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
             
             # Create mood log entries for each selected emotion
             for emotion in emotions_data:
@@ -226,7 +243,7 @@ def emotion_log():
             db.session.rollback()
             flash('An unexpected error occurred while saving your mood log. Please try again.', 'error')
     
-    return render_template('emotion_log.html', form=form)
+    return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
 
 @main_bp.route('/dass21-quiz')
 @login_required
