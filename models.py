@@ -17,8 +17,7 @@ class User(UserMixin, db.Model):
     strand = db.Column(db.String(100))
     grade_level = db.Column(db.String(20))
     section = db.Column(db.String(50))
-    is_admin = db.Column(db.Boolean, default=False)  # Keep for backward compatibility
-    user_role = db.Column(db.String(20), default='student')  # 'student', 'staff', 'guidance_counselor'
+    is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -36,18 +35,6 @@ class User(UserMixin, db.Model):
     def full_name(self):
         return f"{self.firstname} {self.lastname}"
     
-    @property
-    def is_student(self):
-        return self.user_role == 'student'
-    
-    @property
-    def is_staff(self):
-        return self.user_role == 'staff'
-    
-    @property
-    def is_guidance_counselor(self):
-        return self.user_role == 'guidance_counselor'
-    
     def __repr__(self):
         return f'<User {self.email}>'
 
@@ -57,7 +44,6 @@ class MoodLog(db.Model):
     log_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     emotion = db.Column(db.String(50), nullable=False)
-    intensity = db.Column(db.Integer, nullable=False)  # Emotion intensity rating 1-10 as per Use Case diagram
     sleep = db.Column(db.Float, nullable=False)
     energy = db.Column(db.Integer, nullable=False)
     triggers = db.Column(db.String(50), nullable=False)
@@ -97,38 +83,3 @@ class StudentMessage(db.Model):
     
     def __repr__(self):
         return f'<StudentMessage from User {self.sender_user_id}>'
-
-class DailyTip(db.Model):
-    __tablename__ = 'daily_tips'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    tip_type = db.Column(db.String(50), default='wellness')  # 'wellness', 'motivation', 'coping', 'stress'
-    target_audience = db.Column(db.String(20), default='student')  # 'student', 'staff', 'all'
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
-    def __repr__(self):
-        return f'<DailyTip {self.title}>'
-
-class ConsultationSchedule(db.Model):
-    __tablename__ = 'consultation_schedules'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    counselor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    preferred_date = db.Column(db.Date, nullable=False)
-    preferred_time = db.Column(db.String(20), nullable=False)
-    reason = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(20), default='pending')  # 'pending', 'approved', 'completed', 'cancelled'
-    notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    student = db.relationship('User', foreign_keys=[student_id], backref='consultation_requests')
-    counselor = db.relationship('User', foreign_keys=[counselor_id], backref='assigned_consultations')
-    
-    def __repr__(self):
-        return f'<ConsultationSchedule Student {self.student_id}>'
