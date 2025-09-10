@@ -217,12 +217,16 @@
 }
 
 .password-input-group .password-field {
+    padding-right: 45px;
+}
+
+.password-input-group .password-field:valid {
     padding-right: 75px;
 }
 
 .password-toggle-btn {
     position: absolute;
-    right: 40px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -231,7 +235,11 @@
     cursor: pointer;
     padding: 5px;
     z-index: 10;
-    transition: color 0.2s ease;
+    transition: all 0.3s ease;
+}
+
+.password-input-group .password-field:valid + .password-toggle-btn {
+    right: 40px;
 }
 
 .password-toggle-btn:hover {
