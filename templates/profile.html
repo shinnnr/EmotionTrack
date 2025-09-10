@@ -252,7 +252,7 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 1050;
+    z-index: 9999;
     animation: fadeIn 0.3s ease;
 }
 
@@ -270,6 +270,8 @@
     max-height: 90vh;
     overflow-y: auto;
     animation: slideIn 0.3s ease;
+    position: relative;
+    z-index: 10000;
 }
 
 .custom-modal-header {
@@ -448,6 +450,16 @@ function showModal(modalId, size = '') {
         }
         modal.classList.add('show');
         document.body.style.overflow = 'hidden';
+        
+        // Ensure modal is above sidebar
+        modal.style.zIndex = '9999';
+        
+        // Hide sidebar on mobile when modal opens
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar && window.innerWidth <= 768) {
+            sidebar.classList.remove('show');
+            document.body.classList.remove('sidebar-open');
+        }
     }
 }
 
@@ -456,6 +468,9 @@ function closeModal(modalId) {
     if (modal) {
         modal.classList.remove('show');
         document.body.style.overflow = 'auto';
+        
+        // Reset z-index
+        modal.style.zIndex = '';
     }
 }
 
@@ -464,6 +479,7 @@ function createModal(title, content, size = '') {
     const modal = document.createElement('div');
     modal.id = modalId;
     modal.className = 'custom-modal';
+    modal.style.zIndex = '9999'; // Ensure it's above sidebar
     
     modal.innerHTML = `
         <div class="custom-modal-content ${size}">
@@ -909,7 +925,7 @@ function showAlert(message, type = 'info') {
     
     const alert = document.createElement('div');
     alert.className = 'position-fixed top-0 end-0 m-3';
-    alert.style.zIndex = '9999';
+    alert.style.zIndex = '10001';
     alert.innerHTML = `
         <div class="alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show" role="alert">
             <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
