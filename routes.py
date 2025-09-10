@@ -238,9 +238,14 @@ def emotion_log():
             
         except ValueError as e:
             db.session.rollback()
+            print(f"ValueError in emotion_log: {str(e)}")
             flash(f'Invalid data format: {str(e)}. Please check your input and try again.', 'error')
         except Exception as e:
             db.session.rollback()
+            print(f"Exception in emotion_log: {str(e)}")
+            print(f"Exception type: {type(e)}")
+            import traceback
+            traceback.print_exc()
             flash('An unexpected error occurred while saving your mood log. Please try again.', 'error')
     
     return render_template('emotion_log.html', form=form, dass21_status=dass21_status)
