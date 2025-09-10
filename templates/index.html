@@ -232,12 +232,34 @@ function showLoginForm() {
 }
 
 function togglePassword(fieldId, button) {
-    const passwordField = document.getElementById(fieldId);
-    const icon = button.querySelector('i');
+    // Try both the exact fieldId and also common IDs
+    let passwordField = document.getElementById(fieldId);
+    
+    // If not found by exact ID, try common field names
+    if (!passwordField) {
+        const possibleIds = [fieldId, 'password', 'confirm_password'];
+        for (let id of possibleIds) {
+            passwordField = document.getElementById(id);
+            if (passwordField && passwordField.type === 'password') {
+                break;
+            }
+        }
+    }
+    
+    // If still not found, look for password fields in the parent container
+    if (!passwordField) {
+        const parentContainer = button.closest('.password-input-group');
+        if (parentContainer) {
+            passwordField = parentContainer.querySelector('input[type="password"], input[type="text"]');
+        }
+    }
     
     if (!passwordField) {
+        console.error('Could not find password field for ID:', fieldId);
         return;
     }
+    
+    const icon = button.querySelector('i');
     
     if (passwordField.type === 'password') {
         passwordField.type = 'text';
@@ -254,21 +276,27 @@ function togglePassword(fieldId, button) {
 
 // Password matching validation
 document.addEventListener('DOMContentLoaded', function() {
-    const passwordField = document.getElementById('{{ register_form.password.id }}');
-    const confirmPasswordField = document.getElementById('{{ register_form.confirm_password.id }}');
-    
-    if (passwordField && confirmPasswordField) {
-        function validatePasswordMatch() {
-            if (confirmPasswordField.value && passwordField.value !== confirmPasswordField.value) {
-                confirmPasswordField.setCustomValidity('Passwords do not match');
-            } else {
-                confirmPasswordField.setCustomValidity('');
-            }
-        }
+    // Wait for all forms to be loaded
+    setTimeout(function() {
+        const passwordField = document.getElementById('password');
+        const confirmPasswordField = document.getElementById('confirm_password');
         
-        passwordField.addEventListener('input', validatePasswordMatch);
-        confirmPasswordField.addEventListener('input', validatePasswordMatch);
-    }
+        if (passwordField && confirmPasswordField) {
+            function validatePasswordMatch() {
+                if (confirmPasswordField.value === '') {
+                    confirmPasswordField.setCustomValidity('');
+                } else if (passwordField.value !== confirmPasswordField.value) {
+                    confirmPasswordField.setCustomValidity('Passwords do not match');
+                } else {
+                    confirmPasswordField.setCustomValidity('');
+                }
+            }
+            
+            passwordField.addEventListener('input', validatePasswordMatch);
+            confirmPasswordField.addEventListener('input', validatePasswordMatch);
+            confirmPasswordField.addEventListener('blur', validatePasswordMatch);
+        }
+    }, 100);
 });
 </script>
 {% endblock %}
