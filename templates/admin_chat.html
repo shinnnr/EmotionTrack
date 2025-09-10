@@ -59,13 +59,6 @@
                                             {% endif %}
                                         </div>
                                     </div>
-                                    <div class="message-avatar">
-                                        <div class="avatar-sm">
-                                            <div class="avatar-title rounded-circle bg-clsu-green text-white">
-                                                GC
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             {% endif %}
                         {% endfor %}
@@ -173,13 +166,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="message-time">
                                 ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                 <br><small class="text-muted">${new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})}</small>
-                            </div>
-                        </div>
-                        <div class="message-avatar">
-                            <div class="avatar-sm">
-                                <div class="avatar-title rounded-circle bg-clsu-green text-white">
-                                    GC
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -413,11 +399,6 @@ async function loadSuggestedResponses() {
     margin-left: auto;
 }
 
-.admin-message .message-avatar {
-    order: 2;
-    margin-left: 0.75rem;
-    margin-right: 0;
-}
 
 .message-text {
     line-height: 1.5;
