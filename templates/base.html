@@ -71,7 +71,7 @@
         const sidebar = document.getElementById('sidebar') || document.getElementById('adminSidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay') || document.getElementById('adminSidebarOverlay');
         
-        console.log('Initializing sidebar:', { sidebarToggle, sidebar, sidebarOverlay });
+        // Sidebar initialized
         
         if (sidebarToggle) {
             // Remove any existing event listeners
@@ -81,7 +81,7 @@
             newToggle.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Toggle clicked');
+                // Toggle clicked
                 
                 if (sidebar) {
                     sidebar.classList.toggle('show');
@@ -96,7 +96,7 @@
         if (sidebarOverlay) {
             sidebarOverlay.addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('Overlay clicked');
+                // Overlay clicked
                 
                 if (sidebar) {
                     sidebar.classList.remove('show');

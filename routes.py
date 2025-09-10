@@ -142,7 +142,6 @@ def emotion_log():
                 return render_template('emotion_log.html', form=form)
             
             
-            print(f"Emotions data: {emotions_data}")
             
             # Validate emotions selection
             if not emotions_data or len(emotions_data) == 0:
@@ -191,7 +190,6 @@ def emotion_log():
             flash(f'Invalid data format: {str(e)}. Please check your input and try again.', 'error')
         except Exception as e:
             db.session.rollback()
-            print(f"Error saving mood log: {str(e)}")  # For debugging
             flash('An unexpected error occurred while saving your mood log. Please try again.', 'error')
     
     return render_template('emotion_log.html', form=form)
@@ -314,7 +312,6 @@ def process_dass21():
         
     except Exception as e:
         db.session.rollback()
-        print(f"DASS-21 processing error: {str(e)}")  # For debugging
         flash(f'An error occurred while processing your assessment: {str(e)}', 'error')
         return redirect(url_for('main.dass21_quiz'))
 
@@ -346,20 +343,11 @@ def login():
     
     form = LoginForm()
     
-    # Debug form validation
-    print(f"Request method: {request.method}")
-    print(f"Form errors: {form.errors}")
-    print(f"Form data - email: {form.email.data}, password: {'***' if form.password.data else 'None'}")
-    
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        print(f"Login attempt - Email: {form.email.data}")
-        print(f"User found: {user is not None}")
         
         if user:
-            print(f"User exists: {user.email}, Admin: {user.is_admin}")
             password_check = user.check_password(form.password.data)
-            print(f"Password check result: {password_check}")
             
             if password_check:
                 login_user(user)
@@ -383,8 +371,6 @@ def register():
     form = RegisterForm()
     
     if form.validate_on_submit():
-        print(f"Registration form validated successfully")
-        print(f"Form data - Email: {form.email.data}, FirstName: {form.firstname.data}")
         
         # Check if user already exists
         existing_user = User.query.filter_by(email=form.email.data).first()
@@ -407,17 +393,14 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        print(f"User created successfully: {user.email}")
         login_user(user)
         flash('Registration successful! Welcome to EmotionTrack.', 'success')
         return redirect(url_for('main.home'))
     else:
-        print(f"Form validation failed: {form.errors}")
-    
-    # If form validation fails, flash errors
-    for field, errors in form.errors.items():
-        for error in errors:
-            flash(f'{field}: {error}', 'error')
+        # If form validation fails, flash errors
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{field}: {error}', 'error')
     
     return redirect(url_for('main.index'))
 
@@ -755,7 +738,6 @@ def get_suggested_responses(user_id):
         return jsonify({'success': True, 'suggestions': suggestions})
         
     except Exception as e:
-        print(f"Error generating suggested responses: {e}")
         return jsonify({'success': False, 'suggestions': []})
 
 
