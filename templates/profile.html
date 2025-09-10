@@ -969,6 +969,8 @@ async function viewDASSResults() {
 // Change Password functionality
 function showChangePasswordModal() {
     showModal('changePasswordModal');
+    // Setup password validation after modal is shown
+    setTimeout(setupPasswordValidation, 100);
 }
 
 async function handlePasswordChange(e) {
@@ -1138,6 +1140,25 @@ function togglePassword(fieldId, button) {
         icon.classList.remove('fa-eye-slash');
         icon.classList.add('fa-eye');
         button.setAttribute('title', 'Show password');
+    }
+}
+
+// Add password matching validation for change password form
+function setupPasswordValidation() {
+    const newPasswordField = document.getElementById('newPassword');
+    const confirmPasswordField = document.getElementById('confirmPassword');
+    
+    if (newPasswordField && confirmPasswordField) {
+        function validatePasswordMatch() {
+            if (confirmPasswordField.value && newPasswordField.value !== confirmPasswordField.value) {
+                confirmPasswordField.setCustomValidity('Passwords do not match');
+            } else {
+                confirmPasswordField.setCustomValidity('');
+            }
+        }
+        
+        newPasswordField.addEventListener('input', validatePasswordMatch);
+        confirmPasswordField.addEventListener('input', validatePasswordMatch);
     }
 }
 </script>

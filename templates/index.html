@@ -247,5 +247,24 @@ function togglePassword(fieldId, button) {
         button.setAttribute('title', 'Show password');
     }
 }
+
+// Password matching validation
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordField = document.getElementById('{{ register_form.password.id }}');
+    const confirmPasswordField = document.getElementById('{{ register_form.confirm_password.id }}');
+    
+    if (passwordField && confirmPasswordField) {
+        function validatePasswordMatch() {
+            if (confirmPasswordField.value && passwordField.value !== confirmPasswordField.value) {
+                confirmPasswordField.setCustomValidity('Passwords do not match');
+            } else {
+                confirmPasswordField.setCustomValidity('');
+            }
+        }
+        
+        passwordField.addEventListener('input', validatePasswordMatch);
+        confirmPasswordField.addEventListener('input', validatePasswordMatch);
+    }
+});
 </script>
 {% endblock %}
