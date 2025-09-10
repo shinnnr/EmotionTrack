@@ -224,6 +224,10 @@
     padding-right: 75px;
 }
 
+.password-input-group .password-field:invalid:not(:placeholder-shown) {
+    padding-right: 75px;
+}
+
 .password-toggle-btn {
     position: absolute;
     right: 10px;
@@ -246,6 +250,10 @@
 }
 
 .password-input-group .password-field:valid + .password-toggle-btn {
+    right: 40px;
+}
+
+.password-input-group .password-field:invalid:not(:placeholder-shown) + .password-toggle-btn {
     right: 40px;
 }
 
