@@ -784,7 +784,7 @@ def change_password():
         return jsonify({'success': True, 'message': 'Password updated successfully'})
         
     except Exception as e:
-        print(f"Error changing password: {e}")
+        # Log error securely without exposing sensitive information
         return jsonify({'success': False, 'message': 'An error occurred while updating password'})
 
 

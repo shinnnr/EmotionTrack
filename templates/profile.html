@@ -452,7 +452,7 @@ body.modal-open {
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Profile page loaded successfully');
+    // Profile page loaded successfully
     initializeProfilePage();
 });
 
@@ -574,7 +574,7 @@ async function apiCall(endpoint) {
         
         return await response.json();
     } catch (error) {
-        console.error('API call failed:', error);
+        // API call failed
         throw error;
     }
 }

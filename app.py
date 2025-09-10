@@ -32,10 +32,7 @@ def create_app():
     app.config["SESSION_COOKIE_SAMESITE"] = 'Lax'
     app.config["SESSION_COOKIE_NAME"] = 'emotiontrack_session'
     
-    # Debug session configuration
-    print(f"Session config: SECRET_KEY exists: {bool(app.secret_key)}")
-    print(f"CSRF config: WTF_CSRF_SECRET_KEY exists: {bool(app.config.get('WTF_CSRF_SECRET_KEY'))}")
-    print(f"Session cookie config: {app.config['SESSION_COOKIE_NAME']}")
+    # Session configuration (debugging removed for security)
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "postgresql://localhost/mindtrack_db")
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
@@ -67,11 +64,8 @@ def create_app():
     def inject_csrf_token():
         from flask_wtf.csrf import generate_csrf
         try:
-            token = generate_csrf()
-            print(f"Generated CSRF token in context processor: {bool(token)}")
             return dict(csrf_token=generate_csrf)
         except Exception as e:
-            print(f"Error in CSRF context processor: {e}")
             return dict(csrf_token=lambda: '')
     
     # User loader for Flask-Login
