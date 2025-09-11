@@ -73,6 +73,34 @@
         
         // Sidebar initialized
         
+        // Function to open sidebar
+        function openSidebar() {
+            if (sidebar) {
+                sidebar.classList.add('show');
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.add('show');
+            }
+            if (sidebarToggle) {
+                sidebarToggle.style.display = 'none'; // Hide toggle button when sidebar is open
+            }
+            document.body.classList.add('sidebar-open');
+        }
+        
+        // Function to close sidebar
+        function closeSidebar() {
+            if (sidebar) {
+                sidebar.classList.remove('show');
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.remove('show');
+            }
+            if (sidebarToggle) {
+                sidebarToggle.style.display = 'flex'; // Show toggle button when sidebar is closed
+            }
+            document.body.classList.remove('sidebar-open');
+        }
+        
         if (sidebarToggle) {
             // Remove any existing event listeners
             sidebarToggle.replaceWith(sidebarToggle.cloneNode(true));
@@ -81,29 +109,70 @@
             newToggle.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                // Toggle clicked
-                
-                if (sidebar) {
-                    sidebar.classList.toggle('show');
-                }
-                if (sidebarOverlay) {
-                    sidebarOverlay.classList.toggle('show');
-                }
-                document.body.classList.toggle('sidebar-open');
+                // Toggle clicked - always open sidebar
+                openSidebar();
             });
         }
         
+        // Close sidebar when clicking on overlay
         if (sidebarOverlay) {
             sidebarOverlay.addEventListener('click', function(e) {
                 e.preventDefault();
-                // Overlay clicked
+                closeSidebar();
+            });
+        }
+        
+        // Close sidebar when clicking on logo or username in mobile
+        if (sidebar) {
+            const sidebarHeader = sidebar.querySelector('.sidebar-header');
+            if (sidebarHeader) {
+                sidebarHeader.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Only close on mobile (when overlay is visible)
+                    if (sidebarOverlay && sidebarOverlay.classList.contains('show')) {
+                        closeSidebar();
+                    }
+                });
                 
+                // Add cursor pointer to indicate it's clickable on mobile
+                sidebarHeader.style.cursor = 'pointer';
+            }
+        }
+        
+        // Handle window resize to ensure proper state
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                // Desktop view - ensure toggle button is hidden and remove mobile classes
+                if (sidebarToggle) {
+                    sidebarToggle.style.display = 'none';
+                }
                 if (sidebar) {
                     sidebar.classList.remove('show');
                 }
-                sidebarOverlay.classList.remove('show');
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove('show');
+                }
                 document.body.classList.remove('sidebar-open');
-            });
+            } else {
+                // Mobile view - show toggle button if sidebar is closed
+                if (sidebarToggle && (!sidebar || !sidebar.classList.contains('show'))) {
+                    sidebarToggle.style.display = 'flex';
+                }
+            }
+        });
+        
+        // Initialize proper state on load
+        if (window.innerWidth < 768) {
+            // Mobile view - ensure toggle button is visible initially
+            if (sidebarToggle) {
+                sidebarToggle.style.display = 'flex';
+            }
+        } else {
+            // Desktop view - hide toggle button
+            if (sidebarToggle) {
+                sidebarToggle.style.display = 'none';
+            }
         }
     }
     </script>
