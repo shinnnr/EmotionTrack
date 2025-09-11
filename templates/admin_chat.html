@@ -103,8 +103,7 @@
                                     id="messageText" 
                                     name="message_text" 
                                     placeholder="Type your response..." 
-                                    rows="1" 
-                                    required></textarea>
+                                    rows="1"></textarea>
                         </div>
                         <button type="submit" class="btn btn-success btn-send">
                             <i class="fas fa-paper-plane"></i>
@@ -133,7 +132,10 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         const messageText = messageInput.value.trim();
-        if (!messageText) return;
+        if (!messageText) {
+            alert('Please enter a message before sending.');
+            return;
+        }
         
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalHtml = submitBtn.innerHTML;
@@ -569,11 +571,11 @@ async function loadSuggestedResponses() {
 /* Mobile responsive styles for wider message bubbles */
 @media (max-width: 768px) {
     .student-message .message-content {
-        max-width: 85% !important;
+        max-width: 100% !important;
     }
     
     .admin-message .message-content {
-        max-width: 85% !important;
+        max-width: 100% !important;
     }
     
     .chat-container {
@@ -587,11 +589,11 @@ async function loadSuggestedResponses() {
 
 @media (max-width: 576px) {
     .student-message .message-content {
-        max-width: 90% !important;
+        max-width: 100% !important;
     }
     
     .admin-message .message-content {
-        max-width: 90% !important;
+        max-width: 100% !important;
     }
     
     .chat-container {
