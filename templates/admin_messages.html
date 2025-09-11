@@ -174,64 +174,89 @@ async function sendResponse() {
         justify-content: flex-start !important;
     }
     
-    /* Make table scrollable on mobile but ensure it doesn't break layout */
-    .table-responsive {
-        margin: 0 -15px;
-        padding: 0 15px;
+    /* Hide table headers except Student on mobile */
+    .table thead th:not(:first-child) {
+        display: none !important;
     }
     
-    /* Student table mobile optimizations */
-    .table th:nth-child(2),
-    .table td:nth-child(2) {
-        display: none; /* Hide "Last Message" column on mobile */
+    /* Hide all table cells except Student on mobile */
+    .table tbody td:not(:first-child) {
+        display: none !important;
     }
     
-    .table th:nth-child(3),
-    .table td:nth-child(3) {
-        display: none; /* Hide "Last Activity" column on mobile */
+    /* Make student rows clickable and touch-friendly */
+    .table tbody tr {
+        cursor: pointer !important;
+        transition: background-color 0.2s ease !important;
     }
     
-    /* Make student rows more touch-friendly */
-    .table td {
-        padding: 1rem 0.5rem !important;
-        vertical-align: middle !important;
+    .table tbody tr:hover {
+        background-color: var(--clsu-gold-light, #f8f9fa) !important;
     }
     
-    /* Ensure action buttons are easily clickable on mobile */
-    .table td:last-child {
-        width: 100px !important;
-        min-width: 100px !important;
+    .table tbody tr.expanded {
+        background-color: var(--clsu-green-light, #e8f5e8) !important;
     }
     
-    .table td:last-child .btn {
-        padding: 0.5rem 0.75rem !important;
-        font-size: 0.875rem !important;
-        white-space: nowrap !important;
-    }
-    
-    /* Student info styling for mobile */
+    /* Student column takes full width on mobile */
     .table td:first-child {
-        min-width: 200px !important;
+        width: 100% !important;
+        padding: 1rem !important;
+        position: relative !important;
     }
     
-    .table td:first-child .d-flex {
-        align-items: flex-start !important;
+    /* Add expand indicator */
+    .table tbody tr td:first-child::after {
+        content: '\f107'; /* Font Awesome chevron-down */
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--clsu-gold, #b8860b);
+        transition: transform 0.2s ease;
     }
     
-    .table td:first-child .avatar-sm {
-        flex-shrink: 0 !important;
-    }
-}
-
-@media (max-width: 576px) {
-    /* Extra small devices - stack everything vertically */
-    .table th:nth-child(4),
-    .table td:nth-child(4) {
-        display: none; /* Also hide status column on very small screens */
+    .table tbody tr.expanded td:first-child::after {
+        transform: translateY(-50%) rotate(180deg);
     }
     
-    .table td:first-child {
-        min-width: auto !important;
+    /* Expanded content styling */
+    .mobile-expanded-content {
+        display: none;
+        width: 100%;
+        padding: 1rem;
+        background-color: var(--clsu-green-light, #f8f9fa);
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .table tbody tr.expanded .mobile-expanded-content {
+        display: block !important;
+    }
+    
+    .expanded-section {
+        margin-bottom: 1rem;
+    }
+    
+    .expanded-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .expanded-label {
+        font-weight: 600;
+        color: var(--clsu-green, #2c5530);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .expanded-content {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .expanded-content .badge {
+        font-size: 0.8rem;
     }
     
     /* Make the entire table card more mobile friendly */
@@ -242,6 +267,11 @@ async function sendResponse() {
     .container-fluid {
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
+    }
+    
+    /* Remove table responsiveness on mobile since we're handling it differently */
+    .table-responsive {
+        overflow-x: visible !important;
     }
 }
 </style>
@@ -298,7 +328,7 @@ async function loadMessages(page = 1) {
                 const latestMessage = conversation.latest_message;
                 
                 tableHTML += `
-                    <tr class="${hasUnread ? 'table-warning' : ''}">
+                    <tr class="${hasUnread ? 'table-warning' : ''}" onclick="toggleMobileRow(this)" data-user-id="${user.id}">
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="avatar-sm me-3">
@@ -311,6 +341,46 @@ async function loadMessages(page = 1) {
                                     <small class="text-muted">${user.email}</small>
                                     <div class="small text-muted">
                                         ${user.strand || 'N/A'} - Grade ${user.grade_level || 'N/A'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mobile-expanded-content">
+                                <div class="expanded-section">
+                                    <div class="expanded-label">Last Message:</div>
+                                    <div class="expanded-content">
+                                        ${latestMessage && latestMessage.message_text ? 
+                                            (latestMessage.message_text.length > 100 ? 
+                                                latestMessage.message_text.substring(0, 100) + '...' : 
+                                                latestMessage.message_text) 
+                                            : '<em class="text-muted">No messages yet</em>'}
+                                    </div>
+                                </div>
+                                <div class="expanded-section">
+                                    <div class="expanded-label">Last Activity:</div>
+                                    <div class="expanded-content">
+                                        ${latestMessage && latestMessage.created_at ? 
+                                            latestMessage.created_at : 
+                                            '<em class="text-muted">Never</em>'}
+                                    </div>
+                                </div>
+                                <div class="expanded-section">
+                                    <div class="expanded-label">Status:</div>
+                                    <div class="expanded-content">
+                                        ${hasUnread ? 
+                                            '<span class="badge bg-warning">New Messages</span>' : 
+                                            latestMessage && latestMessage.admin_response ? 
+                                                '<span class="badge bg-success">Responded</span>' : 
+                                                latestMessage ? 
+                                                    '<span class="badge bg-secondary">Pending</span>' : 
+                                                    '<span class="badge bg-light text-dark">No Activity</span>'}
+                                    </div>
+                                </div>
+                                <div class="expanded-section">
+                                    <div class="expanded-label">Actions:</div>
+                                    <div class="expanded-content">
+                                        <a href="/admin/student-chat/${user.id}" class="btn btn-sm btn-success" onclick="event.stopPropagation()">
+                                            <i class="fas fa-comments"></i> Chat
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -421,6 +491,23 @@ function generatePagination(pagination) {
 function changePerPage() {
     perPage = parseInt(document.getElementById('perPageSelect').value);
     loadMessages(1); // Reset to first page
+}
+
+function toggleMobileRow(row) {
+    // Only handle clicks on mobile (768px and below)
+    if (window.innerWidth > 768) return;
+    
+    // Toggle expanded class
+    if (row.classList.contains('expanded')) {
+        row.classList.remove('expanded');
+    } else {
+        // Close any other expanded rows first
+        const allRows = document.querySelectorAll('.table tbody tr');
+        allRows.forEach(r => r.classList.remove('expanded'));
+        
+        // Expand this row
+        row.classList.add('expanded');
+    }
 }
 </script>
 {% endblock %}
