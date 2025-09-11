@@ -34,7 +34,7 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 35253
+localPort = 35243
 externalPort = 3000
 
 [agent]

@@ -565,6 +565,43 @@ async function loadSuggestedResponses() {
 .suggestion-item:hover .use-suggestion-btn {
     opacity: 1;
 }
+
+/* Mobile responsive styles for wider message bubbles */
+@media (max-width: 768px) {
+    .student-message .message-content {
+        max-width: 85% !important;
+    }
+    
+    .admin-message .message-content {
+        max-width: 85% !important;
+    }
+    
+    .chat-container {
+        padding: 1rem !important;
+    }
+    
+    .message-input-container {
+        padding: 1rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .student-message .message-content {
+        max-width: 90% !important;
+    }
+    
+    .admin-message .message-content {
+        max-width: 90% !important;
+    }
+    
+    .chat-container {
+        padding: 0.75rem !important;
+    }
+    
+    .message-input-container {
+        padding: 0.75rem !important;
+    }
+}
 </style>
 
 {% endblock %}
