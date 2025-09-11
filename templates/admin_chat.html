@@ -450,6 +450,17 @@ async function loadSuggestedResponses() {
     box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
 }
 
+/* Remove validation styling */
+.message-input:valid {
+    border-color: #dee2e6 !important;
+    background-image: none !important;
+}
+
+.message-input.is-valid {
+    border-color: #dee2e6 !important;
+    background-image: none !important;
+}
+
 .btn-send {
     border-radius: 50%;
     width: 48px;
