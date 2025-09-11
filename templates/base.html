@@ -82,7 +82,7 @@
                 sidebarOverlay.classList.add('show');
             }
             if (sidebarToggle) {
-                sidebarToggle.style.display = 'none'; // Hide toggle button when sidebar is open
+                sidebarToggle.classList.add('hidden'); // Hide toggle button when sidebar is open
             }
             document.body.classList.add('sidebar-open');
         }
@@ -96,7 +96,7 @@
                 sidebarOverlay.classList.remove('show');
             }
             if (sidebarToggle) {
-                sidebarToggle.style.display = 'flex'; // Show toggle button when sidebar is closed
+                sidebarToggle.classList.remove('hidden'); // Show toggle button when sidebar is closed
             }
             document.body.classList.remove('sidebar-open');
         }
@@ -145,7 +145,7 @@
             if (window.innerWidth >= 768) {
                 // Desktop view - ensure toggle button is hidden and remove mobile classes
                 if (sidebarToggle) {
-                    sidebarToggle.style.display = 'none';
+                    sidebarToggle.classList.add('hidden');
                 }
                 if (sidebar) {
                     sidebar.classList.remove('show');
@@ -157,7 +157,7 @@
             } else {
                 // Mobile view - show toggle button if sidebar is closed
                 if (sidebarToggle && (!sidebar || !sidebar.classList.contains('show'))) {
-                    sidebarToggle.style.display = 'flex';
+                    sidebarToggle.classList.remove('hidden');
                 }
             }
         });
@@ -166,12 +166,12 @@
         if (window.innerWidth < 768) {
             // Mobile view - ensure toggle button is visible initially
             if (sidebarToggle) {
-                sidebarToggle.style.display = 'flex';
+                sidebarToggle.classList.remove('hidden');
             }
         } else {
             // Desktop view - hide toggle button
             if (sidebarToggle) {
-                sidebarToggle.style.display = 'none';
+                sidebarToggle.classList.add('hidden');
             }
         }
     }

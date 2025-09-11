@@ -205,6 +205,10 @@
         z-index: 1060;
     }
     
+    .sidebar-toggle.hidden {
+        display: none !important;
+    }
+    
     .sidebar-overlay {
         display: block !important;
     }
