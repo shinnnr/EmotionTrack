@@ -196,6 +196,16 @@
         transform: translateX(0);
     }
     
+    /* Hide toggle button when sidebar is open */
+    .sidebar.show ~ .sidebar-toggle {
+        display: none !important;
+    }
+    
+    /* Hide toggle button when body has sidebar-open class */
+    .sidebar-open .sidebar-toggle {
+        display: none !important;
+    }
+    
     .sidebar-toggle {
         display: flex !important;
         align-items: center;

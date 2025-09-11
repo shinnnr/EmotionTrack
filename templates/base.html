@@ -75,16 +75,24 @@
         
         // Function to open sidebar
         function openSidebar() {
+            console.log('Opening sidebar...');
             if (sidebar) {
                 sidebar.classList.add('show');
+                console.log('Added show class to sidebar');
             }
             if (sidebarOverlay) {
                 sidebarOverlay.classList.add('show');
             }
-            if (sidebarToggle) {
-                sidebarToggle.style.setProperty('display', 'none', 'important'); // Force hide with !important
-            }
             document.body.classList.add('sidebar-open');
+            console.log('Added sidebar-open class to body');
+            
+            // Multiple approaches to hide the button
+            if (sidebarToggle) {
+                sidebarToggle.style.setProperty('display', 'none', 'important');
+                sidebarToggle.classList.add('hidden');
+                sidebarToggle.setAttribute('style', 'display: none !important;');
+                console.log('Applied multiple hide methods to toggle button');
+            }
         }
         
         // Function to close sidebar
