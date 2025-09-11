@@ -82,7 +82,7 @@
                 sidebarOverlay.classList.add('show');
             }
             if (sidebarToggle) {
-                sidebarToggle.classList.add('hidden'); // Hide toggle button when sidebar is open
+                sidebarToggle.style.setProperty('display', 'none', 'important'); // Force hide with !important
             }
             document.body.classList.add('sidebar-open');
         }
@@ -96,7 +96,7 @@
                 sidebarOverlay.classList.remove('show');
             }
             if (sidebarToggle) {
-                sidebarToggle.classList.remove('hidden'); // Show toggle button when sidebar is closed
+                sidebarToggle.style.setProperty('display', 'flex', 'important'); // Force show with !important
             }
             document.body.classList.remove('sidebar-open');
         }
@@ -145,7 +145,7 @@
             if (window.innerWidth >= 768) {
                 // Desktop view - ensure toggle button is hidden and remove mobile classes
                 if (sidebarToggle) {
-                    sidebarToggle.classList.add('hidden');
+                    sidebarToggle.style.setProperty('display', 'none', 'important');
                 }
                 if (sidebar) {
                     sidebar.classList.remove('show');
@@ -157,7 +157,7 @@
             } else {
                 // Mobile view - show toggle button if sidebar is closed
                 if (sidebarToggle && (!sidebar || !sidebar.classList.contains('show'))) {
-                    sidebarToggle.classList.remove('hidden');
+                    sidebarToggle.style.setProperty('display', 'flex', 'important');
                 }
             }
         });
@@ -166,12 +166,12 @@
         if (window.innerWidth < 768) {
             // Mobile view - ensure toggle button is visible initially
             if (sidebarToggle) {
-                sidebarToggle.classList.remove('hidden');
+                sidebarToggle.style.setProperty('display', 'flex', 'important');
             }
         } else {
             // Desktop view - hide toggle button
             if (sidebarToggle) {
-                sidebarToggle.classList.add('hidden');
+                sidebarToggle.style.setProperty('display', 'none', 'important');
             }
         }
     }
