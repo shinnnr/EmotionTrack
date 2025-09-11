@@ -66,6 +66,7 @@ async function sendMessage() {
     const messageText = messageInput.value.trim();
     
     if (!messageText) {
+        alert('Please enter a message before sending.');
         return;
     }
     

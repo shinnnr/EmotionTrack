@@ -47,5 +47,5 @@ class EmotionLogForm(FlaskForm):
 
 class ConsultationForm(FlaskForm):
     message_text = TextAreaField('Your Message', 
-                                validators=[DataRequired(), Length(max=500)],
+                                validators=[Length(max=500)],
                                 render_kw={"rows": 4, "placeholder": "Describe your concerns or questions..."})
