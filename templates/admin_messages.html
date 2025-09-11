@@ -51,6 +51,50 @@
                         </div>
                     </div>
                     
+                    <!-- Mobile Student Details Panel -->
+                    <div id="mobileDetailsPanel" class="mobile-details-panel">
+                        <div class="mobile-details-content">
+                            <div class="mobile-details-header">
+                                <h5 id="mobileStudentName">Student Details</h5>
+                                <button type="button" class="btn-close" onclick="closeMobilePanel()"></button>
+                            </div>
+                            <div class="mobile-details-body">
+                                <div class="mobile-student-info mb-3">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="avatar-sm me-3" id="mobileStudentAvatar">
+                                            <div class="avatar-title rounded-circle bg-primary text-white" id="mobileStudentInitials"></div>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0" id="mobileStudentFullName"></h6>
+                                            <small class="text-muted" id="mobileStudentEmail"></small>
+                                            <div class="small text-muted" id="mobileStudentDetails"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mobile-detail-section">
+                                    <div class="mobile-detail-label">Last Message:</div>
+                                    <div class="mobile-detail-content" id="mobileLastMessage"></div>
+                                </div>
+                                
+                                <div class="mobile-detail-section">
+                                    <div class="mobile-detail-label">Last Activity:</div>
+                                    <div class="mobile-detail-content" id="mobileLastActivity"></div>
+                                </div>
+                                
+                                <div class="mobile-detail-section">
+                                    <div class="mobile-detail-label">Status:</div>
+                                    <div class="mobile-detail-content" id="mobileStatus"></div>
+                                </div>
+                                
+                                <div class="mobile-detail-section">
+                                    <div class="mobile-detail-label">Actions:</div>
+                                    <div class="mobile-detail-content" id="mobileActions"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Pagination -->
                     <nav aria-label="Messages pagination" id="messagesPagination" style="display: none;">
                         <ul class="pagination justify-content-center">
@@ -161,6 +205,21 @@ async function sendResponse() {
 
 {% block extra_js %}
 <style>
+/* Desktop - ensure normal table behavior */
+@media (min-width: 769px) {
+    .table tbody tr {
+        cursor: default !important;
+    }
+    
+    .table tbody tr td:first-child::after {
+        display: none !important;
+    }
+    
+    .mobile-details-panel {
+        display: none !important;
+    }
+}
+
 /* Mobile responsive styles for admin messages */
 @media (max-width: 768px) {
     .messages-header {
@@ -184,7 +243,7 @@ async function sendResponse() {
         display: none !important;
     }
     
-    /* Make student rows clickable and touch-friendly */
+    /* Make student rows clickable and touch-friendly on mobile only */
     .table tbody tr {
         cursor: pointer !important;
         transition: background-color 0.2s ease !important;
@@ -194,10 +253,6 @@ async function sendResponse() {
         background-color: var(--clsu-gold-light, #f8f9fa) !important;
     }
     
-    .table tbody tr.expanded {
-        background-color: var(--clsu-green-light, #e8f5e8) !important;
-    }
-    
     /* Student column takes full width on mobile */
     .table td:first-child {
         width: 100% !important;
@@ -205,9 +260,9 @@ async function sendResponse() {
         position: relative !important;
     }
     
-    /* Add expand indicator */
+    /* Add tap indicator for mobile */
     .table tbody tr td:first-child::after {
-        content: '\f107'; /* Font Awesome chevron-down */
+        content: '\f105'; /* Font Awesome chevron-right */
         font-family: "Font Awesome 6 Free";
         font-weight: 900;
         position: absolute;
@@ -215,48 +270,97 @@ async function sendResponse() {
         top: 50%;
         transform: translateY(-50%);
         color: var(--clsu-gold, #b8860b);
-        transition: transform 0.2s ease;
+        font-size: 1.2rem;
     }
     
-    .table tbody tr.expanded td:first-child::after {
-        transform: translateY(-50%) rotate(180deg);
-    }
-    
-    /* Expanded content styling */
-    .mobile-expanded-content {
-        display: none;
+    /* Mobile Details Panel */
+    .mobile-details-panel {
+        position: fixed;
+        top: 0;
+        right: -100%;
         width: 100%;
-        padding: 1rem;
-        background-color: var(--clsu-green-light, #f8f9fa);
-        border-top: 1px solid #dee2e6;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1060;
+        transition: right 0.3s ease;
     }
     
-    .table tbody tr.expanded .mobile-expanded-content {
-        display: block !important;
+    .mobile-details-panel.show {
+        right: 0;
     }
     
-    .expanded-section {
-        margin-bottom: 1rem;
+    .mobile-details-content {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 100%;
+        max-width: 400px;
+        height: 100%;
+        background: white;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
     }
     
-    .expanded-section:last-child {
+    .mobile-details-panel.show .mobile-details-content {
+        transform: translateX(0);
+    }
+    
+    .mobile-details-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+        background: var(--clsu-green, #2c5530);
+        color: white;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    .mobile-details-header h5 {
+        margin: 0;
+        flex-grow: 1;
+        color: white;
+    }
+    
+    .mobile-details-header .btn-close {
+        filter: invert(1);
+        margin-left: auto;
+    }
+    
+    .mobile-details-body {
+        padding: 1.5rem;
+    }
+    
+    .mobile-detail-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .mobile-detail-section:last-child {
         margin-bottom: 0;
     }
     
-    .expanded-label {
+    .mobile-detail-label {
         font-weight: 600;
         color: var(--clsu-green, #2c5530);
         margin-bottom: 0.5rem;
         font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
-    .expanded-content {
-        color: #6c757d;
-        font-size: 0.9rem;
+    .mobile-detail-content {
+        color: #495057;
+        font-size: 0.95rem;
+        line-height: 1.5;
     }
     
-    .expanded-content .badge {
+    .mobile-detail-content .badge {
         font-size: 0.8rem;
+    }
+    
+    .mobile-detail-content .btn {
+        width: 100%;
+        margin-top: 0.5rem;
     }
     
     /* Make the entire table card more mobile friendly */
@@ -328,7 +432,18 @@ async function loadMessages(page = 1) {
                 const latestMessage = conversation.latest_message;
                 
                 tableHTML += `
-                    <tr class="${hasUnread ? 'table-warning' : ''}" onclick="toggleMobileRow(this)" data-user-id="${user.id}">
+                    <tr class="${hasUnread ? 'table-warning' : ''}" onclick="showMobileDetails(this)" 
+                        data-user-id="${user.id}"
+                        data-user-name="${user.full_name}"
+                        data-user-email="${user.email}" 
+                        data-user-strand="${user.strand || 'N/A'}"
+                        data-user-grade="${user.grade_level || 'N/A'}"
+                        data-user-firstname="${user.firstname || ''}"
+                        data-user-lastname="${user.lastname || ''}"
+                        data-last-message="${latestMessage && latestMessage.message_text ? latestMessage.message_text : ''}"
+                        data-last-activity="${latestMessage && latestMessage.created_at ? latestMessage.created_at : ''}"
+                        data-has-unread="${hasUnread}"
+                        data-admin-response="${latestMessage && latestMessage.admin_response ? 'true' : 'false'}">
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="avatar-sm me-3">
@@ -341,46 +456,6 @@ async function loadMessages(page = 1) {
                                     <small class="text-muted">${user.email}</small>
                                     <div class="small text-muted">
                                         ${user.strand || 'N/A'} - Grade ${user.grade_level || 'N/A'}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mobile-expanded-content">
-                                <div class="expanded-section">
-                                    <div class="expanded-label">Last Message:</div>
-                                    <div class="expanded-content">
-                                        ${latestMessage && latestMessage.message_text ? 
-                                            (latestMessage.message_text.length > 100 ? 
-                                                latestMessage.message_text.substring(0, 100) + '...' : 
-                                                latestMessage.message_text) 
-                                            : '<em class="text-muted">No messages yet</em>'}
-                                    </div>
-                                </div>
-                                <div class="expanded-section">
-                                    <div class="expanded-label">Last Activity:</div>
-                                    <div class="expanded-content">
-                                        ${latestMessage && latestMessage.created_at ? 
-                                            latestMessage.created_at : 
-                                            '<em class="text-muted">Never</em>'}
-                                    </div>
-                                </div>
-                                <div class="expanded-section">
-                                    <div class="expanded-label">Status:</div>
-                                    <div class="expanded-content">
-                                        ${hasUnread ? 
-                                            '<span class="badge bg-warning">New Messages</span>' : 
-                                            latestMessage && latestMessage.admin_response ? 
-                                                '<span class="badge bg-success">Responded</span>' : 
-                                                latestMessage ? 
-                                                    '<span class="badge bg-secondary">Pending</span>' : 
-                                                    '<span class="badge bg-light text-dark">No Activity</span>'}
-                                    </div>
-                                </div>
-                                <div class="expanded-section">
-                                    <div class="expanded-label">Actions:</div>
-                                    <div class="expanded-content">
-                                        <a href="/admin/student-chat/${user.id}" class="btn btn-sm btn-success" onclick="event.stopPropagation()">
-                                            <i class="fas fa-comments"></i> Chat
-                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -493,21 +568,78 @@ function changePerPage() {
     loadMessages(1); // Reset to first page
 }
 
-function toggleMobileRow(row) {
+function showMobileDetails(row) {
     // Only handle clicks on mobile (768px and below)
     if (window.innerWidth > 768) return;
     
-    // Toggle expanded class
-    if (row.classList.contains('expanded')) {
-        row.classList.remove('expanded');
+    const panel = document.getElementById('mobileDetailsPanel');
+    
+    // Get data from row attributes
+    const userId = row.dataset.userId;
+    const userName = row.dataset.userName;
+    const userEmail = row.dataset.userEmail;
+    const userStrand = row.dataset.userStrand;
+    const userGrade = row.dataset.userGrade;
+    const userFirstname = row.dataset.userFirstname;
+    const userLastname = row.dataset.userLastname;
+    const lastMessage = row.dataset.lastMessage;
+    const lastActivity = row.dataset.lastActivity;
+    const hasUnread = row.dataset.hasUnread === 'true';
+    const adminResponse = row.dataset.adminResponse === 'true';
+    
+    // Populate panel content
+    document.getElementById('mobileStudentName').textContent = userName;
+    document.getElementById('mobileStudentFullName').textContent = userName;
+    document.getElementById('mobileStudentEmail').textContent = userEmail;
+    document.getElementById('mobileStudentDetails').textContent = `${userStrand} - Grade ${userGrade}`;
+    document.getElementById('mobileStudentInitials').textContent = `${userFirstname[0] || ''}${userLastname[0] || ''}`;
+    
+    // Last message
+    document.getElementById('mobileLastMessage').innerHTML = lastMessage ? 
+        (lastMessage.length > 100 ? lastMessage.substring(0, 100) + '...' : lastMessage) : 
+        '<em class="text-muted">No messages yet</em>';
+    
+    // Last activity
+    document.getElementById('mobileLastActivity').innerHTML = lastActivity ? 
+        lastActivity : '<em class="text-muted">Never</em>';
+    
+    // Status
+    let statusHTML = '';
+    if (hasUnread) {
+        statusHTML = '<span class="badge bg-warning">New Messages</span>';
+    } else if (adminResponse) {
+        statusHTML = '<span class="badge bg-success">Responded</span>';
+    } else if (lastMessage) {
+        statusHTML = '<span class="badge bg-secondary">Pending</span>';
     } else {
-        // Close any other expanded rows first
-        const allRows = document.querySelectorAll('.table tbody tr');
-        allRows.forEach(r => r.classList.remove('expanded'));
-        
-        // Expand this row
-        row.classList.add('expanded');
+        statusHTML = '<span class="badge bg-light text-dark">No Activity</span>';
     }
+    document.getElementById('mobileStatus').innerHTML = statusHTML;
+    
+    // Actions
+    document.getElementById('mobileActions').innerHTML = `
+        <a href="/admin/student-chat/${userId}" class="btn btn-success">
+            <i class="fas fa-comments me-2"></i> Start Chat
+        </a>
+    `;
+    
+    // Show panel
+    panel.classList.add('show');
 }
+
+function closeMobilePanel() {
+    const panel = document.getElementById('mobileDetailsPanel');
+    panel.classList.remove('show');
+}
+
+// Close panel when clicking outside on mobile
+document.addEventListener('click', function(e) {
+    if (window.innerWidth <= 768) {
+        const panel = document.getElementById('mobileDetailsPanel');
+        if (e.target === panel) {
+            closeMobilePanel();
+        }
+    }
+});
 </script>
 {% endblock %}
