@@ -28,11 +28,11 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3 messages-header">
                         <p class="text-muted mb-0">
                             <span id="messageCount">Loading...</span> student conversations
                         </p>
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 per-page-controls">
                             <label for="perPageSelect" class="form-label small mb-0 text-nowrap">Per page:</label>
                             <select id="perPageSelect" class="form-select form-select-sm" style="width: 80px; min-width: 80px;" onchange="changePerPage()">
                                 <option value="10">10</option>
@@ -160,6 +160,91 @@ async function sendResponse() {
 {% endblock %}
 
 {% block extra_js %}
+<style>
+/* Mobile responsive styles for admin messages */
+@media (max-width: 768px) {
+    .messages-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .per-page-controls {
+        width: 100%;
+        justify-content: flex-start !important;
+    }
+    
+    /* Make table scrollable on mobile but ensure it doesn't break layout */
+    .table-responsive {
+        margin: 0 -15px;
+        padding: 0 15px;
+    }
+    
+    /* Student table mobile optimizations */
+    .table th:nth-child(2),
+    .table td:nth-child(2) {
+        display: none; /* Hide "Last Message" column on mobile */
+    }
+    
+    .table th:nth-child(3),
+    .table td:nth-child(3) {
+        display: none; /* Hide "Last Activity" column on mobile */
+    }
+    
+    /* Make student rows more touch-friendly */
+    .table td {
+        padding: 1rem 0.5rem !important;
+        vertical-align: middle !important;
+    }
+    
+    /* Ensure action buttons are easily clickable on mobile */
+    .table td:last-child {
+        width: 100px !important;
+        min-width: 100px !important;
+    }
+    
+    .table td:last-child .btn {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.875rem !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Student info styling for mobile */
+    .table td:first-child {
+        min-width: 200px !important;
+    }
+    
+    .table td:first-child .d-flex {
+        align-items: flex-start !important;
+    }
+    
+    .table td:first-child .avatar-sm {
+        flex-shrink: 0 !important;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Extra small devices - stack everything vertically */
+    .table th:nth-child(4),
+    .table td:nth-child(4) {
+        display: none; /* Also hide status column on very small screens */
+    }
+    
+    .table td:first-child {
+        min-width: auto !important;
+    }
+    
+    /* Make the entire table card more mobile friendly */
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    .container-fluid {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+}
+</style>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 <script>
 let currentPage = 1;
