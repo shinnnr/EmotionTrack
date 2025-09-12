@@ -588,6 +588,104 @@ body {
     vertical-align: middle;
 }
 
+/* Notification Badge Styling */
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: bold;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 2px solid white;
+    animation: pulse-notification 2s infinite;
+}
+
+.notification-badge.zero {
+    display: none !important;
+}
+
+.sidebar-link {
+    position: relative;
+}
+
+@keyframes pulse-notification {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.notification-alert {
+    border-left: 4px solid #0d6efd;
+    background: rgba(13, 110, 253, 0.1);
+}
+
+.notification-alert.warning {
+    border-left-color: #fd7e14;
+    background: rgba(253, 126, 20, 0.1);
+}
+
+.notification-alert.success {
+    border-left-color: #198754;
+    background: rgba(25, 135, 84, 0.1);
+}
+
+.notification-alert.danger {
+    border-left-color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.notification-item {
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border-left-color: #0d6efd;
+}
+
+.notification-item.unread {
+    background: rgba(13, 110, 253, 0.05);
+    border-left-color: #0d6efd;
+}
+
+.notification-item.high-priority {
+    border-left-color: #dc3545;
+}
+
+.notification-item.urgent-priority {
+    border-left-color: #fd7e14;
+    animation: urgent-notification 3s infinite;
+}
+
+@keyframes urgent-notification {
+    0%, 100% { background: rgba(253, 126, 20, 0.05); }
+    50% { background: rgba(253, 126, 20, 0.15); }
+}
+
+.notification-timestamp {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.notification-read-btn {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.notification-item:hover .notification-read-btn {
+    opacity: 1;
+}
+
 /* Print Styles */
 @media print {
     .sidebar,
@@ -608,5 +706,13 @@ body {
     .card {
         box-shadow: none !important;
         border: 1px solid #000 !important;
+    }
+    
+    .notification-badge {
+        font-size: 0.7rem;
+        min-width: 16px;
+        height: 16px;
+        top: -3px;
+        right: -8px;
     }
 }

@@ -29,6 +29,7 @@
         <a href="{{ url_for('main.consultation') }}" class="sidebar-link {{ 'active' if request.endpoint == 'main.consultation' }}">
             <i class="fas fa-user-md"></i>
             <span>Consultation</span>
+            <span class="notification-badge" id="consultationNotificationBadge" style="display: none;"></span>
         </a>
         
         <div class="sidebar-footer">
