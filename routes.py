@@ -551,13 +551,25 @@ def dashboard():
         flash('Access denied. Admin privileges required.', 'error')
         return redirect(url_for('main.home'))
     
+    # Get pagination parameters
+    risk_page = request.args.get('risk_page', 1, type=int)
+    activity_page = request.args.get('activity_page', 1, type=int)
+    risk_per_page = 3  # 3 high risk students per page
+    activity_per_page = 10  # 10 activity items per page
+    
     # Get statistics for admin dashboard
     total_users = User.query.filter_by(is_admin=False).count()
     total_logs = MoodLog.query.count()
     unread_messages = StudentMessage.query.filter_by(is_read=False).count()
     
-    # Recent activity
-    recent_logs = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id).order_by(desc(MoodLog.log_date)).limit(10).all()
+    # Recent activity with pagination
+    recent_logs_pagination = MoodLog.query.join(User, MoodLog.user_id == User.id).order_by(desc(MoodLog.log_date)).paginate(
+        page=activity_page, 
+        per_page=activity_per_page, 
+        error_out=False
+    )
+    # Get the associated users for each mood log
+    recent_logs = [(log, User.query.get(log.user_id)) for log in recent_logs_pagination.items]
     
     # Get students with concerning DASS-21 scores (based on most recent assessment only)
     # First, get the most recent DASS21Result ID for each user
@@ -573,22 +585,33 @@ def dashboard():
         (DASS21Result.created_at == latest_dass_subquery.c.max_created_at)
     ).subquery()
     
-    # Finally, get users whose LATEST assessment shows concerning scores
-    concerning_students = db.session.query(DASS21Result, User).join(
-        latest_dass_results,
-        DASS21Result.id == latest_dass_results.c.id
-    ).join(User, DASS21Result.user_id == User.id).filter(
-        (DASS21Result.depression_severity.in_(['Severe', 'Extremely Severe'])) |
-        (DASS21Result.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
-        (DASS21Result.stress_severity.in_(['Severe', 'Extremely Severe']))
-    ).order_by(desc(DASS21Result.created_at)).limit(10).all()
+    # Finally, get users whose LATEST assessment shows concerning scores with pagination
+    # First get the concerning DASS21Result IDs from the subquery
+    concerning_dass_ids = db.session.query(latest_dass_results.c.id).filter(
+        (latest_dass_results.c.depression_severity.in_(['Severe', 'Extremely Severe'])) |
+        (latest_dass_results.c.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
+        (latest_dass_results.c.stress_severity.in_(['Severe', 'Extremely Severe']))
+    ).subquery()
+    
+    # Now paginate the DASS21Result objects
+    concerning_students_pagination = DASS21Result.query.filter(
+        DASS21Result.id.in_(db.session.query(concerning_dass_ids.c.id))
+    ).order_by(desc(DASS21Result.created_at)).paginate(
+        page=risk_page, 
+        per_page=risk_per_page, 
+        error_out=False
+    )
+    # Get the associated users for each DASS21Result
+    concerning_students = [(result, User.query.get(result.user_id)) for result in concerning_students_pagination.items]
     
     return render_template('admin_dashboard.html',
                          total_users=total_users,
                          total_logs=total_logs,
                          unread_messages=unread_messages,
                          recent_logs=recent_logs,
-                         concerning_students=concerning_students)
+                         recent_logs_pagination=recent_logs_pagination,
+                         concerning_students=concerning_students,
+                         concerning_students_pagination=concerning_students_pagination)
 
 @admin_bp.route('/messages')
 @login_required

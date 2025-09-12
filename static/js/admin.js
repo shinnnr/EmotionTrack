@@ -2180,3 +2180,308 @@ function generatePaginationHTML(pagination, functionName) {
     
     return html;
 }
+
+// Dashboard Pagination Functions
+async function loadRiskStudentsPage(page) {
+    try {
+        const riskListContainer = document.querySelector('.risk-list');
+        const riskPagination = document.getElementById('riskPagination');
+        
+        // Show loading state
+        riskListContainer.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading high risk students...</p>
+            </div>
+        `;
+        
+        // Disable pagination controls
+        if (riskPagination) {
+            riskPagination.style.pointerEvents = 'none';
+            riskPagination.style.opacity = '0.6';
+        }
+        
+        // Fetch paginated data
+        const response = await fetch(`/admin/api/high-risk-students?page=${page}&per_page=3`);
+        if (!response.ok) throw new Error('Failed to fetch high risk students');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update content
+            if (data.data && data.data.length > 0) {
+                riskListContainer.innerHTML = `
+                    <div class="row g-3">
+                        ${data.data.map(student => `
+                            <div class="col-md-6 col-lg-4">
+                                <div class="risk-item p-3 border rounded h-100">
+                                    <div class="d-flex flex-column h-100">
+                                        <div class="flex-grow-1">
+                                            <h6 class="fw-bold mb-2">${student.full_name}</h6>
+                                            <div class="risk-scores mb-2">
+                                                ${student.depression_severity ? 
+                                                    `<span class="badge bg-danger mb-1">Depression: ${student.depression_severity}</span><br>` : ''}
+                                                ${student.anxiety_severity ? 
+                                                    `<span class="badge bg-warning mb-1">Anxiety: ${student.anxiety_severity}</span><br>` : ''}
+                                                ${student.stress_severity ? 
+                                                    `<span class="badge bg-info mb-1">Stress: ${student.stress_severity}</span><br>` : ''}
+                                            </div>
+                                            <small class="text-muted d-block">
+                                                Assessed: ${student.assessment_date}
+                                            </small>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button class="btn btn-outline-primary btn-sm w-100" onclick="viewStudentProfile(${student.user_id})">
+                                                <i class="fas fa-user me-1"></i>View Profile
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                riskListContainer.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="text-muted">No high risk students</p>
+                    </div>
+                `;
+            }
+            
+            // Update pagination controls
+            updateRiskPaginationControls(data.pagination);
+            
+        } else {
+            throw new Error(data.error || 'Failed to load high risk students');
+        }
+        
+    } catch (error) {
+        console.error('Error loading high risk students page:', error);
+        document.querySelector('.risk-list').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Students</h5>
+                <p class="text-muted">${error.message}</p>
+                <button class="btn btn-primary btn-sm" onclick="loadRiskStudentsPage(1)">
+                    <i class="fas fa-retry me-1"></i>Try Again
+                </button>
+            </div>
+        `;
+    } finally {
+        // Re-enable pagination controls
+        const riskPagination = document.getElementById('riskPagination');
+        if (riskPagination) {
+            riskPagination.style.pointerEvents = 'auto';
+            riskPagination.style.opacity = '1';
+        }
+    }
+}
+
+async function loadRecentActivityPage(page) {
+    try {
+        const activityListContainer = document.querySelector('.activity-list');
+        const activityPagination = document.getElementById('activityPagination');
+        
+        // Show loading state
+        activityListContainer.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading recent activity...</p>
+            </div>
+        `;
+        
+        // Disable pagination controls
+        if (activityPagination) {
+            activityPagination.style.pointerEvents = 'none';
+            activityPagination.style.opacity = '0.6';
+        }
+        
+        // Fetch paginated data
+        const response = await fetch(`/admin/api/recent-mood-logs?page=${page}&per_page=10`);
+        if (!response.ok) throw new Error('Failed to fetch recent activity');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update content
+            if (data.data && data.data.length > 0) {
+                activityListContainer.innerHTML = data.data.map(log => `
+                    <div class="activity-item d-flex align-items-center p-3 border-bottom">
+                        <div class="activity-icon me-3">
+                            <i class="fas fa-heart text-danger"></i>
+                        </div>
+                        <div class="activity-content flex-grow-1">
+                            <h6 class="mb-1">${log.user_name}</h6>
+                            <p class="mb-1">Logged emotion: <strong>${log.emotion}</strong></p>
+                            <small class="text-muted">${log.log_date}</small>
+                        </div>
+                        <div class="activity-meta">
+                            <span class="badge bg-light text-dark">Sleep: ${log.sleep}h</span>
+                            <span class="badge bg-light text-dark">Energy: ${log.energy}/10</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                activityListContainer.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No recent activity</p>
+                    </div>
+                `;
+            }
+            
+            // Update pagination controls
+            updateActivityPaginationControls(data.pagination);
+            
+        } else {
+            throw new Error(data.error || 'Failed to load recent activity');
+        }
+        
+    } catch (error) {
+        console.error('Error loading recent activity page:', error);
+        document.querySelector('.activity-list').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Activity</h5>
+                <p class="text-muted">${error.message}</p>
+                <button class="btn btn-primary btn-sm" onclick="loadRecentActivityPage(1)">
+                    <i class="fas fa-retry me-1"></i>Try Again
+                </button>
+            </div>
+        `;
+    } finally {
+        // Re-enable pagination controls
+        const activityPagination = document.getElementById('activityPagination');
+        if (activityPagination) {
+            activityPagination.style.pointerEvents = 'auto';
+            activityPagination.style.opacity = '1';
+        }
+    }
+}
+
+// Helper functions to update pagination controls
+function updateRiskPaginationControls(pagination) {
+    const riskPagination = document.getElementById('riskPagination');
+    if (!riskPagination || pagination.pages <= 1) return;
+    
+    let html = '';
+    
+    // Previous button
+    if (pagination.has_prev) {
+        html += `
+            <li class="page-item">
+                <button class="page-link" onclick="loadRiskStudentsPage(${pagination.prev_num})">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </li>
+        `;
+    } else {
+        html += `
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+            </li>
+        `;
+    }
+    
+    // Page numbers
+    for (let i = 1; i <= pagination.pages; i++) {
+        if (i === pagination.page) {
+            html += `
+                <li class="page-item active">
+                    <span class="page-link">${i}</span>
+                </li>
+            `;
+        } else {
+            html += `
+                <li class="page-item">
+                    <button class="page-link" onclick="loadRiskStudentsPage(${i})">${i}</button>
+                </li>
+            `;
+        }
+    }
+    
+    // Next button
+    if (pagination.has_next) {
+        html += `
+            <li class="page-item">
+                <button class="page-link" onclick="loadRiskStudentsPage(${pagination.next_num})">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </li>
+        `;
+    } else {
+        html += `
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+            </li>
+        `;
+    }
+    
+    riskPagination.innerHTML = html;
+}
+
+function updateActivityPaginationControls(pagination) {
+    const activityPagination = document.getElementById('activityPagination');
+    if (!activityPagination || pagination.pages <= 1) return;
+    
+    let html = '';
+    
+    // Previous button
+    if (pagination.has_prev) {
+        html += `
+            <li class="page-item">
+                <button class="page-link" onclick="loadRecentActivityPage(${pagination.prev_num})">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </li>
+        `;
+    } else {
+        html += `
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+            </li>
+        `;
+    }
+    
+    // Page numbers
+    for (let i = 1; i <= pagination.pages; i++) {
+        if (i === pagination.page) {
+            html += `
+                <li class="page-item active">
+                    <span class="page-link">${i}</span>
+                </li>
+            `;
+        } else {
+            html += `
+                <li class="page-item">
+                    <button class="page-link" onclick="loadRecentActivityPage(${i})">${i}</button>
+                </li>
+            `;
+        }
+    }
+    
+    // Next button
+    if (pagination.has_next) {
+        html += `
+            <li class="page-item">
+                <button class="page-link" onclick="loadRecentActivityPage(${pagination.next_num})">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </li>
+        `;
+    } else {
+        html += `
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+            </li>
+        `;
+    }
+    
+    activityPagination.innerHTML = html;
+}
