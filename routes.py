@@ -1359,3 +1359,97 @@ def get_students_by_hierarchy():
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/api/recent-mood-logs')
+@login_required
+def get_recent_mood_logs():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # Get recent mood logs with user information
+        logs_query = MoodLog.query.join(User, MoodLog.user_id == User.id).order_by(desc(MoodLog.log_date))
+        
+        logs_paginated = logs_query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        return jsonify({
+            'success': True,
+            'data': [{
+                'user_name': log.user.full_name,
+                'emotion': log.emotion,
+                'sleep': log.sleep,
+                'energy': log.energy,
+                'triggers': log.triggers,
+                'log_date': log.log_date.strftime('%B %d, %Y at %I:%M %p') if log.log_date else ''
+            } for log in logs_paginated.items],
+            'pagination': {
+                'page': logs_paginated.page,
+                'pages': logs_paginated.pages,
+                'per_page': logs_paginated.per_page,
+                'total': logs_paginated.total,
+                'has_prev': logs_paginated.has_prev,
+                'has_next': logs_paginated.has_next,
+                'prev_num': logs_paginated.prev_num,
+                'next_num': logs_paginated.next_num
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@admin_bp.route('/api/high-risk-students')
+@login_required
+def get_high_risk_students():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 3, type=int)
+        
+        # Get latest DASS-21 assessment for each user (subquery)
+        latest_dass_subquery = db.session.query(
+            DASS21Result.user_id,
+            func.max(DASS21Result.created_at).label('max_created_at')
+        ).group_by(DASS21Result.user_id).subquery()
+        
+        # Get high risk students based on most recent DASS-21 results
+        high_risk_query = DASS21Result.query.join(
+            latest_dass_subquery,
+            (DASS21Result.user_id == latest_dass_subquery.c.user_id) &
+            (DASS21Result.created_at == latest_dass_subquery.c.max_created_at)
+        ).join(User, DASS21Result.user_id == User.id).filter(
+            (DASS21Result.depression_severity.in_(['Severe', 'Extremely Severe'])) |
+            (DASS21Result.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
+            (DASS21Result.stress_severity.in_(['Severe', 'Extremely Severe']))
+        ).order_by(desc(DASS21Result.created_at))
+        
+        risk_paginated = high_risk_query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        return jsonify({
+            'success': True,
+            'data': [{
+                'user_id': dass_result.user.id,
+                'full_name': dass_result.user.full_name,
+                'depression_severity': dass_result.depression_severity if dass_result.depression_severity in ['Severe', 'Extremely Severe'] else None,
+                'anxiety_severity': dass_result.anxiety_severity if dass_result.anxiety_severity in ['Severe', 'Extremely Severe'] else None,
+                'stress_severity': dass_result.stress_severity if dass_result.stress_severity in ['Severe', 'Extremely Severe'] else None,
+                'assessment_date': dass_result.created_at.strftime('%B %d, %Y') if dass_result.created_at else ''
+            } for dass_result in risk_paginated.items],
+            'pagination': {
+                'page': risk_paginated.page,
+                'pages': risk_paginated.pages,
+                'per_page': risk_paginated.per_page,
+                'total': risk_paginated.total,
+                'has_prev': risk_paginated.has_prev,
+                'has_next': risk_paginated.has_next,
+                'prev_num': risk_paginated.prev_num,
+                'next_num': risk_paginated.next_num
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500

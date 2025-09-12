@@ -283,6 +283,16 @@ document.addEventListener('click', function(e) {
     if (e.target === overlay) {
         closeStudentProfileModal();
     }
+    
+    const moodLogsOverlay = document.getElementById('moodLogsOverlay');
+    if (e.target === moodLogsOverlay) {
+        closeMoodLogsModal();
+    }
+    
+    const highRiskOverlay = document.getElementById('highRiskOverlay');
+    if (e.target === highRiskOverlay) {
+        closeHighRiskModal();
+    }
 });
 
 function generateProfileHTML(data) {
@@ -1859,4 +1869,314 @@ async function generateTrendAnalysisCSV() {
         const data = [['Data Unavailable', 'Unable to fetch mood log data', new Date().toLocaleString()]];
         return [headers, ...data].map(row => row.join(',')).join('\n');
     }
+}
+
+// =========================
+// Stat Card Click Handlers
+// =========================
+
+// Global pagination state for modals
+let currentMoodLogsPage = 1;
+let currentHighRiskPage = 1;
+
+// Unread Messages Card - Redirect to messages page
+function goToMessagesPage() {
+    window.location.href = '/admin/messages';
+}
+
+// Mood Logs Modal Functions
+async function openMoodLogsModal() {
+    try {
+        const overlay = document.getElementById('moodLogsOverlay');
+        const content = document.getElementById('moodLogsContent');
+        
+        // Show loading
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading recent mood logs...</p>
+            </div>
+        `;
+        
+        // Show modal
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Load initial page
+        await loadMoodLogsPage(1);
+        
+    } catch (error) {
+        console.error('Error opening mood logs modal:', error);
+        document.getElementById('moodLogsContent').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Mood Logs</h5>
+                <p class="text-muted">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function closeMoodLogsModal() {
+    const overlay = document.getElementById('moodLogsOverlay');
+    overlay.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    currentMoodLogsPage = 1; // Reset pagination
+}
+
+async function loadMoodLogsPage(page) {
+    try {
+        const response = await fetch(`/admin/api/recent-mood-logs?page=${page}&per_page=10`);
+        if (!response.ok) throw new Error('Failed to fetch mood logs');
+        
+        const data = await response.json();
+        currentMoodLogsPage = page;
+        
+        if (data.success) {
+            displayMoodLogsData(data.data, data.pagination);
+        } else {
+            throw new Error(data.error || 'Failed to load mood logs');
+        }
+        
+    } catch (error) {
+        console.error('Error loading mood logs page:', error);
+        document.getElementById('moodLogsContent').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Data</h5>
+                <p class="text-muted">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function displayMoodLogsData(logs, pagination) {
+    const content = document.getElementById('moodLogsContent');
+    
+    let html = `
+        <div class="mood-logs-list">
+            ${logs.length > 0 ? 
+                logs.map(log => `
+                    <div class="activity-item d-flex align-items-center p-3 border-bottom">
+                        <div class="activity-icon me-3">
+                            <i class="fas fa-heart text-danger"></i>
+                        </div>
+                        <div class="activity-content flex-grow-1">
+                            <h6 class="mb-1">${log.user_name}</h6>
+                            <p class="mb-1">Logged emotion: <strong>${log.emotion}</strong></p>
+                            <small class="text-muted">${log.log_date}</small>
+                        </div>
+                        <div class="activity-meta">
+                            <span class="badge bg-light text-dark">Sleep: ${log.sleep}h</span>
+                            <span class="badge bg-light text-dark">Energy: ${log.energy}/10</span>
+                        </div>
+                    </div>
+                `).join('') :
+                `<div class="text-center py-4">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No mood logs found</p>
+                </div>`
+            }
+        </div>
+    `;
+    
+    // Add pagination if needed
+    if (pagination.pages > 1) {
+        html += generatePaginationHTML(pagination, 'loadMoodLogsPage');
+    }
+    
+    content.innerHTML = html;
+}
+
+// High Risk Students Modal Functions
+async function openHighRiskModal() {
+    try {
+        const overlay = document.getElementById('highRiskOverlay');
+        const content = document.getElementById('highRiskContent');
+        
+        // Show loading
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading high risk students...</p>
+            </div>
+        `;
+        
+        // Show modal
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Load initial page
+        await loadHighRiskPage(1);
+        
+    } catch (error) {
+        console.error('Error opening high risk modal:', error);
+        document.getElementById('highRiskContent').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading High Risk Students</h5>
+                <p class="text-muted">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function closeHighRiskModal() {
+    const overlay = document.getElementById('highRiskOverlay');
+    overlay.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    currentHighRiskPage = 1; // Reset pagination
+}
+
+async function loadHighRiskPage(page) {
+    try {
+        const response = await fetch(`/admin/api/high-risk-students?page=${page}&per_page=3`);
+        if (!response.ok) throw new Error('Failed to fetch high risk students');
+        
+        const data = await response.json();
+        currentHighRiskPage = page;
+        
+        if (data.success) {
+            displayHighRiskData(data.data, data.pagination);
+        } else {
+            throw new Error(data.error || 'Failed to load high risk students');
+        }
+        
+    } catch (error) {
+        console.error('Error loading high risk page:', error);
+        document.getElementById('highRiskContent').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Data</h5>
+                <p class="text-muted">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function displayHighRiskData(students, pagination) {
+    const content = document.getElementById('highRiskContent');
+    
+    let html = `
+        <div class="risk-students-list">
+            ${students.length > 0 ? 
+                `<div class="row g-3">
+                    ${students.map(student => `
+                        <div class="col-12">
+                            <div class="risk-item p-3 border rounded">
+                                <div class="d-flex flex-column h-100">
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold mb-2">${student.full_name}</h6>
+                                        <div class="risk-scores mb-2">
+                                            ${student.depression_severity ? 
+                                                `<span class="badge bg-danger mb-1">Depression: ${student.depression_severity}</span><br>` : ''}
+                                            ${student.anxiety_severity ? 
+                                                `<span class="badge bg-warning mb-1">Anxiety: ${student.anxiety_severity}</span><br>` : ''}
+                                            ${student.stress_severity ? 
+                                                `<span class="badge bg-info mb-1">Stress: ${student.stress_severity}</span><br>` : ''}
+                                        </div>
+                                        <small class="text-muted d-block">
+                                            Assessed: ${student.assessment_date}
+                                        </small>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-outline-primary btn-sm me-2" onclick="viewStudentProfile(${student.user_id})">
+                                            <i class="fas fa-user me-1"></i>View Profile
+                                        </button>
+                                        <button class="btn btn-outline-success btn-sm" onclick="goToStudentChat(${student.user_id})">
+                                            <i class="fas fa-comments me-1"></i>Chat
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>` :
+                `<div class="text-center py-4">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <p class="text-muted">No high risk students found</p>
+                </div>`
+            }
+        </div>
+    `;
+    
+    // Add pagination if needed
+    if (pagination.pages > 1) {
+        html += generatePaginationHTML(pagination, 'loadHighRiskPage');
+    }
+    
+    content.innerHTML = html;
+}
+
+// Utility function to generate pagination HTML
+function generatePaginationHTML(pagination, functionName) {
+    let html = `
+        <div class="d-flex justify-content-center mt-4">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+    `;
+    
+    // Previous button
+    if (pagination.has_prev) {
+        html += `<li class="page-item">
+            <a class="page-link" href="#" onclick="${functionName}(${pagination.prev_num}); return false;">
+                <i class="fas fa-chevron-left"></i> Previous
+            </a>
+        </li>`;
+    } else {
+        html += `<li class="page-item disabled">
+            <span class="page-link"><i class="fas fa-chevron-left"></i> Previous</span>
+        </li>`;
+    }
+    
+    // Page numbers (show current and adjacent pages)
+    const startPage = Math.max(1, pagination.page - 2);
+    const endPage = Math.min(pagination.pages, pagination.page + 2);
+    
+    if (startPage > 1) {
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="${functionName}(1); return false;">1</a></li>`;
+        if (startPage > 2) {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === pagination.page) {
+            html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
+        } else {
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="${functionName}(${i}); return false;">${i}</a></li>`;
+        }
+    }
+    
+    if (endPage < pagination.pages) {
+        if (endPage < pagination.pages - 1) {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="${functionName}(${pagination.pages}); return false;">${pagination.pages}</a></li>`;
+    }
+    
+    // Next button
+    if (pagination.has_next) {
+        html += `<li class="page-item">
+            <a class="page-link" href="#" onclick="${functionName}(${pagination.next_num}); return false;">
+                Next <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>`;
+    } else {
+        html += `<li class="page-item disabled">
+            <span class="page-link">Next <i class="fas fa-chevron-right"></i></span>
+        </li>`;
+    }
+    
+    html += `
+                </ul>
+            </nav>
+        </div>
+    `;
+    
+    return html;
 }
