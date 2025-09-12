@@ -397,10 +397,6 @@ def consultation():
         db.session.add(message)
         db.session.commit()
         
-        # Create notification for admin when student sends message
-        from models import Notification
-        Notification.create_new_message_notification(current_user.id)
-        
         flash('Your message has been sent to the guidance office.', 'success')
         return redirect(url_for('main.consultation'))
     
@@ -672,12 +668,6 @@ def respond_message(message_id):
         message.responded_at = datetime.utcnow()
         db.session.commit()
         
-        # Create notification for student when admin responds
-        from models import Notification
-        Notification.create_admin_response_notification(
-            message.sender_user_id, message.id, current_user.id
-        )
-        
         return jsonify({'success': True, 'message': 'Response sent successfully'})
     
     return jsonify({'success': False, 'message': 'Response text is required'})
@@ -730,12 +720,6 @@ def send_message(user_id):
     
     db.session.add(message)
     db.session.commit()
-    
-    # Create notification for student when admin sends message
-    from models import Notification
-    Notification.create_admin_response_notification(
-        user_id, message.id, current_user.id
-    )
     
     return jsonify({'success': True, 'message': 'Message sent successfully'})
 
@@ -1488,137 +1472,6 @@ def get_high_risk_students():
                 'prev_num': risk_paginated.prev_num,
                 'next_num': risk_paginated.next_num
             }
-        })
-        
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-# Notification API routes
-@api_bp.route('/notifications')
-@login_required
-def get_user_notifications():
-    """Get notifications for current user (both admin and student)"""
-    try:
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 20, type=int)
-        unread_only = request.args.get('unread_only', 'false').lower() == 'true'
-        
-        from models import Notification
-        query = Notification.query.filter_by(recipient_user_id=current_user.id)
-        
-        if unread_only:
-            query = query.filter_by(is_read=False)
-        
-        notifications_paginated = query.order_by(Notification.created_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
-        
-        return jsonify({
-            'success': True,
-            'notifications': [{
-                'id': notif.id,
-                'title': notif.title,
-                'message': notif.message,
-                'notification_type': notif.notification_type,
-                'is_read': notif.is_read,
-                'priority': notif.priority,
-                'created_at': notif.created_at.strftime('%B %d, %Y at %I:%M %p') if notif.created_at else '',
-                'sender_name': notif.sender.full_name if notif.sender else 'System',
-                'related_message_id': notif.related_message_id
-            } for notif in notifications_paginated.items],
-            'pagination': {
-                'page': notifications_paginated.page,
-                'pages': notifications_paginated.pages,
-                'per_page': notifications_paginated.per_page,
-                'total': notifications_paginated.total,
-                'has_prev': notifications_paginated.has_prev,
-                'has_next': notifications_paginated.has_next,
-                'prev_num': notifications_paginated.prev_num,
-                'next_num': notifications_paginated.next_num
-            }
-        })
-        
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@api_bp.route('/notifications/count')
-@login_required
-def get_notification_count():
-    """Get unread notification count for current user"""
-    try:
-        from models import Notification
-        count = Notification.get_unread_count_for_user(current_user.id)
-        return jsonify({'success': True, 'count': count})
-        
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@api_bp.route('/notifications/<int:notification_id>/read', methods=['POST'])
-@login_required
-def mark_notification_read(notification_id):
-    """Mark a specific notification as read"""
-    try:
-        from models import Notification
-        notification = Notification.query.get_or_404(notification_id)
-        
-        # Ensure user can only mark their own notifications as read
-        if notification.recipient_user_id != current_user.id:
-            return jsonify({'success': False, 'error': 'Access denied'}), 403
-        
-        if not notification.is_read:
-            notification.mark_as_read()
-        
-        return jsonify({'success': True, 'message': 'Notification marked as read'})
-        
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@api_bp.route('/notifications/mark-all-read', methods=['POST'])
-@login_required
-def mark_all_notifications_read():
-    """Mark all notifications as read for current user"""
-    try:
-        from models import Notification
-        notification_type = request.form.get('type')  # Optional: only mark specific type as read
-        
-        Notification.mark_all_read_for_user(current_user.id, notification_type)
-        
-        return jsonify({'success': True, 'message': 'All notifications marked as read'})
-        
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@api_bp.route('/notifications/recent')
-@login_required  
-def get_recent_notifications():
-    """Get recent notifications for current user (for real-time updates)"""
-    try:
-        # Get notifications from the last 5 minutes
-        from datetime import datetime, timedelta
-        from models import Notification
-        
-        since = datetime.utcnow() - timedelta(minutes=5)
-        recent_notifications = Notification.query.filter(
-            Notification.recipient_user_id == current_user.id,
-            Notification.created_at >= since
-        ).order_by(Notification.created_at.desc()).all()
-        
-        return jsonify({
-            'success': True,
-            'notifications': [{
-                'id': notif.id,
-                'title': notif.title,
-                'message': notif.message,
-                'notification_type': notif.notification_type,
-                'is_read': notif.is_read,
-                'priority': notif.priority,
-                'created_at': notif.created_at.strftime('%B %d, %Y at %I:%M %p') if notif.created_at else '',
-                'sender_name': notif.sender.full_name if notif.sender else 'System',
-                'related_message_id': notif.related_message_id
-            } for notif in recent_notifications],
-            'count': len(recent_notifications),
-            'unread_count': Notification.get_unread_count_for_user(current_user.id)
         })
         
     except Exception as e:

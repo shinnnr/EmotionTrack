@@ -14,7 +14,6 @@
         <a href="{{ url_for('admin.messages') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.messages' }}">
             <i class="fas fa-envelope"></i>
             <span>View Messages</span>
-            <span class="notification-badge" id="adminMessagesNotificationBadge" style="display: none;"></span>
         </a>
         
         <button type="button" class="sidebar-link" onclick="exportData();">

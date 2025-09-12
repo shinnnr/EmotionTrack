@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeTooltips();
     initializeScrollEffects();
     initializeFormValidation();
-    initializeNotifications();
 });
 
 // Sidebar Management
@@ -351,158 +350,6 @@ function confirmLogout() {
     });
 }
 
-// Notification System
-function initializeNotifications() {
-    updateNotificationBadges();
-    loadUserNotifications();
-    
-    // Poll for notifications every 30 seconds
-    setInterval(updateNotificationBadges, 30000);
-    
-    // Poll for new notifications every 10 seconds when page is visible
-    setInterval(function() {
-        if (document.visibilityState === 'visible') {
-            checkForNewNotifications();
-        }
-    }, 10000);
-}
-
-async function updateNotificationBadges() {
-    try {
-        const response = await fetch('/api/notifications/count');
-        const data = await response.json();
-        
-        if (data.success) {
-            const count = data.count;
-            
-            // Update student consultation badge
-            const consultationBadge = document.getElementById('consultationNotificationBadge');
-            if (consultationBadge) {
-                if (count > 0) {
-                    consultationBadge.textContent = count > 9 ? '9+' : count;
-                    consultationBadge.style.display = 'flex';
-                    consultationBadge.classList.remove('zero');
-                } else {
-                    consultationBadge.style.display = 'none';
-                    consultationBadge.classList.add('zero');
-                }
-            }
-            
-            // Update admin messages badge  
-            const adminBadge = document.getElementById('adminMessagesNotificationBadge');
-            if (adminBadge) {
-                if (count > 0) {
-                    adminBadge.textContent = count > 9 ? '9+' : count;
-                    adminBadge.style.display = 'flex';
-                    adminBadge.classList.remove('zero');
-                } else {
-                    adminBadge.style.display = 'none';
-                    adminBadge.classList.add('zero');
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error updating notification badges:', error);
-    }
-}
-
-async function loadUserNotifications() {
-    const notificationsList = document.getElementById('notificationsList');
-    if (!notificationsList) return;
-    
-    try {
-        const response = await fetch('/api/notifications?per_page=5');
-        const data = await response.json();
-        
-        if (data.success && data.notifications.length > 0) {
-            document.getElementById('notificationsSection').style.display = 'block';
-            
-            notificationsList.innerHTML = data.notifications.map(notification => `
-                <div class="notification-item ${notification.is_read ? '' : 'unread'} ${notification.priority}-priority p-3 mb-2 border rounded" 
-                     onclick="markNotificationRead(${notification.id}, ${notification.related_message_id})">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1 fw-bold">${notification.title}</h6>
-                            <p class="mb-1 text-muted small">${notification.message}</p>
-                            <div class="notification-timestamp">${notification.created_at}</div>
-                        </div>
-                        ${!notification.is_read ? `<button class="btn btn-outline-primary btn-sm notification-read-btn" onclick="event.stopPropagation(); markNotificationRead(${notification.id})"><i class="fas fa-check"></i></button>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-    } catch (error) {
-        console.error('Error loading notifications:', error);
-    }
-}
-
-async function checkForNewNotifications() {
-    try {
-        const response = await fetch('/api/notifications/recent');
-        const data = await response.json();
-        
-        if (data.success && data.notifications.length > 0) {
-            // Show new notification alert
-            const newCount = data.notifications.filter(n => !n.is_read).length;
-            if (newCount > 0) {
-                showNotificationAlert(`You have ${newCount} new notification${newCount > 1 ? 's' : ''}!`);
-                updateNotificationBadges();
-                loadUserNotifications();
-            }
-        }
-    } catch (error) {
-        console.error('Error checking for new notifications:', error);
-    }
-}
-
-async function markNotificationRead(notificationId, messageId = null) {
-    try {
-        const formData = new FormData();
-        formData.append('csrf_token', document.querySelector('[name=csrf_token]').value);
-        
-        const response = await fetch(`/api/notifications/${notificationId}/read`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (response.ok) {
-            updateNotificationBadges();
-            loadUserNotifications();
-            
-            // If there's a related message, optionally navigate to it
-            if (messageId) {
-                window.location.href = '/consultation';
-            }
-        }
-    } catch (error) {
-        console.error('Error marking notification as read:', error);
-    }
-}
-
-async function markAllNotificationsRead() {
-    try {
-        const formData = new FormData();
-        formData.append('csrf_token', document.querySelector('[name=csrf_token]').value);
-        
-        const response = await fetch('/api/notifications/mark-all-read', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (response.ok) {
-            showAlert('All notifications marked as read!', 'success');
-            updateNotificationBadges();
-            loadUserNotifications();
-        }
-    } catch (error) {
-        console.error('Error marking all notifications as read:', error);
-    }
-}
-
-function showNotificationAlert(message) {
-    showAlert(message, 'info');
-}
-
 // Export functions for use in other modules
 window.MindTrack = {
     showAlert,
@@ -512,8 +359,5 @@ window.MindTrack = {
     showModal,
     hideModal,
     apiCall,
-    confirmLogout,
-    updateNotificationBadges,
-    markNotificationRead,
-    markAllNotificationsRead
+    confirmLogout
 };
