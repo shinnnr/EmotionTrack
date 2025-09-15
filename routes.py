@@ -56,23 +56,21 @@ def home():
             dass21_status['next_available_date'] = latest_dass.created_at + timedelta(days=7)
             dass21_status['last_taken_date'] = latest_dass.created_at
     
-    # Check for new admin responses that student hasn't seen yet
-    # For now, count messages with admin responses from the last 3 days as "new"
-    # TODO: Add is_response_read_by_student field for proper tracking
-    new_admin_responses = StudentMessage.query.filter(
+    # Check for admin responses that the student hasn't read yet
+    unread_admin_responses = StudentMessage.query.filter(
         StudentMessage.sender_user_id == current_user.id,
         StudentMessage.admin_response.is_not(None),
-        StudentMessage.responded_at > datetime.utcnow() - timedelta(days=3)  # Responses in last 3 days
+        StudentMessage.is_response_read_by_student == False
     ).count()
     
-    # Count unread messages is not currently used as it tracks admin-read status, not student-read status
-    unread_messages_count = 0  # Placeholder - will implement proper tracking later
+    # No longer needed - proper tracking implemented
+    unread_messages_count = 0
     
     notifications = {
         'dass21_available': dass21_status['can_take'],
         'unread_messages': unread_messages_count,
-        'recent_responses': new_admin_responses,
-        'has_notifications': dass21_status['can_take'] or new_admin_responses > 0
+        'recent_responses': unread_admin_responses,
+        'has_notifications': dass21_status['can_take'] or unread_admin_responses > 0
     }
     
     return render_template('home.html', 
@@ -425,6 +423,12 @@ def consultation():
     
     # Get user's previous messages (ordered oldest to newest like admin side)
     messages = StudentMessage.query.filter_by(sender_user_id=current_user.id).order_by(StudentMessage.created_at).all()
+    
+    # Mark all admin responses as read by the student when they visit this page
+    for message in messages:
+        if message.admin_response and not message.is_response_read_by_student:
+            message.is_response_read_by_student = True
+    db.session.commit()
     
     return render_template('consultation.html', form=form, messages=messages)
 

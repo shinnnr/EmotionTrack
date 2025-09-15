@@ -108,6 +108,7 @@ class StudentMessage(db.Model):
     message_text = db.Column(db.Text, nullable=False)
     is_read = db.Column(db.Boolean, default=False)
     admin_response = db.Column(db.Text)
+    is_response_read_by_student = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     responded_at = db.Column(db.DateTime)
     
