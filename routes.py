@@ -612,17 +612,43 @@ def dashboard():
     risk_per_page = 3  # 3 high risk students per page
     activity_per_page = 10  # 10 activity items per page
     
-    # Get statistics for admin dashboard
-    total_users = User.query.filter_by(is_admin=False).count()
-    total_logs = MoodLog.query.count()
-    unread_messages = StudentMessage.query.filter_by(is_read=False).count()
+    # Get statistics for admin dashboard (filtered by faculty section if applicable)
+    accessible_students_query = get_students_for_faculty(current_user)
+    total_users = accessible_students_query.count()
     
-    # Recent activity with pagination
-    recent_logs_pagination = MoodLog.query.join(User, MoodLog.user_id == User.id).order_by(desc(MoodLog.log_date)).paginate(
-        page=activity_page, 
-        per_page=activity_per_page, 
-        error_out=False
-    )
+    # Get accessible student IDs for filtering other queries
+    accessible_student_ids = [user.id for user in accessible_students_query.all()]
+    
+    # Filter mood logs and messages based on accessible students
+    if accessible_student_ids:
+        total_logs = MoodLog.query.filter(MoodLog.user_id.in_(accessible_student_ids)).count()
+        unread_messages = StudentMessage.query.filter(
+            StudentMessage.sender_user_id.in_(accessible_student_ids),
+            StudentMessage.is_read == False
+        ).count()
+    else:
+        total_logs = 0
+        unread_messages = 0
+    
+    # Recent activity with pagination (filtered by faculty section)
+    if accessible_student_ids:
+        recent_logs_pagination = MoodLog.query.join(User, MoodLog.user_id == User.id).filter(
+            MoodLog.user_id.in_(accessible_student_ids)
+        ).order_by(desc(MoodLog.log_date)).paginate(
+            page=activity_page, 
+            per_page=activity_per_page, 
+            error_out=False
+        )
+    else:
+        # Create empty pagination if no accessible students
+        from flask_sqlalchemy.pagination import Pagination
+        recent_logs_pagination = Pagination(
+            query=MoodLog.query.filter(MoodLog.user_id == -1),
+            page=1,
+            per_page=activity_per_page,
+            total=0,
+            items=[]
+        )
     # Get the associated users for each mood log
     recent_logs = [(log, User.query.get(log.user_id)) for log in recent_logs_pagination.items]
     
@@ -640,22 +666,34 @@ def dashboard():
         (DASS21Result.created_at == latest_dass_subquery.c.max_created_at)
     ).subquery()
     
-    # Finally, get users whose LATEST assessment shows concerning scores with pagination
-    # First get the concerning DASS21Result IDs from the subquery
-    concerning_dass_ids = db.session.query(latest_dass_results.c.id).filter(
-        (latest_dass_results.c.depression_severity.in_(['Severe', 'Extremely Severe'])) |
-        (latest_dass_results.c.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
-        (latest_dass_results.c.stress_severity.in_(['Severe', 'Extremely Severe']))
-    ).subquery()
-    
-    # Now paginate the DASS21Result objects
-    concerning_students_pagination = DASS21Result.query.filter(
-        DASS21Result.id.in_(db.session.query(concerning_dass_ids.c.id))
-    ).order_by(desc(DASS21Result.created_at)).paginate(
-        page=risk_page, 
-        per_page=risk_per_page, 
-        error_out=False
-    )
+    # Finally, get users whose LATEST assessment shows concerning scores with pagination (filtered by faculty section)
+    # First get the concerning DASS21Result IDs from the subquery, filtered by accessible students
+    if accessible_student_ids:
+        concerning_dass_ids = db.session.query(latest_dass_results.c.id).filter(
+            (latest_dass_results.c.depression_severity.in_(['Severe', 'Extremely Severe'])) |
+            (latest_dass_results.c.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
+            (latest_dass_results.c.stress_severity.in_(['Severe', 'Extremely Severe'])),
+            latest_dass_results.c.user_id.in_(accessible_student_ids)
+        ).subquery()
+        
+        # Now paginate the DASS21Result objects
+        concerning_students_pagination = DASS21Result.query.filter(
+            DASS21Result.id.in_(db.session.query(concerning_dass_ids.c.id))
+        ).order_by(desc(DASS21Result.created_at)).paginate(
+            page=risk_page, 
+            per_page=risk_per_page, 
+            error_out=False
+        )
+    else:
+        # Create empty pagination if no accessible students
+        from flask_sqlalchemy.pagination import Pagination
+        concerning_students_pagination = Pagination(
+            query=DASS21Result.query.filter(DASS21Result.user_id == -1),
+            page=1,
+            per_page=risk_per_page,
+            total=0,
+            items=[]
+        )
     # Get the associated users for each DASS21Result
     concerning_students = [(result, User.query.get(result.user_id)) for result in concerning_students_pagination.items]
     
