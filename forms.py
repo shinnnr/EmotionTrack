@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms.csrf.session import SessionCSRF
 from wtforms.meta import DefaultMeta
-from wtforms import StringField, PasswordField, SelectField, TextAreaField, IntegerField, FloatField, HiddenField, DateField
+from wtforms import StringField, PasswordField, SelectField, TextAreaField, IntegerField, FloatField, HiddenField, DateField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, EqualTo, ValidationError
 from wtforms.widgets import TextArea
 import re
@@ -40,6 +40,7 @@ class RegisterForm(FlaskForm):
     ])
     grade_level = SelectField('Grade Level', choices=[('11', 'Grade 11'), ('12', 'Grade 12')])
     section = StringField('Section', validators=[DataRequired(), Length(max=50)])
+    privacy_agreement = BooleanField('I agree that my data is private and secure and will only be used by the guidance office', validators=[DataRequired()])
 
 class EmotionLogForm(FlaskForm):
     emotions = HiddenField('Selected Emotions', validators=[DataRequired()])
