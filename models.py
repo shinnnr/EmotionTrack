@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
+from sqlalchemy import Enum
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -17,13 +18,17 @@ class User(UserMixin, db.Model):
     strand = db.Column(db.String(100))
     grade_level = db.Column(db.String(20))
     section = db.Column(db.String(50))
+    # Keep both old and new columns during migration
     is_admin = db.Column(db.Boolean, default=False)
+    role = db.Column(Enum('student', 'guidance_admin', 'faculty_admin', name='user_roles'), 
+                     default='student', nullable=True)  # Make nullable during migration
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
     mood_logs = db.relationship('MoodLog', backref='user', lazy=True, cascade='all, delete-orphan')
     dass21_results = db.relationship('DASS21Result', backref='user', lazy=True, cascade='all, delete-orphan')
     sent_messages = db.relationship('StudentMessage', backref='sender', lazy=True, cascade='all, delete-orphan')
+    class_assignments = db.relationship('ClassAssignment', backref='faculty', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -34,6 +39,30 @@ class User(UserMixin, db.Model):
     @property
     def full_name(self):
         return f"{self.firstname} {self.lastname}"
+    
+    # Helper properties for role-based access
+    @property
+    def is_admin_role(self):
+        """New role-based method: returns True if user is any type of admin"""
+        if self.role:
+            return self.role in ['guidance_admin', 'faculty_admin']
+        # Fallback to old is_admin column during migration
+        return self.is_admin
+    
+    @property
+    def is_guidance_admin(self):
+        """Returns True if user is a guidance office admin"""
+        return self.role == 'guidance_admin'
+    
+    @property
+    def is_faculty_admin(self):
+        """Returns True if user is a faculty admin"""
+        return self.role == 'faculty_admin'
+    
+    @property
+    def is_student(self):
+        """Returns True if user is a student"""
+        return self.role == 'student'
     
     def __repr__(self):
         return f'<User {self.email}>'
@@ -84,3 +113,18 @@ class StudentMessage(db.Model):
     
     def __repr__(self):
         return f'<StudentMessage from User {self.sender_user_id}>'
+
+class ClassAssignment(db.Model):
+    __tablename__ = 'class_assignments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    faculty_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    grade_level = db.Column(db.String(20), nullable=False)
+    section = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Add unique constraint to ensure one faculty per section
+    __table_args__ = (db.UniqueConstraint('grade_level', 'section', name='unique_grade_section'),)
+    
+    def __repr__(self):
+        return f'<ClassAssignment Faculty {self.faculty_id} - {self.grade_level}-{self.section}>'

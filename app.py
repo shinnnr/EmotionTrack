@@ -88,8 +88,13 @@ def create_app():
         
         # Create admin user if it doesn't exist
         from models import User
-        admin = User.query.filter_by(email='admin@emotiontrack.app').first()
-        if not admin:
+        # Use a safer query that doesn't select all columns to avoid role column issues during migration
+        admin_exists = db.session.execute(
+            db.text("SELECT id FROM users WHERE email = :email"), 
+            {"email": "admin@emotiontrack.app"}
+        ).fetchone()
+        
+        if not admin_exists:
             admin = User()
             admin.firstname = 'Admin'
             admin.lastname = 'User'
@@ -100,6 +105,7 @@ def create_app():
             admin.grade_level = '12'
             admin.section = 'Admin'
             admin.is_admin = True
+            admin.role = 'guidance_admin'  # Set the new role
             db.session.add(admin)
             db.session.commit()
     
