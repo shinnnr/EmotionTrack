@@ -439,6 +439,7 @@ def login():
 @auth_bp.route('/register', methods=['POST'])
 def register():
     form = RegisterForm()
+    login_form = LoginForm()
     
     if form.validate_on_submit():
         
@@ -446,7 +447,8 @@ def register():
         existing_user = User.query.filter_by(email=form.email.data).first()
         if existing_user:
             flash('Email already registered. Please use a different email.', 'error')
-            return redirect(url_for('main.index'))
+            # Render template with form data preserved instead of redirecting
+            return render_template('index.html', login_form=login_form, register_form=form)
         
         # Create new user
         user = User()
@@ -467,12 +469,13 @@ def register():
         flash('Registration successful! Welcome to EmotionTrack.', 'success')
         return redirect(url_for('main.home'))
     else:
-        # If form validation fails, flash errors
+        # If form validation fails, flash errors and render template with form data preserved
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f'{field}: {error}', 'error')
-    
-    return redirect(url_for('main.index'))
+        
+        # Render template with form data preserved instead of redirecting
+        return render_template('index.html', login_form=login_form, register_form=form)
 
 @auth_bp.route('/logout')
 @login_required

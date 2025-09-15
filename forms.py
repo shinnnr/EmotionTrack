@@ -2,8 +2,22 @@ from flask_wtf import FlaskForm
 from wtforms.csrf.session import SessionCSRF
 from wtforms.meta import DefaultMeta
 from wtforms import StringField, PasswordField, SelectField, TextAreaField, IntegerField, FloatField, HiddenField, DateField
-from wtforms.validators import DataRequired, Email, Length, NumberRange, EqualTo
+from wtforms.validators import DataRequired, Email, Length, NumberRange, EqualTo, ValidationError
 from wtforms.widgets import TextArea
+import re
+from datetime import datetime, date
+
+def validate_name_no_numbers(form, field):
+    """Custom validator to ensure name fields don't contain numbers"""
+    if re.search(r'\d', field.data):
+        raise ValidationError('Name cannot contain numbers.')
+
+def validate_birthday_not_future(form, field):
+    """Custom validator to ensure birthday is not in the future"""
+    if field.data and field.data > date.today():
+        raise ValidationError('Birthday cannot be in the future.')
+    if field.data and field.data.year > datetime.now().year:
+        raise ValidationError('Please enter a valid birth year.')
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -12,13 +26,13 @@ class LoginForm(FlaskForm):
     # CSRF protection is handled globally
 
 class RegisterForm(FlaskForm):
-    firstname = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
-    lastname = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50)])
+    firstname = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
+    lastname = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Confirm Password', 
                                    validators=[DataRequired(), EqualTo('password')])
-    birthday = DateField('Birthday', validators=[DataRequired()])
+    birthday = DateField('Birthday', validators=[DataRequired(), validate_birthday_not_future])
     gender = SelectField('Gender', choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')])
     strand = SelectField('Strand', choices=[
         ('STEM', 'STEM'), ('ABM', 'ABM'), ('HUMSS', 'HUMSS'), 
