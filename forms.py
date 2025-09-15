@@ -39,7 +39,7 @@ class RegisterForm(FlaskForm):
         ('GAS', 'GAS'), ('TVL', 'TVL'), ('Other', 'Other')
     ])
     grade_level = SelectField('Grade Level', choices=[('11', 'Grade 11'), ('12', 'Grade 12')])
-    section = StringField('Section', validators=[DataRequired(), Length(max=50)])
+    section = StringField('Section', validators=[DataRequired(), Length(max=50)], render_kw={"placeholder": "Example: MARX"})
     privacy_agreement = BooleanField('I agree that my data is private and secure and will only be used by the guidance office', validators=[DataRequired()])
 
 class EmotionLogForm(FlaskForm):
