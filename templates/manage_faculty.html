@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Faculty Admin - EmotionTrack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Faculty Management Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="admin-header bg-gradient-dark text-white p-4 rounded">
+                <h1 class="display-6 fw-bold mb-2">
+                    <i class="fas fa-users-cog me-3"></i>
+                    Manage Faculty Admin
+                </h1>
+                <p class="lead mb-0">Create and manage faculty accounts for class advisers</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Faculty Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-user-plus text-success me-2"></i>
+                        Create New Faculty
+                    </h5>
+                    
+                    <form id="createFacultyForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="firstname" name="firstname" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="lastname" name="lastname" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Advisory Class</label>
+                            <input type="text" class="form-control" id="advisory_class" name="advisory_class" 
+                                   placeholder="e.g., HUMSS 12 - MARX" required>
+                            <div class="form-text">Format: STRAND GRADE - SECTION (e.g., HUMSS 12 - MARX)</div>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Create Faculty
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Faculty List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-chalkboard-teacher text-primary me-2"></i>
+                        Faculty List
+                    </h5>
+                    
+                    {% if faculty_data %}
+                        <div class="row g-3">
+                            {% for data in faculty_data %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="faculty-card p-3 border rounded h-100">
+                                        <div class="d-flex flex-column h-100">
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-bold mb-2">{{ data.faculty.firstname }} {{ data.faculty.lastname }}</h6>
+                                                <p class="text-muted mb-2">{{ data.faculty.email }}</p>
+                                                {% if data.assignment %}
+                                                    <div class="advisory-info mb-2">
+                                                        <span class="badge bg-primary">{{ data.assignment.grade_level }}</span>
+                                                        <span class="badge bg-info">{{ data.faculty.strand }}</span>
+                                                        <span class="badge bg-success">{{ data.assignment.section }}</span>
+                                                    </div>
+                                                    <small class="text-muted d-block">
+                                                        <i class="fas fa-users me-1"></i>{{ data.student_count }} students
+                                                    </small>
+                                                {% else %}
+                                                    <span class="badge bg-warning">No Assignment</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="mt-3">
+                                                <a href="{{ url_for('admin.faculty_students', faculty_id=data.faculty.id) }}" 
+                                                   class="btn btn-outline-primary btn-sm w-100">
+                                                    <i class="fas fa-eye me-1"></i>View Students
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No faculty created yet</p>
+                            <small class="text-muted">Create your first faculty member using the form above.</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('createFacultyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    // Add CSRF token
+    formData.append('csrf_token', '{{ csrf_token() }}');
+    
+    fetch('{{ url_for("admin.create_faculty") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Faculty created successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while creating faculty.');
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.faculty-card {
+    border-left: 4px solid #0d6efd !important;
+    transition: transform 0.2s ease;
+}
+
+.faculty-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.advisory-info .badge {
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.admin-header {
+    border-left: 5px solid var(--clsu-gold);
+}
+</style>
+{% endblock %}

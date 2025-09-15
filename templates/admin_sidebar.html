@@ -16,6 +16,11 @@
             <span>View Messages</span>
         </a>
         
+        <a href="{{ url_for('admin.manage_faculty') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.manage_faculty' }}">
+            <i class="fas fa-users-cog"></i>
+            <span>Manage Faculty Admin</span>
+        </a>
+        
         <button type="button" class="sidebar-link" onclick="exportData();">
             <i class="fas fa-download"></i>
             <span>Export Data</span>

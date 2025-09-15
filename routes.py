@@ -5,7 +5,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from app import db, csrf
-from models import User, MoodLog, DASS21Result, StudentMessage
+from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm
 
 # Create blueprints
@@ -724,6 +724,136 @@ def student_chat(user_id):
     db.session.commit()
     
     return render_template('admin_chat.html', student=student, messages=messages)
+
+@admin_bp.route('/manage-faculty')
+@login_required
+def manage_faculty():
+    if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
+        flash('Access denied. Only the main admin can manage faculty.', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Get all faculty members (users with role 'faculty' or 'guidance_admin' but not main admin)
+    faculties = User.query.filter(
+        User.role.in_(['faculty', 'guidance_admin']),
+        User.email != 'admin@emotiontrack.app'
+    ).all()
+    
+    # Get class assignments for each faculty
+    faculty_data = []
+    for faculty in faculties:
+        assignment = ClassAssignment.query.filter_by(faculty_id=faculty.id).first()
+        student_count = 0
+        if assignment:
+            student_count = User.query.filter(
+                User.grade_level == assignment.grade_level,
+                User.section == assignment.section,
+                User.is_admin == False
+            ).count()
+        
+        faculty_data.append({
+            'faculty': faculty,
+            'assignment': assignment,
+            'student_count': student_count
+        })
+    
+    return render_template('manage_faculty.html', faculty_data=faculty_data)
+
+@admin_bp.route('/create-faculty', methods=['POST'])
+@login_required
+def create_faculty():
+    if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Access denied'})
+    
+    firstname = request.form.get('firstname')
+    lastname = request.form.get('lastname')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    advisory_class = request.form.get('advisory_class')
+    
+    if not all([firstname, lastname, email, password, advisory_class]):
+        return jsonify({'success': False, 'message': 'All fields are required'})
+    
+    # Check if email already exists
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({'success': False, 'message': 'Email already exists'})
+    
+    try:
+        # Parse advisory class (e.g., "HUMSS 12 - MARX")
+        if not advisory_class:
+            return jsonify({'success': False, 'message': 'Advisory class is required'})
+            
+        parts = advisory_class.split(' - ')
+        if len(parts) != 2:
+            return jsonify({'success': False, 'message': 'Invalid advisory class format. Use format: "STRAND GRADE - SECTION"'})
+        
+        strand_grade = parts[0].strip()
+        section = parts[1].strip()
+        
+        # Extract grade level
+        grade_parts = strand_grade.split()
+        if len(grade_parts) < 2:
+            return jsonify({'success': False, 'message': 'Invalid format. Use format: "STRAND GRADE - SECTION"'})
+        
+        grade_level = grade_parts[-1]  # Get the last part as grade level
+        strand = ' '.join(grade_parts[:-1])  # Everything except the last part as strand
+        
+        # Create faculty user
+        faculty = User()
+        faculty.firstname = firstname
+        faculty.lastname = lastname
+        faculty.email = email
+        if password:
+            faculty.password_hash = generate_password_hash(password)
+        else:
+            return jsonify({'success': False, 'message': 'Password is required'})
+        faculty.gender = 'Other'  # Default value
+        faculty.strand = strand
+        faculty.grade_level = grade_level
+        faculty.section = section
+        faculty.is_admin = True
+        faculty.role = 'faculty'
+        
+        db.session.add(faculty)
+        db.session.flush()  # Get the faculty ID
+        
+        # Create class assignment
+        assignment = ClassAssignment()
+        assignment.faculty_id = faculty.id
+        assignment.grade_level = grade_level
+        assignment.section = section
+        
+        db.session.add(assignment)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Faculty created successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error creating faculty: {str(e)}'})
+
+@admin_bp.route('/faculty-students/<int:faculty_id>')
+@login_required
+def faculty_students(faculty_id):
+    if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
+        flash('Access denied. Only the main admin can view faculty students.', 'error')
+        return redirect(url_for('main.home'))
+    
+    faculty = User.query.get_or_404(faculty_id)
+    assignment = ClassAssignment.query.filter_by(faculty_id=faculty_id).first()
+    
+    students = []
+    if assignment:
+        students = User.query.filter(
+            User.grade_level == assignment.grade_level,
+            User.section == assignment.section,
+            User.is_admin == False
+        ).order_by(User.lastname, User.firstname).all()
+    
+    return render_template('faculty_students.html', 
+                         faculty=faculty, 
+                         assignment=assignment, 
+                         students=students)
 
 @admin_bp.route('/send-message/<int:user_id>', methods=['POST'])
 @login_required

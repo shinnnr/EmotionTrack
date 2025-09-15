@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Students - EmotionTrack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="admin-header bg-gradient-dark text-white p-4 rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-6 fw-bold mb-2">
+                            <i class="fas fa-users me-3"></i>
+                            {{ faculty.firstname }} {{ faculty.lastname }}'s Students
+                        </h1>
+                        {% if assignment %}
+                            <p class="lead mb-0">{{ faculty.strand }} {{ assignment.grade_level }} - {{ assignment.section }}</p>
+                        {% else %}
+                            <p class="lead mb-0">No class assignment</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-outline-light">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Faculty List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Faculty Info Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-3">
+                        <i class="fas fa-chalkboard-teacher text-primary me-2"></i>
+                        Faculty Information
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ faculty.firstname }} {{ faculty.lastname }}</p>
+                            <p><strong>Email:</strong> {{ faculty.email }}</p>
+                            <p><strong>Role:</strong> {{ faculty.role|title }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            {% if assignment %}
+                                <p><strong>Advisory Class:</strong> {{ faculty.strand }} {{ assignment.grade_level }} - {{ assignment.section }}</p>
+                                <p><strong>Total Students:</strong> {{ students|length }}</p>
+                            {% else %}
+                                <p class="text-muted">No class assignment</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-user-graduate text-success me-2"></i>
+                        Students in {{ assignment.section if assignment else 'No Section' }}
+                    </h5>
+                    
+                    {% if students %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Student Name</th>
+                                        <th>Email</th>
+                                        <th>Grade & Section</th>
+                                        <th>Strand</th>
+                                        <th>Joined Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                        <tr>
+                                            <td class="fw-bold">{{ student.firstname }} {{ student.lastname }}</td>
+                                            <td>{{ student.email }}</td>
+                                            <td>
+                                                <span class="badge bg-primary">Grade {{ student.grade_level }}</span>
+                                                <span class="badge bg-success">{{ student.section }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ student.strand }}</span>
+                                            </td>
+                                            <td>{{ student.created_at.strftime('%B %d, %Y') if student.created_at else 'N/A' }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="viewStudentProfile({{ student.id }})">
+                                                    <i class="fas fa-eye me-1"></i>View Profile
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No students found in this section</p>
+                            {% if assignment %}
+                                <small class="text-muted">Students will appear here when they register for {{ faculty.strand }} {{ assignment.grade_level }} - {{ assignment.section }}</small>
+                            {% else %}
+                                <small class="text-muted">Faculty needs a class assignment to have students</small>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student Profile Modal -->
+<div class="custom-modal-overlay" id="studentProfileOverlay" style="display: none;">
+    <div class="custom-modal">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-user me-2"></i>Student Profile
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeStudentProfileModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body" id="studentProfileContent">
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading profile...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-header {
+    border-left: 5px solid var(--clsu-gold);
+}
+
+.table th {
+    border-top: none;
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.badge {
+    margin-right: 0.25rem;
+}
+
+/* Custom Modal Styles */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1070;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    padding-left: 300px; /* Account for sidebar width */
+}
+
+.custom-modal {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: calc(100vw - 350px);
+    max-height: 90vh;
+    overflow: hidden;
+}
+
+.custom-modal-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #f8f9fa;
+}
+
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.custom-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.custom-modal-close:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.custom-modal-body {
+    padding: 1.5rem;
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .custom-modal-overlay {
+        padding-left: 20px;
+    }
+}
+</style>
+{% endblock %}
