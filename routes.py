@@ -56,25 +56,23 @@ def home():
             dass21_status['next_available_date'] = latest_dass.created_at + timedelta(days=7)
             dass21_status['last_taken_date'] = latest_dass.created_at
     
-    # Check for unread messages and new notifications
-    unread_messages_count = StudentMessage.query.filter_by(
-        sender_user_id=current_user.id, 
-        is_read=False
-    ).count()
-    
-    # Check if there are any admin responses the student hasn't seen
-    # (messages with admin_response that were responded to recently)
-    recent_responses = StudentMessage.query.filter(
+    # Check for new admin responses that student hasn't seen yet
+    # For now, count messages with admin responses from the last 3 days as "new"
+    # TODO: Add is_response_read_by_student field for proper tracking
+    new_admin_responses = StudentMessage.query.filter(
         StudentMessage.sender_user_id == current_user.id,
         StudentMessage.admin_response.is_not(None),
         StudentMessage.responded_at > datetime.utcnow() - timedelta(days=3)  # Responses in last 3 days
     ).count()
     
+    # Count unread messages is not currently used as it tracks admin-read status, not student-read status
+    unread_messages_count = 0  # Placeholder - will implement proper tracking later
+    
     notifications = {
         'dass21_available': dass21_status['can_take'],
         'unread_messages': unread_messages_count,
-        'recent_responses': recent_responses,
-        'has_notifications': dass21_status['can_take'] or unread_messages_count > 0 or recent_responses > 0
+        'recent_responses': new_admin_responses,
+        'has_notifications': dass21_status['can_take'] or new_admin_responses > 0
     }
     
     return render_template('home.html', 

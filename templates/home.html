@@ -100,7 +100,7 @@
                         
                         <div class="col-md-6 col-lg-3">
                             {% if dass21_status.can_take %}
-                                <a href="{{ url_for('main.dass21_quiz') }}" class="quick-action-card">
+                                <a href="{{ url_for('main.dass21_quiz') }}" class="quick-action-card position-relative">
                                     <div class="card bg-gradient-info text-white h-100">
                                         <div class="card-body text-center">
                                             <i class="fas fa-brain fa-2x mb-3"></i>
@@ -108,6 +108,11 @@
                                             <p class="card-text small">Evaluate your mental wellness</p>
                                         </div>
                                     </div>
+                                    <!-- Notification indicator for available assessment -->
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                                        <i class="fas fa-exclamation"></i>
+                                        <span class="visually-hidden">new assessment available</span>
+                                    </span>
                                 </a>
                             {% else %}
                                 <div class="quick-action-card disabled-card">
@@ -123,7 +128,7 @@
                         </div>
                         
                         <div class="col-md-6 col-lg-3">
-                            <a href="{{ url_for('main.consultation') }}" class="quick-action-card">
+                            <a href="{{ url_for('main.consultation') }}" class="quick-action-card position-relative">
                                 <div class="card bg-gradient-success text-white h-100">
                                     <div class="card-body text-center">
                                         <i class="fas fa-user-md fa-2x mb-3"></i>
@@ -131,6 +136,17 @@
                                         <p class="card-text small">Connect with guidance counselors</p>
                                     </div>
                                 </div>
+                                <!-- Notification indicator for new messages -->
+                                {% if notifications.recent_responses > 0 %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                                        {% if notifications.recent_responses > 0 %}
+                                            {{ notifications.recent_responses }}
+                                        {% else %}
+                                            <i class="fas fa-reply"></i>
+                                        {% endif %}
+                                        <span class="visually-hidden">new admin responses</span>
+                                    </span>
+                                {% endif %}
                             </a>
                         </div>
                         
@@ -412,6 +428,32 @@ document.addEventListener('keydown', function(event) {
 
 .disabled-card {
     cursor: not-allowed;
+}
+
+/* Notification badge styles */
+.notification-badge {
+    width: 24px;
+    height: 24px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    animation: pulse 2s infinite;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 /* Custom Modal Styles */
