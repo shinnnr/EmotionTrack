@@ -732,9 +732,9 @@ def manage_faculty():
         flash('Access denied. Only the main admin can manage faculty.', 'error')
         return redirect(url_for('main.home'))
     
-    # Get all faculty members (users with role 'faculty' or 'guidance_admin' but not main admin)
+    # Get all faculty members (users with role 'faculty_admin' or 'guidance_admin' but not main admin)
     faculties = User.query.filter(
-        User.role.in_(['faculty', 'guidance_admin']),
+        User.role.in_(['faculty_admin', 'guidance_admin']),
         User.email != 'admin@emotiontrack.app'
     ).all()
     
@@ -812,7 +812,7 @@ def create_faculty():
         faculty.grade_level = grade_level
         faculty.section = section
         faculty.is_admin = True
-        faculty.role = 'faculty'
+        faculty.role = 'faculty_admin'
         
         db.session.add(faculty)
         db.session.flush()  # Get the faculty ID
