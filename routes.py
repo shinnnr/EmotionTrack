@@ -14,6 +14,31 @@ auth_bp = Blueprint('auth', __name__)
 api_bp = Blueprint('api', __name__)
 admin_bp = Blueprint('admin', __name__)
 
+# Helper functions for faculty admin access control
+def get_faculty_assignment(user):
+    """Get the class assignment for a faculty admin user"""
+    if not user.is_admin:
+        return None
+    return ClassAssignment.query.filter_by(faculty_id=user.id).first()
+
+def get_students_for_faculty(user):
+    """Get students that a faculty admin can access based on their assignment"""
+    # Main admin can see all students
+    if user.email == 'admin@emotiontrack.app':
+        return User.query.filter_by(is_admin=False)
+    
+    # Faculty admin can only see students in their assigned section
+    assignment = get_faculty_assignment(user)
+    if assignment:
+        return User.query.filter(
+            User.grade_level == assignment.grade_level,
+            User.section == assignment.section,
+            User.is_admin == False
+        )
+    
+    # If no assignment, return empty query
+    return User.query.filter(User.id == -1)  # Impossible condition to return empty
+
 # Main routes
 @main_bp.route('/')
 def index():
