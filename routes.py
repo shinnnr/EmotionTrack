@@ -713,11 +713,9 @@ def messages():
         flash('Access denied. Admin privileges required.', 'error')
         return redirect(url_for('main.home'))
     
-    # Get all students who have sent messages, grouped by student
-    students_with_messages = db.session.query(User).join(StudentMessage, User.id == StudentMessage.sender_user_id).distinct().all()
-    
-    # Get all students for the complete list
-    all_students = User.query.filter_by(is_admin=False).all()
+    # Get students accessible to this faculty admin (filtered by section)
+    accessible_students_query = get_students_for_faculty(current_user)
+    all_students = accessible_students_query.all()
     
     student_conversations = []
     
@@ -775,6 +773,12 @@ def student_chat(user_id):
     student = User.query.get_or_404(user_id)
     if student.is_admin:
         flash('Cannot chat with admin users.', 'error')
+        return redirect(url_for('admin.messages'))
+    
+    # Check if faculty admin can access this student (section-based access control)
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+    if student.id not in accessible_student_ids:
+        flash('Access denied. You can only chat with students in your advisory section.', 'error')
         return redirect(url_for('admin.messages'))
     
     # Get all messages for this student
