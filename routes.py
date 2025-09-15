@@ -56,7 +56,32 @@ def home():
             dass21_status['next_available_date'] = latest_dass.created_at + timedelta(days=7)
             dass21_status['last_taken_date'] = latest_dass.created_at
     
-    return render_template('home.html', recent_logs=recent_logs, latest_dass=latest_dass, dass21_status=dass21_status)
+    # Check for unread messages and new notifications
+    unread_messages_count = StudentMessage.query.filter_by(
+        sender_user_id=current_user.id, 
+        is_read=False
+    ).count()
+    
+    # Check if there are any admin responses the student hasn't seen
+    # (messages with admin_response that were responded to recently)
+    recent_responses = StudentMessage.query.filter(
+        StudentMessage.sender_user_id == current_user.id,
+        StudentMessage.admin_response.is_not(None),
+        StudentMessage.responded_at > datetime.utcnow() - timedelta(days=3)  # Responses in last 3 days
+    ).count()
+    
+    notifications = {
+        'dass21_available': dass21_status['can_take'],
+        'unread_messages': unread_messages_count,
+        'recent_responses': recent_responses,
+        'has_notifications': dass21_status['can_take'] or unread_messages_count > 0 or recent_responses > 0
+    }
+    
+    return render_template('home.html', 
+                         recent_logs=recent_logs, 
+                         latest_dass=latest_dass, 
+                         dass21_status=dass21_status,
+                         notifications=notifications)
 
 @main_bp.route('/profile')
 @login_required
