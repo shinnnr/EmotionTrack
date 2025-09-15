@@ -1123,16 +1123,31 @@ def get_dashboard_stats():
     if not current_user.is_admin:
         return jsonify({'error': 'Access denied'}), 403
     
-    total_users = User.query.filter_by(is_admin=False).count()
-    total_logs = MoodLog.query.count()
-    unread_messages = StudentMessage.query.filter_by(is_read=False).count()
+    # Get students accessible to this faculty admin (filtered by section)
+    accessible_students_query = get_students_for_faculty(current_user)
+    accessible_student_ids = [user.id for user in accessible_students_query.all()]
     
-    # Count high risk students
-    concerning_count = db.session.query(DASS21Result).join(User, DASS21Result.user_id == User.id).filter(
-        (DASS21Result.depression_severity.in_(['Severe', 'Extremely Severe'])) |
-        (DASS21Result.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
-        (DASS21Result.stress_severity.in_(['Severe', 'Extremely Severe']))
-    ).count()
+    total_users = accessible_students_query.count()
+    
+    # Filter other statistics by accessible students
+    if accessible_student_ids:
+        total_logs = MoodLog.query.filter(MoodLog.user_id.in_(accessible_student_ids)).count()
+        unread_messages = StudentMessage.query.filter(
+            StudentMessage.sender_user_id.in_(accessible_student_ids),
+            StudentMessage.is_read == False
+        ).count()
+        
+        # Count high risk students in accessible section
+        concerning_count = db.session.query(DASS21Result).join(User, DASS21Result.user_id == User.id).filter(
+            (DASS21Result.depression_severity.in_(['Severe', 'Extremely Severe'])) |
+            (DASS21Result.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
+            (DASS21Result.stress_severity.in_(['Severe', 'Extremely Severe'])),
+            DASS21Result.user_id.in_(accessible_student_ids)
+        ).count()
+    else:
+        total_logs = 0
+        unread_messages = 0
+        concerning_count = 0
     
     return jsonify({
         'total_users': total_users,
@@ -1152,6 +1167,11 @@ def get_student_profile(user_id):
         student = User.query.get_or_404(user_id)
         if student.is_admin:
             return jsonify({'error': 'Cannot view admin profiles'}), 400
+        
+        # Check if faculty admin can access this student (section-based access control)
+        accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+        if student.id not in accessible_student_ids:
+            return jsonify({'error': 'Access denied. You can only view students in your advisory section.'}), 403
         
         # Get recent DASS-21 results
         dass21_results = DASS21Result.query.filter_by(user_id=user_id).order_by(DASS21Result.created_at.desc()).limit(5).all()
@@ -1499,8 +1519,9 @@ def get_admin_messages():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         
-        # Get all students with their latest message
-        students_with_messages = db.session.query(User).filter_by(is_admin=False).all()
+        # Get students accessible to this faculty admin (filtered by section)
+        accessible_students_query = get_students_for_faculty(current_user)
+        students_with_messages = accessible_students_query.all()
         
         conversations = []
         for student in students_with_messages:
@@ -1567,33 +1588,36 @@ def get_students_by_hierarchy():
         grade = request.args.get('grade')
         section = request.args.get('section')
         
+        # Get students accessible to this faculty admin
+        accessible_students_query = get_students_for_faculty(current_user)
+        
         if not strand and not grade and not section:
-            # Return all strands
-            strands = db.session.query(User.strand).filter(User.strand.isnot(None), User.is_admin == False).distinct().all()
+            # Return all strands from accessible students
+            strands = accessible_students_query.filter(User.strand.isnot(None)).with_entities(User.strand).distinct().all()
             return jsonify({
                 'type': 'strands',
                 'data': [s[0] for s in strands if s[0]]
             })
         
         elif strand and not grade and not section:
-            # Return grades for this strand
-            grades = db.session.query(User.grade_level).filter_by(strand=strand, is_admin=False).filter(User.grade_level.isnot(None)).distinct().all()
+            # Return grades for this strand from accessible students
+            grades = accessible_students_query.filter_by(strand=strand).filter(User.grade_level.isnot(None)).with_entities(User.grade_level).distinct().all()
             return jsonify({
                 'type': 'grades',
                 'data': [g[0] for g in grades if g[0]]
             })
         
         elif strand and grade and not section:
-            # Return sections for this strand and grade
-            sections = db.session.query(User.section).filter_by(strand=strand, grade_level=grade, is_admin=False).filter(User.section.isnot(None)).distinct().all()
+            # Return sections for this strand and grade from accessible students
+            sections = accessible_students_query.filter_by(strand=strand, grade_level=grade).filter(User.section.isnot(None)).with_entities(User.section).distinct().all()
             return jsonify({
                 'type': 'sections',
                 'data': [s[0] for s in sections if s[0]]
             })
         
         elif strand and grade and section:
-            # Return students for this strand, grade, and section
-            students = User.query.filter_by(strand=strand, grade_level=grade, section=section, is_admin=False).all()
+            # Return students for this strand, grade, and section from accessible students
+            students = accessible_students_query.filter_by(strand=strand, grade_level=grade, section=section).all()
             return jsonify({
                 'type': 'students',
                 'data': [{
@@ -1620,8 +1644,24 @@ def get_recent_mood_logs():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         
-        # Get recent mood logs with user information
-        logs_query = MoodLog.query.join(User, MoodLog.user_id == User.id).order_by(desc(MoodLog.log_date))
+        # Get students accessible to this faculty admin
+        accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+        
+        if not accessible_student_ids:
+            # Return empty result if no accessible students
+            return jsonify({
+                'success': True,
+                'data': [],
+                'pagination': {
+                    'page': 1, 'pages': 0, 'per_page': per_page, 'total': 0,
+                    'has_prev': False, 'has_next': False, 'prev_num': None, 'next_num': None
+                }
+            })
+        
+        # Get recent mood logs with user information (filtered by accessible students)
+        logs_query = MoodLog.query.join(User, MoodLog.user_id == User.id).filter(
+            MoodLog.user_id.in_(accessible_student_ids)
+        ).order_by(desc(MoodLog.log_date))
         
         logs_paginated = logs_query.paginate(page=page, per_page=per_page, error_out=False)
         
@@ -1660,13 +1700,27 @@ def get_high_risk_students():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 3, type=int)
         
-        # Get latest DASS-21 assessment for each user (subquery)
+        # Get students accessible to this faculty admin
+        accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+        
+        if not accessible_student_ids:
+            # Return empty result if no accessible students
+            return jsonify({
+                'success': True,
+                'data': [],
+                'pagination': {
+                    'page': 1, 'pages': 0, 'per_page': per_page, 'total': 0,
+                    'has_prev': False, 'has_next': False, 'prev_num': None, 'next_num': None
+                }
+            })
+        
+        # Get latest DASS-21 assessment for each accessible user (subquery)
         latest_dass_subquery = db.session.query(
             DASS21Result.user_id,
             func.max(DASS21Result.created_at).label('max_created_at')
-        ).group_by(DASS21Result.user_id).subquery()
+        ).filter(DASS21Result.user_id.in_(accessible_student_ids)).group_by(DASS21Result.user_id).subquery()
         
-        # Get high risk students based on most recent DASS-21 results
+        # Get high risk students based on most recent DASS-21 results (filtered by accessible students)
         high_risk_query = DASS21Result.query.join(
             latest_dass_subquery,
             (DASS21Result.user_id == latest_dass_subquery.c.user_id) &
@@ -1674,7 +1728,8 @@ def get_high_risk_students():
         ).join(User, DASS21Result.user_id == User.id).filter(
             (DASS21Result.depression_severity.in_(['Severe', 'Extremely Severe'])) |
             (DASS21Result.anxiety_severity.in_(['Severe', 'Extremely Severe'])) |
-            (DASS21Result.stress_severity.in_(['Severe', 'Extremely Severe']))
+            (DASS21Result.stress_severity.in_(['Severe', 'Extremely Severe'])),
+            DASS21Result.user_id.in_(accessible_student_ids)
         ).order_by(desc(DASS21Result.created_at))
         
         risk_paginated = high_risk_query.paginate(page=page, per_page=per_page, error_out=False)
