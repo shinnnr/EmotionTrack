@@ -53,12 +53,12 @@ function setupTextareaHandlers(textareaId) {
         this.style.height = (this.scrollHeight) + 'px';
     });
     
-    // Send message on Enter key (but not Shift+Enter)
+    // Disabled automatic sending on Enter key - users must click Send button explicitly
+    // This prevents accidental sending when using suggested responses
     textarea.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            const conversationType = textareaId.includes('guidance') ? 'guidance_office' : 'faculty_adviser';
-            sendMessage(conversationType);
+            // No automatic submission - users must click Send button
         }
     });
 }
