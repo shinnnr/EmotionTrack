@@ -149,11 +149,16 @@ async function sendMessage(conversationType) {
     }
 }
 
-function addMessageToChat(messageText, type, chatType) {
+function addMessageToChat(messageText, type, chatType, messageId = null) {
     const chatContainer = document.getElementById(chatType === 'guidance' ? 'guidanceMessages' : 'facultyMessages');
     const messageDiv = document.createElement('div');
     
     const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    // Set message ID if provided to prevent duplicates
+    if (messageId) {
+        messageDiv.setAttribute('data-message-id', messageId);
+    }
     
     if (type === 'student') {
         messageDiv.className = 'message-bubble student-message';
@@ -242,8 +247,8 @@ function updateChatMessages(messages, chatType) {
         // Check if message already exists to avoid duplicates
         const existingMessage = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
         if (!existingMessage && message.admin_response) {
-            // Add new admin response
-            addMessageToChat(message.admin_response, 'admin', chatType);
+            // Add new admin response with message ID to prevent duplicates
+            addMessageToChat(message.admin_response, 'admin', chatType, message.id);
             
             // Show notification if not on active tab
             const activeTab = document.querySelector('#consultationTabs .nav-link.active');
