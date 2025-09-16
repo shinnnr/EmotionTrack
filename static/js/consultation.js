@@ -151,6 +151,15 @@ async function sendMessage(conversationType) {
 
 function addMessageToChat(messageText, type, chatType, messageId = null) {
     const chatContainer = document.getElementById(chatType === 'guidance' ? 'guidanceMessages' : 'facultyMessages');
+    
+    // Check for duplicate messages if messageId is provided
+    if (messageId) {
+        const existingMessage = chatContainer.querySelector(`[data-message-id="${messageId}"]`);
+        if (existingMessage) {
+            return; // Message already exists, don't add duplicate
+        }
+    }
+    
     const messageDiv = document.createElement('div');
     
     const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -205,14 +214,25 @@ function scrollToBottom(chatType) {
 }
 
 // Real-time polling functions
+let pollingInterval = null;
+let lastSeenIds = {
+    guidance: 0,
+    faculty: 0
+};
+
 function startRealtimePolling() {
+    // Prevent multiple polling intervals
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+    
     // Poll for new messages every 5 seconds
-    setInterval(checkForNewMessages, 5000);
+    pollingInterval = setInterval(checkForNewMessages, 5000);
 }
 
 async function checkForNewMessages() {
     try {
-        const response = await fetch('/consultation/poll-messages', {
+        const response = await fetch(`/consultation/poll-messages?since_guidance_id=${lastSeenIds.guidance}&since_faculty_id=${lastSeenIds.faculty}`, {
             method: 'GET',
             headers: {
                 'X-CSRFToken': document.querySelector('[name=csrf_token]')?.value || ''
@@ -225,11 +245,17 @@ async function checkForNewMessages() {
             // Update guidance office messages
             if (data.guidance_office && data.guidance_office.length > 0) {
                 updateChatMessages(data.guidance_office, 'guidance');
+                // Update last seen ID
+                const lastMsg = data.guidance_office[data.guidance_office.length - 1];
+                lastSeenIds.guidance = Math.max(lastSeenIds.guidance, lastMsg.id);
             }
             
             // Update faculty adviser messages
             if (data.faculty_adviser && data.faculty_adviser.length > 0) {
                 updateChatMessages(data.faculty_adviser, 'faculty');
+                // Update last seen ID
+                const lastMsg = data.faculty_adviser[data.faculty_adviser.length - 1];
+                lastSeenIds.faculty = Math.max(lastSeenIds.faculty, lastMsg.id);
             }
             
             // Update unread counts
@@ -241,13 +267,9 @@ async function checkForNewMessages() {
 }
 
 function updateChatMessages(messages, chatType) {
-    const messagesContainer = document.getElementById(chatType === 'guidance' ? 'guidanceMessages' : 'facultyMessages');
-    
     messages.forEach(message => {
-        // Check if message already exists to avoid duplicates
-        const existingMessage = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
-        if (!existingMessage && message.admin_response) {
-            // Add new admin response with message ID to prevent duplicates
+        if (message.admin_response) {
+            // Add new admin response with message ID for deduplication
             addMessageToChat(message.admin_response, 'admin', chatType, message.id);
             
             // Show notification if not on active tab

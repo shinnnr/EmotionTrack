@@ -160,22 +160,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (result.success) {
-                // Add message to chat immediately
-                const messageHtml = `
-                    <div class="message-bubble admin-message">
-                        <div class="message-content">
-                            <div class="message-sender">You (Guidance Counselor)</div>
-                            <div class="message-text">${messageText}</div>
-                            <div class="message-time">
-                                ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                <br><small class="text-muted">${new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})}</small>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                chatContainer.insertAdjacentHTML('beforeend', messageHtml);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
+                // Add message to chat immediately with temporary ID to prevent duplication
+                addMessageToChat(messageText, 'admin', null, `temp-${Date.now()}`);
                 
                 // Clear input
                 messageInput.value = '';
@@ -212,11 +198,129 @@ document.addEventListener('DOMContentLoaded', function() {
         loadSuggestedResponses();
     });
     
+    // Start real-time polling for new student messages
+    startAdminPolling();
+    
     // Auto-scroll to bottom on page load
     setTimeout(() => {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }, 100);
 });
+
+// Admin real-time polling functions
+let adminPollingInterval = null;
+let lastSeenMessageId = 0;
+
+function startAdminPolling() {
+    // Prevent multiple polling intervals
+    if (adminPollingInterval) {
+        clearInterval(adminPollingInterval);
+    }
+    
+    // Initialize last seen ID from existing messages
+    const existingMessages = document.querySelectorAll('#chatContainer [data-message-id]');
+    existingMessages.forEach(msg => {
+        const messageId = parseInt(msg.getAttribute('data-message-id'));
+        if (!isNaN(messageId)) {
+            lastSeenMessageId = Math.max(lastSeenMessageId, messageId);
+        }
+    });
+    
+    // Poll for new messages every 5 seconds
+    adminPollingInterval = setInterval(checkForNewStudentMessages, 5000);
+}
+
+async function checkForNewStudentMessages() {
+    try {
+        const response = await fetch(`{{ url_for('admin.poll_student_messages', user_id=student.id) }}?since_id=${lastSeenMessageId}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success && data.messages && data.messages.length > 0) {
+                data.messages.forEach(message => {
+                    if (message.is_student_message && message.message_text) {
+                        // Add new student message
+                        addMessageToChat(message.message_text, 'student', message.created_at, message.id);
+                    } else if (message.is_admin_message && message.admin_response) {
+                        // Add admin message (in case of other admins responding)
+                        addMessageToChat(message.admin_response, 'admin', message.responded_at, message.id);
+                    }
+                    
+                    // Update last seen ID
+                    lastSeenMessageId = Math.max(lastSeenMessageId, message.id);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error polling for new messages:', error);
+    }
+}
+
+function addMessageToChat(messageText, messageType, timestamp, messageId = null) {
+    const chatContainer = document.getElementById('chatContainer');
+    
+    // Check for duplicate messages if messageId is provided
+    if (messageId) {
+        const existingMessage = chatContainer.querySelector(`[data-message-id="${messageId}"]`);
+        if (existingMessage) {
+            return; // Message already exists, don't add duplicate
+        }
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message-bubble';
+    
+    // Add message ID for deduplication if provided
+    if (messageId) {
+        messageDiv.setAttribute('data-message-id', messageId);
+    }
+    
+    const time = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                           : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const date = timestamp ? new Date(timestamp).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
+                           : new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'});
+    
+    if (messageType === 'student') {
+        messageDiv.classList.add('student-message');
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                <div class="message-sender">{{ student.full_name }}</div>
+                <div class="message-text">${messageText}</div>
+                <div class="message-time">
+                    ${time}
+                    <br><small class="text-muted">${date}</small>
+                </div>
+            </div>
+        `;
+    } else {
+        messageDiv.classList.add('admin-message');
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                <div class="message-sender">You ({{ 'Guidance Counselor' if current_user.email == 'admin@emotiontrack.app' else 'Faculty Adviser' }})</div>
+                <div class="message-text">${messageText}</div>
+                <div class="message-time">
+                    ${time}
+                    <br><small class="text-muted">${date}</small>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Remove empty chat message if it exists
+    const emptyChat = chatContainer.querySelector('.empty-chat');
+    if (emptyChat) {
+        emptyChat.remove();
+    }
+    
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
 
 async function loadSuggestedResponses() {
     const suggestedResponsesContent = document.getElementById('suggestedResponsesContent');

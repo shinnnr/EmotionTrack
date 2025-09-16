@@ -479,18 +479,28 @@ def consultation():
 @main_bp.route('/consultation/poll-messages', methods=['GET'])
 @login_required
 def poll_messages():
-    """API endpoint for polling new messages in real-time"""
+    """API endpoint for polling new messages in real-time for students"""
     try:
-        # Get the latest messages since last poll
+        # Get parameters for incremental updates
+        since_guidance_id = request.args.get('since_guidance_id', 0, type=int)
+        since_faculty_id = request.args.get('since_faculty_id', 0, type=int)
+        
+        # Get new admin responses since last poll
         guidance_messages = StudentMessage.query.filter_by(
             sender_user_id=current_user.id,
             conversation_type='guidance_office'
-        ).filter(StudentMessage.admin_response.isnot(None)).order_by(StudentMessage.responded_at.desc()).limit(5).all()
+        ).filter(
+            StudentMessage.admin_response.isnot(None),
+            StudentMessage.id > since_guidance_id
+        ).order_by(StudentMessage.id).all()
         
         faculty_messages = StudentMessage.query.filter_by(
             sender_user_id=current_user.id,
             conversation_type='faculty_adviser'
-        ).filter(StudentMessage.admin_response.isnot(None)).order_by(StudentMessage.responded_at.desc()).limit(5).all()
+        ).filter(
+            StudentMessage.admin_response.isnot(None),
+            StudentMessage.id > since_faculty_id
+        ).order_by(StudentMessage.id).all()
         
         # Count unread messages
         guidance_unread = StudentMessage.query.filter_by(
@@ -511,10 +521,11 @@ def poll_messages():
                 'id': message.id,
                 'admin_response': message.admin_response,
                 'responded_at': message.responded_at.isoformat() if message.responded_at else None,
-                'conversation_type': message.conversation_type
+                'conversation_type': message.conversation_type,
+                'responded_by_admin_id': message.responded_by_admin_id
             }
         
-        return jsonify({
+        response = jsonify({
             'guidance_office': [message_to_dict(m) for m in guidance_messages],
             'faculty_adviser': [message_to_dict(m) for m in faculty_messages],
             'unread_counts': {
@@ -522,6 +533,10 @@ def poll_messages():
                 'faculty_adviser': faculty_unread
             }
         })
+        
+        # Prevent caching
+        response.headers['Cache-Control'] = 'no-store'
+        return response
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1108,6 +1123,65 @@ def send_message(user_id):
     db.session.commit()
     
     return jsonify({'success': True, 'message': 'Message sent successfully'})
+
+@admin_bp.route('/poll-student-messages/<int:user_id>', methods=['GET'])
+@login_required
+def poll_student_messages(user_id):
+    """API endpoint for polling new student messages in real-time for admins"""
+    try:
+        if not current_user.is_admin:
+            return jsonify({'error': 'Access denied'}), 403
+        
+        student = User.query.get_or_404(user_id)
+        if student.is_admin:
+            return jsonify({'error': 'Cannot poll admin users'}), 400
+        
+        # Check if faculty admin can access this student
+        is_main_admin = current_user.email == 'admin@emotiontrack.app'
+        if not is_main_admin:
+            accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+            if student.id not in accessible_student_ids:
+                return jsonify({'error': 'Access denied'}), 403
+        
+        # Get parameters for incremental updates
+        since_id = request.args.get('since_id', 0, type=int)
+        
+        # Determine conversation type based on admin role
+        conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
+        
+        # Get new student messages since last poll
+        new_messages = StudentMessage.query.filter_by(
+            sender_user_id=user_id,
+            conversation_type=conversation_type
+        ).filter(
+            StudentMessage.id > since_id
+        ).order_by(StudentMessage.id).all()
+        
+        # Convert messages to JSON format
+        def message_to_dict(message):
+            return {
+                'id': message.id,
+                'message_text': message.message_text,
+                'admin_response': message.admin_response,
+                'created_at': message.created_at.isoformat() if message.created_at else None,
+                'responded_at': message.responded_at.isoformat() if message.responded_at else None,
+                'conversation_type': message.conversation_type,
+                'responded_by_admin_id': message.responded_by_admin_id,
+                'is_student_message': bool(message.message_text),
+                'is_admin_message': bool(message.admin_response)
+            }
+        
+        response = jsonify({
+            'success': True,
+            'messages': [message_to_dict(m) for m in new_messages]
+        })
+        
+        # Prevent caching
+        response.headers['Cache-Control'] = 'no-store'
+        return response
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @admin_bp.route('/suggested-responses/<int:user_id>')
 @login_required
