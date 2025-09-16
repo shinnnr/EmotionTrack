@@ -166,8 +166,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (result.success) {
-                // Add message to chat immediately with temporary ID to prevent duplication
-                addMessageToChat(messageText, 'admin', null, `temp-${Date.now()}`);
+                // Don't add message immediately - let polling handle it to avoid duplication
+                // The real-time polling will show the message within 5 seconds
                 
                 // Clear input
                 messageInput.value = '';
