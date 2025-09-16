@@ -1330,6 +1330,10 @@ function showAnalyticsModal() {
     return new Promise((resolve) => {
         const modal = document.createElement('div');
         modal.className = 'modal fade';
+        
+        // Check if user is main admin to show filtering controls
+        const isMainAdmin = window.adminConfig && window.adminConfig.isMainAdmin;
+        
         modal.innerHTML = `
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
@@ -1341,37 +1345,39 @@ function showAnalyticsModal() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        ${isMainAdmin ? `
+                        <div class="analytics-filters mb-4">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Filter by Strand</label>
+                                    <select id="analyticsStrandFilter" class="form-select" onchange="updateAnalytics()">
+                                        <option value="">All Strands</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Filter by Grade</label>
+                                    <select id="analyticsGradeFilter" class="form-select" onchange="updateAnalytics()">
+                                        <option value="">All Grades</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Filter by Section</label>
+                                    <select id="analyticsSectionFilter" class="form-select" onchange="updateAnalytics()">
+                                        <option value="">All Sections</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-outline-secondary w-100" onclick="clearAnalyticsFilters()">
+                                        <i class="fas fa-times me-1"></i>Clear Filters
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
                         <div class="analytics-dashboard">
                             <div class="text-center p-4">
                                 <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
                                 <p class="mt-2 text-muted">Loading analytics data...</p>
-                            </div>
-                            
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="analytics-chart">
-                                        <h6 class="fw-bold mb-3">Emotion Trends</h6>
-                                        <canvas id="emotionTrendsChart" width="400" height="250"></canvas>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="analytics-chart">
-                                        <h6 class="fw-bold mb-3">DASS-21 Distribution</h6>
-                                        <canvas id="dassDistributionChart" width="400" height="250"></canvas>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="analytics-chart">
-                                        <h6 class="fw-bold mb-3">Daily Activity</h6>
-                                        <canvas id="activityChart" width="400" height="250"></canvas>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="analytics-chart">
-                                        <h6 class="fw-bold mb-3">Sleep Patterns</h6>
-                                        <canvas id="sleepPatternsChart" width="400" height="250"></canvas>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -1403,124 +1409,128 @@ function showAnalyticsModal() {
 
 async function initializeAnalyticsCharts() {
     try {
-        // Fetch analytics data from API
-        const response = await fetch('/admin/api/analytics-data');
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        const analyticsData = await response.json();
-        
         // Show loading state
         document.querySelector('.analytics-dashboard').innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading analytics data...</div>';
         
-        // Delay to show the analytics data is being loaded
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Reset the modal content
-        const modal = document.querySelector('.modal-content');
-        if (modal) {
-            modal.innerHTML = `
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title">
-                        <i class="fas fa-analytics me-2"></i>
-                        Wellness Analytics Dashboard
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="analytics-dashboard">
-                        <div class="row g-4 mb-4">
-                            <div class="col-md-3">
-                                <div class="analytics-metric">
-                                    <h6 class="text-muted">Total Mood Logs</h6>
-                                    <div class="h3 text-primary">${analyticsData.mood_distribution?.reduce((sum, item) => sum + item.count, 0) || 0}</div>
-                                    <small class="text-muted">All time</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="analytics-metric">
-                                    <h6 class="text-muted">Average Energy Level</h6>
-                                    <div class="h3 text-success">${analyticsData.average_energy ? analyticsData.average_energy.toFixed(1) + '/10' : 'N/A'}</div>
-                                    <small class="text-muted">Current average</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="analytics-metric">
-                                    <h6 class="text-muted">Total Students</h6>
-                                    <div class="h3 text-info">${analyticsData.total_users || 0}</div>
-                                    <small class="text-muted">Registered students</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="analytics-metric">
-                                    <h6 class="text-muted">High Risk Cases</h6>
-                                    <div class="h3 text-warning">${analyticsData.concerning_students || 0}</div>
-                                    <small class="text-muted">Severe DASS-21 scores</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row g-4 mb-4">
-                            <div class="col-md-3">
-                                <div class="analytics-metric">
-                                    <h6 class="text-muted">DASS-21 Assessments</h6>
-                                    <div class="h3 text-info">${analyticsData.dass_severity?.reduce((sum, item) => sum + item.count, 0) || 0}</div>
-                                    <small class="text-muted">Completed</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="analytics-metric">
-                                    <h6 class="text-muted">Monthly Average</h6>
-                                    <div class="h3 text-success">${analyticsData.monthly_activity?.length > 0 ? Math.round(analyticsData.monthly_activity.reduce((sum, item) => sum + item.count, 0) / analyticsData.monthly_activity.length) : 0}</div>
-                                    <small class="text-muted">Logs per month</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="analytics-metric">
-                                    <h6 class="text-muted">Risk Cases</h6>
-                                    <div class="h3 text-warning">${analyticsData.dass_severity?.filter(item => item.severity === 'Severe' || item.severity === 'Extremely Severe').reduce((sum, item) => sum + item.count, 0) || 0}</div>
-                                    <small class="text-danger">Severe/Extremely Severe</small>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="analytics-chart">
-                                    <h6 class="fw-bold mb-3">Mood Distribution</h6>
-                                    <canvas id="emotionTrendsChart" width="400" height="250"></canvas>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="analytics-chart">
-                                    <h6 class="fw-bold mb-3">DASS-21 Severity Distribution</h6>
-                                    <canvas id="dassDistributionChart" width="400" height="250"></canvas>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="analytics-chart">
-                                    <h6 class="fw-bold mb-3">Monthly Activity</h6>
-                                    <canvas id="activityChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="window.print()">
-                        <i class="fas fa-print me-1"></i>Print Analytics
-                    </button>
-                </div>
-            `;
+        // For main admin, populate filter dropdowns first
+        const isMainAdmin = window.adminConfig && window.adminConfig.isMainAdmin;
+        if (isMainAdmin) {
+            await populateFilterDropdowns();
         }
-
-        // Initialize charts with real data
-        initializeChartsWithData(analyticsData);
+        
+        // Load analytics with current filters
+        await updateAnalyticsData();
         
     } catch (error) {
         console.error('Error loading analytics data:', error);
         document.querySelector('.analytics-dashboard').innerHTML = '<div class="alert alert-danger text-center">Failed to load analytics data. Please try again.</div>';
     }
+}
+
+async function updateAnalyticsData() {
+    try {
+        // Build API URL with filters for main admin
+        let apiUrl = '/admin/api/analytics-data';
+        const isMainAdmin = window.adminConfig && window.adminConfig.isMainAdmin;
+        
+        if (isMainAdmin) {
+            const strandFilter = document.getElementById('analyticsStrandFilter')?.value;
+            const gradeFilter = document.getElementById('analyticsGradeFilter')?.value;
+            const sectionFilter = document.getElementById('analyticsSectionFilter')?.value;
+            
+            const params = new URLSearchParams();
+            if (strandFilter) params.set('strand', strandFilter);
+            if (gradeFilter) params.set('grade', gradeFilter);
+            if (sectionFilter) params.set('section', sectionFilter);
+            
+            if (params.toString()) {
+                apiUrl += '?' + params.toString();
+            }
+        }
+        
+        // Fetch analytics data from API
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const analyticsData = await response.json();
+        
+        // Update analytics dashboard content
+        renderAnalyticsDashboard(analyticsData, isMainAdmin);
+        
+    } catch (error) {
+        console.error('Error updating analytics data:', error);
+        document.querySelector('.analytics-dashboard').innerHTML = '<div class="alert alert-danger text-center">Failed to load analytics data. Please try again.</div>';
+    }
+}
+
+function renderAnalyticsDashboard(analyticsData, isMainAdmin) {
+    const strandBreakdownChart = isMainAdmin && analyticsData.strand_breakdown && analyticsData.strand_breakdown.length > 0 ? `
+        <div class="col-md-6">
+            <div class="analytics-chart">
+                <h6 class="fw-bold mb-3">Students by Strand</h6>
+                <canvas id="strandBreakdownChart" width="400" height="250"></canvas>
+            </div>
+        </div>
+    ` : '';
+    
+    document.querySelector('.analytics-dashboard').innerHTML = `
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="analytics-metric">
+                    <h6 class="text-muted">Total Mood Logs</h6>
+                    <div class="h3 text-primary">${analyticsData.mood_distribution?.reduce((sum, item) => sum + item.count, 0) || 0}</div>
+                    <small class="text-muted">All time</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="analytics-metric">
+                    <h6 class="text-muted">Average Energy Level</h6>
+                    <div class="h3 text-success">${analyticsData.average_energy ? analyticsData.average_energy.toFixed(1) + '/10' : 'N/A'}</div>
+                    <small class="text-muted">Current average</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="analytics-metric">
+                    <h6 class="text-muted">Total Students</h6>
+                    <div class="h3 text-info">${analyticsData.total_users || 0}</div>
+                    <small class="text-muted">Registered students</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="analytics-metric">
+                    <h6 class="text-muted">High Risk Cases</h6>
+                    <div class="h3 text-warning">${analyticsData.concerning_students || 0}</div>
+                    <small class="text-muted">Severe DASS-21 scores</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="analytics-chart">
+                    <h6 class="fw-bold mb-3">Mood Distribution</h6>
+                    <canvas id="emotionTrendsChart" width="400" height="250"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="analytics-chart">
+                    <h6 class="fw-bold mb-3">DASS-21 Severity Distribution</h6>
+                    <canvas id="dassDistributionChart" width="400" height="250"></canvas>
+                </div>
+            </div>
+            ${strandBreakdownChart}
+            <div class="col-md-${strandBreakdownChart ? '6' : '12'}">
+                <div class="analytics-chart">
+                    <h6 class="fw-bold mb-3">Monthly Activity</h6>
+                    <canvas id="activityChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Initialize charts with real data
+    initializeChartsWithData(analyticsData);
 }
 
 function initializeChartsWithData(analyticsData) {
@@ -1629,6 +1639,94 @@ function initializeChartsWithData(analyticsData) {
             }
         });
     }
+    
+    // Strand Breakdown Chart (for main admin only)
+    const strandCtx = document.getElementById('strandBreakdownChart');
+    if (strandCtx && analyticsData.strand_breakdown) {
+        const labels = analyticsData.strand_breakdown.map(item => item.strand);
+        const data = analyticsData.strand_breakdown.map(item => item.count);
+        
+        new Chart(strandCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Students by Strand',
+                    data: data,
+                    backgroundColor: [
+                        '#007bff', '#28a745', '#ffc107', '#dc3545', 
+                        '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+async function populateFilterDropdowns() {
+    try {
+        // Fetch available strands, grades, and sections for filtering
+        const response = await fetch('/admin/api/students-by-hierarchy');
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        
+        if (data.type === 'strands') {
+            // Populate strand dropdown
+            const strandSelect = document.getElementById('analyticsStrandFilter');
+            if (strandSelect) {
+                data.data.forEach(strand => {
+                    const option = document.createElement('option');
+                    option.value = strand;
+                    option.textContent = strand;
+                    strandSelect.appendChild(option);
+                });
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error populating filter dropdowns:', error);
+    }
+}
+
+window.updateAnalytics = async function() {
+    // Update analytics when filters change
+    await updateAnalyticsData();
+};
+
+window.clearAnalyticsFilters = function() {
+    // Clear all filter selections
+    const strandFilter = document.getElementById('analyticsStrandFilter');
+    const gradeFilter = document.getElementById('analyticsGradeFilter');
+    const sectionFilter = document.getElementById('analyticsSectionFilter');
+    
+    if (strandFilter) strandFilter.value = '';
+    if (gradeFilter) {
+        gradeFilter.innerHTML = '<option value="">All Grades</option>';
+    }
+    if (sectionFilter) {
+        sectionFilter.innerHTML = '<option value="">All Sections</option>';
+    }
+    
+    // Refresh analytics
+    updateAnalytics();
 }
 
 function initializeRealTimeUpdates() {
