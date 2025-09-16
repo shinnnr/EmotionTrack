@@ -1075,8 +1075,13 @@ def send_message(user_id):
         return jsonify({'success': False, 'message': 'Cannot message admin users'})
     
     message_text = request.form.get('message_text')
-    if not message_text:
+    if not message_text or not message_text.strip():
         return jsonify({'success': False, 'message': 'Message text is required'})
+    
+    # Add safeguard against automatic sending - require explicit manual confirmation
+    manual_send = request.form.get('manual_send')
+    if manual_send != 'true':
+        return jsonify({'success': False, 'message': 'Manual confirmation required to prevent automatic sending'})
     
     # Determine conversation type based on admin role
     is_main_admin = current_user.email == 'admin@emotiontrack.app'

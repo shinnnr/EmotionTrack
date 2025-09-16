@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const formData = new FormData();
             formData.append('message_text', messageText);
+            formData.append('manual_send', 'true');
             
             const response = await fetch(`{{ url_for('admin.send_message', user_id=student.id) }}`, {
                 method: 'POST',
