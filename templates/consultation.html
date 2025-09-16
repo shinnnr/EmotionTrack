@@ -12,110 +12,156 @@
                     <div class="d-flex align-items-center">
                         <div class="avatar-md me-3">
                             <div class="avatar-title rounded-circle bg-clsu-green text-white">
-                                <i class="fas fa-user-md"></i>
+                                <i class="fas fa-comments"></i>
                             </div>
                         </div>
                         <div>
-                            <h5 class="mb-0 fw-bold text-clsu-green">Guidance Counselor</h5>
-                            <small class="text-muted">Private & Confidential Chat</small>
+                            <h5 class="mb-0 fw-bold text-clsu-green">Student Consultation</h5>
+                            <small class="text-muted">Private & Confidential Conversations</small>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Chat Container -->
+            <!-- Chat Tabs -->
             <div class="card border-0 shadow-sm">
-                <div class="chat-container" id="chatContainer">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <!-- Student Message -->
-                            {% if message.message_text and not message.message_text.startswith('[ADMIN]') %}
-                                <div class="message-bubble student-message">
-                                    <div class="message-content">
-                                        <div class="message-text">{{ message.message_text }}</div>
-                                        <div class="message-time">
-                                            {{ message.created_at.strftime('%I:%M %p') }}
+                <div class="card-header bg-white border-bottom">
+                    <ul class="nav nav-tabs card-header-tabs" id="consultationTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="guidance-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#guidance-chat" type="button" role="tab" 
+                                    aria-controls="guidance-chat" aria-selected="true">
+                                <i class="fas fa-user-md me-2"></i>
+                                Guidance Office
+                                <span class="badge bg-primary ms-2 unread-count" id="guidance-unread" style="display: none;">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="faculty-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#faculty-chat" type="button" role="tab" 
+                                    aria-controls="faculty-chat" aria-selected="false">
+                                <i class="fas fa-chalkboard-teacher me-2"></i>
+                                Faculty Adviser
+                                <span class="badge bg-primary ms-2 unread-count" id="faculty-unread" style="display: none;">0</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="tab-content">
+                    <!-- Guidance Office Chat -->
+                    <div class="tab-pane fade show active" id="guidance-chat" role="tabpanel" aria-labelledby="guidance-tab">
+                        <div class="chat-container" id="guidanceChatContainer">
+                            <div class="chat-messages" id="guidanceMessages">
+                                {% set guidance_messages = messages.guidance_office if messages else [] %}
+                                {% if guidance_messages %}
+                                    {% for message in guidance_messages %}
+                                        {% include 'message_bubble.html' %}
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="empty-chat">
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-user-md fa-4x text-muted mb-3"></i>
+                                            <h5 class="text-muted mb-2">Connect with Guidance Office</h5>
+                                            <p class="text-muted">Send your first message to speak with our guidance counselors</p>
                                         </div>
                                     </div>
-                                </div>
-                            {% endif %}
-                            
-                            <!-- Admin Response -->
-                            {% if message.admin_response %}
-                                <div class="message-bubble admin-message">
-                                    <div class="message-avatar">
-                                        <div class="avatar-sm">
-                                            <div class="avatar-title rounded-circle bg-clsu-green text-white">
-                                                GC
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="message-content">
-                                        <div class="message-sender">Guidance Counselor</div>
-                                        <div class="message-text">{{ message.admin_response }}</div>
-                                        <div class="message-time">
-                                            {% if message.responded_at %}
-                                                {{ message.responded_at.strftime('%I:%M %p') }}
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <div class="empty-chat">
-                            <div class="text-center py-5">
-                                <i class="fas fa-comments fa-4x text-muted mb-3"></i>
-                                <h5 class="text-muted mb-2">Start Your Conversation</h5>
-                                <p class="text-muted">Send your first message to connect with our guidance counselors</p>
+                                {% endif %}
                             </div>
                         </div>
-                    {% endif %}
-                </div>
-                
-                <!-- Message Suggestions -->
-                <div class="message-suggestions p-3 bg-light border-top">
-                    <h6 class="fw-bold text-clsu-green mb-2">
-                        <i class="fas fa-lightbulb me-2"></i>
-                        Quick Message Suggestions:
-                    </h6>
-                    <div class="suggestion-buttons d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-outline-primary btn-sm suggestion-btn" data-message="I'm feeling overwhelmed with school work and need someone to talk to.">
-                            <i class="fas fa-school me-1"></i>School Stress
-                        </button>
-                        <button type="button" class="btn btn-outline-info btn-sm suggestion-btn" data-message="I've been having trouble sleeping and it's affecting my daily life.">
-                            <i class="fas fa-bed me-1"></i>Sleep Issues
-                        </button>
-                        <button type="button" class="btn btn-outline-success btn-sm suggestion-btn" data-message="I'm experiencing anxiety about upcoming exams and need coping strategies.">
-                            <i class="fas fa-brain me-1"></i>Anxiety & Exams
-                        </button>
-                        <button type="button" class="btn btn-outline-warning btn-sm suggestion-btn" data-message="I'm having difficulties with social interactions and relationships at school.">
-                            <i class="fas fa-users me-1"></i>Social Issues
-                        </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm suggestion-btn" data-message="I'm going through a very difficult time and need immediate support and guidance.">
-                            <i class="fas fa-exclamation-triangle me-1"></i>Need Support
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Message Input -->
-                <div class="message-input-container">
-                    <form id="messageForm" class="d-flex align-items-end gap-3">
-                        {{ form.hidden_tag() }}
-                        <div class="flex-grow-1">
-                            {{ form.message_text(class="form-control message-input", placeholder="Type your message...", rows="3") }}
-                            {% if form.message_text.errors %}
-                                <div class="text-danger mt-1">
-                                    {% for error in form.message_text.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                        
+                        <!-- Guidance Message Suggestions -->
+                        <div class="message-suggestions p-3 bg-light border-top">
+                            <h6 class="fw-bold text-clsu-green mb-2">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                Quick Message Suggestions:
+                            </h6>
+                            <div class="suggestion-buttons d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm suggestion-btn" data-message="I'm feeling overwhelmed with school work and need someone to talk to." data-target="guidance">
+                                    <i class="fas fa-school me-1"></i>School Stress
+                                </button>
+                                <button type="button" class="btn btn-outline-info btn-sm suggestion-btn" data-message="I've been having trouble sleeping and it's affecting my daily life." data-target="guidance">
+                                    <i class="fas fa-bed me-1"></i>Sleep Issues
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm suggestion-btn" data-message="I'm experiencing anxiety about upcoming exams and need coping strategies." data-target="guidance">
+                                    <i class="fas fa-brain me-1"></i>Anxiety & Exams
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm suggestion-btn" data-message="I'm going through a very difficult time and need immediate support and guidance." data-target="guidance">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Need Support
+                                </button>
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-clsu-green btn-send">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </form>
+                        
+                        <!-- Guidance Message Input -->
+                        <div class="message-input-container">
+                            <form id="guidanceMessageForm" class="chat-form d-flex align-items-end gap-3" data-conversation-type="guidance_office">
+                                {{ form.hidden_tag() }}
+                                <div class="flex-grow-1">
+                                    <textarea name="message_text" class="form-control message-input" id="guidanceMessageText" placeholder="Type your message to guidance office..." rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-clsu-green btn-send">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Faculty Adviser Chat -->
+                    <div class="tab-pane fade" id="faculty-chat" role="tabpanel" aria-labelledby="faculty-tab">
+                        <div class="chat-container" id="facultyChatContainer">
+                            <div class="chat-messages" id="facultyMessages">
+                                {% set faculty_messages = messages.faculty_adviser if messages else [] %}
+                                {% if faculty_messages %}
+                                    {% for message in faculty_messages %}
+                                        {% include 'message_bubble.html' %}
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="empty-chat">
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-3"></i>
+                                            <h5 class="text-muted mb-2">Connect with Faculty Adviser</h5>
+                                            <p class="text-muted">Send your first message to speak with your assigned faculty adviser</p>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Faculty Message Suggestions -->
+                        <div class="message-suggestions p-3 bg-light border-top">
+                            <h6 class="fw-bold text-clsu-green mb-2">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                Quick Message Suggestions:
+                            </h6>
+                            <div class="suggestion-buttons d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm suggestion-btn" data-message="I need help with my academic performance and study schedule." data-target="faculty">
+                                    <i class="fas fa-graduation-cap me-1"></i>Academic Help
+                                </button>
+                                <button type="button" class="btn btn-outline-info btn-sm suggestion-btn" data-message="I'm having difficulties with class attendance and participation." data-target="faculty">
+                                    <i class="fas fa-calendar-check me-1"></i>Attendance Issues
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm suggestion-btn" data-message="I would like to discuss my grade progress and improvement strategies." data-target="faculty">
+                                    <i class="fas fa-chart-line me-1"></i>Grade Discussion
+                                </button>
+                                <button type="button" class="btn btn-outline-warning btn-sm suggestion-btn" data-message="I'm having conflicts with classmates and need advice on handling them." data-target="faculty">
+                                    <i class="fas fa-users me-1"></i>Class Issues
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Faculty Message Input -->
+                        <div class="message-input-container">
+                            <form id="facultyMessageForm" class="chat-form d-flex align-items-end gap-3" data-conversation-type="faculty_adviser">
+                                {{ form.hidden_tag() }}
+                                <div class="flex-grow-1">
+                                    <textarea name="message_text" class="form-control message-input" id="facultyMessageText" placeholder="Type your message to faculty adviser..." rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-send">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
             

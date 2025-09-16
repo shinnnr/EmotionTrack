@@ -437,25 +437,122 @@ def consultation():
     form = ConsultationForm()
     
     if form.validate_on_submit():
+        # Get conversation type from request
+        conversation_type = request.form.get('conversation_type', 'guidance_office')
+        
         message = StudentMessage()
         message.sender_user_id = current_user.id
         message.message_text = form.message_text.data
+        message.conversation_type = conversation_type
         db.session.add(message)
         db.session.commit()
         
-        flash('Your message has been sent to the guidance office.', 'success')
+        type_label = 'Guidance Office' if conversation_type == 'guidance_office' else 'Faculty Adviser'
+        flash(f'Your message has been sent to {type_label}.', 'success')
         return redirect(url_for('main.consultation'))
     
-    # Get user's previous messages (ordered oldest to newest like admin side)
-    messages = StudentMessage.query.filter_by(sender_user_id=current_user.id).order_by(StudentMessage.created_at).all()
+    # Get user's previous messages separated by conversation type
+    guidance_messages = StudentMessage.query.filter_by(
+        sender_user_id=current_user.id, 
+        conversation_type='guidance_office'
+    ).order_by(StudentMessage.created_at).all()
+    
+    faculty_messages = StudentMessage.query.filter_by(
+        sender_user_id=current_user.id, 
+        conversation_type='faculty_adviser'
+    ).order_by(StudentMessage.created_at).all()
     
     # Mark all admin responses as read by the student when they visit this page
-    for message in messages:
+    all_messages = guidance_messages + faculty_messages
+    for message in all_messages:
         if message.admin_response and not message.is_response_read_by_student:
             message.is_response_read_by_student = True
     db.session.commit()
     
+    messages = {
+        'guidance_office': guidance_messages,
+        'faculty_adviser': faculty_messages
+    }
+    
     return render_template('consultation.html', form=form, messages=messages)
+
+@main_bp.route('/consultation/poll-messages', methods=['GET'])
+@login_required
+def poll_messages():
+    """API endpoint for polling new messages in real-time"""
+    try:
+        # Get the latest messages since last poll
+        guidance_messages = StudentMessage.query.filter_by(
+            sender_user_id=current_user.id,
+            conversation_type='guidance_office'
+        ).filter(StudentMessage.admin_response.isnot(None)).order_by(StudentMessage.responded_at.desc()).limit(5).all()
+        
+        faculty_messages = StudentMessage.query.filter_by(
+            sender_user_id=current_user.id,
+            conversation_type='faculty_adviser'
+        ).filter(StudentMessage.admin_response.isnot(None)).order_by(StudentMessage.responded_at.desc()).limit(5).all()
+        
+        # Count unread messages
+        guidance_unread = StudentMessage.query.filter_by(
+            sender_user_id=current_user.id,
+            conversation_type='guidance_office',
+            is_response_read_by_student=False
+        ).filter(StudentMessage.admin_response.isnot(None)).count()
+        
+        faculty_unread = StudentMessage.query.filter_by(
+            sender_user_id=current_user.id,
+            conversation_type='faculty_adviser',
+            is_response_read_by_student=False
+        ).filter(StudentMessage.admin_response.isnot(None)).count()
+        
+        # Convert messages to JSON format
+        def message_to_dict(message):
+            return {
+                'id': message.id,
+                'admin_response': message.admin_response,
+                'responded_at': message.responded_at.isoformat() if message.responded_at else None,
+                'conversation_type': message.conversation_type
+            }
+        
+        return jsonify({
+            'guidance_office': [message_to_dict(m) for m in guidance_messages],
+            'faculty_adviser': [message_to_dict(m) for m in faculty_messages],
+            'unread_counts': {
+                'guidance_office': guidance_unread,
+                'faculty_adviser': faculty_unread
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main_bp.route('/consultation/mark-read', methods=['POST'])
+@login_required
+def mark_read():
+    """API endpoint for marking messages as read"""
+    try:
+        data = request.get_json()
+        conversation_type = data.get('conversation_type')
+        
+        if conversation_type not in ['guidance_office', 'faculty_adviser']:
+            return jsonify({'error': 'Invalid conversation type'}), 400
+        
+        # Mark all unread messages for this conversation type as read
+        messages = StudentMessage.query.filter_by(
+            sender_user_id=current_user.id,
+            conversation_type=conversation_type,
+            is_response_read_by_student=False
+        ).filter(StudentMessage.admin_response.isnot(None)).all()
+        
+        for message in messages:
+            message.is_response_read_by_student = True
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'marked_read': len(messages)})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Authentication routes
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -713,6 +810,10 @@ def messages():
         flash('Access denied. Admin privileges required.', 'error')
         return redirect(url_for('main.home'))
     
+    # Determine conversation type based on admin role
+    is_main_admin = current_user.email == 'admin@emotiontrack.app'
+    conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
+    
     # Get students accessible to this faculty admin (filtered by section)
     accessible_students_query = get_students_for_faculty(current_user)
     all_students = accessible_students_query.all()
@@ -720,29 +821,45 @@ def messages():
     student_conversations = []
     
     for student in all_students:
-        # Get latest message for this student
-        latest_message = StudentMessage.query.filter_by(sender_user_id=student.id).order_by(desc(StudentMessage.created_at)).first()
+        # Get latest message for this student in the appropriate conversation type
+        latest_message = StudentMessage.query.filter_by(
+            sender_user_id=student.id,
+            conversation_type=conversation_type
+        ).order_by(desc(StudentMessage.created_at)).first()
         
-        # Count total messages
-        message_count = StudentMessage.query.filter_by(sender_user_id=student.id).count()
+        # Count total messages for this conversation type
+        message_count = StudentMessage.query.filter_by(
+            sender_user_id=student.id,
+            conversation_type=conversation_type
+        ).count()
         
-        # Count unread messages
-        unread_count = StudentMessage.query.filter_by(sender_user_id=student.id, is_read=False).count()
+        # Count unread messages for this conversation type
+        unread_count = StudentMessage.query.filter_by(
+            sender_user_id=student.id, 
+            conversation_type=conversation_type,
+            is_read=False
+        ).count()
         
-        conversation = {
-            'user': student,
-            'latest_message': latest_message,
-            'message_count': message_count,
-            'unread_count': unread_count,
-            'has_unread': unread_count > 0
-        }
-        
-        student_conversations.append(conversation)
+        # Only include students who have messages in this conversation type
+        if message_count > 0:
+            conversation = {
+                'user': student,
+                'latest_message': latest_message,
+                'message_count': message_count,
+                'unread_count': unread_count,
+                'has_unread': unread_count > 0,
+                'conversation_type': conversation_type
+            }
+            
+            student_conversations.append(conversation)
     
     # Sort by latest activity (students with recent messages first)
     student_conversations.sort(key=lambda x: x['latest_message'].created_at if x['latest_message'] else datetime.min, reverse=True)
     
-    return render_template('admin_messages.html', student_conversations=student_conversations)
+    return render_template('admin_messages.html', 
+                         student_conversations=student_conversations,
+                         is_main_admin=is_main_admin,
+                         conversation_type=conversation_type)
 
 @admin_bp.route('/respond-message/<int:message_id>', methods=['POST'])
 @login_required
@@ -753,9 +870,23 @@ def respond_message(message_id):
     message = StudentMessage.query.get_or_404(message_id)
     response_text = request.form.get('response_text')
     
+    # Check if admin can respond to this conversation type
+    is_main_admin = current_user.email == 'admin@emotiontrack.app'
+    allowed_conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
+    
+    if message.conversation_type != allowed_conversation_type:
+        return jsonify({'success': False, 'message': 'Access denied. You can only respond to your conversation type.'})
+    
+    # Check if faculty admin can access this student
+    if not is_main_admin:
+        accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+        if message.sender_user_id not in accessible_student_ids:
+            return jsonify({'success': False, 'message': 'Access denied. You can only respond to students in your advisory section.'})
+    
     if response_text:
         message.admin_response = response_text
         message.is_read = True
+        message.responded_by_admin_id = current_user.id
         message.responded_at = datetime.utcnow()
         db.session.commit()
         
@@ -781,8 +912,15 @@ def student_chat(user_id):
         flash('Access denied. You can only chat with students in your advisory section.', 'error')
         return redirect(url_for('admin.messages'))
     
-    # Get all messages for this student
-    messages = StudentMessage.query.filter_by(sender_user_id=user_id).order_by(StudentMessage.created_at).all()
+    # Determine conversation type based on admin role
+    is_main_admin = current_user.email == 'admin@emotiontrack.app'
+    conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
+    
+    # Get messages for this student in the appropriate conversation type
+    messages = StudentMessage.query.filter_by(
+        sender_user_id=user_id,
+        conversation_type=conversation_type
+    ).order_by(StudentMessage.created_at).all()
     
     # Mark all messages as read
     for message in messages:
@@ -790,7 +928,11 @@ def student_chat(user_id):
             message.is_read = True
     db.session.commit()
     
-    return render_template('admin_chat.html', student=student, messages=messages)
+    return render_template('admin_chat.html', 
+                         student=student, 
+                         messages=messages,
+                         conversation_type=conversation_type,
+                         is_main_admin=is_main_admin)
 
 @admin_bp.route('/manage-faculty')
 @login_required
@@ -936,12 +1078,24 @@ def send_message(user_id):
     if not message_text:
         return jsonify({'success': False, 'message': 'Message text is required'})
     
+    # Determine conversation type based on admin role
+    is_main_admin = current_user.email == 'admin@emotiontrack.app'
+    conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
+    
+    # Check if faculty admin can access this student
+    if not is_main_admin:
+        accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+        if student.id not in accessible_student_ids:
+            return jsonify({'success': False, 'message': 'Access denied. You can only message students in your advisory section.'})
+    
     # Create a new message from admin to student
     # We'll use the same StudentMessage model but indicate it's from admin
     message = StudentMessage()
     message.sender_user_id = user_id  # Keep the student as the "sender" for filtering
     message.message_text = ""  # Empty for admin messages, we only use admin_response
     message.admin_response = message_text  # Store the actual admin message
+    message.conversation_type = conversation_type
+    message.responded_by_admin_id = current_user.id
     message.is_read = True
     message.responded_at = datetime.utcnow()
     

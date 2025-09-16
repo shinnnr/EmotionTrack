@@ -1,48 +1,79 @@
 // Consultation Page JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    initializeChat();
-    scrollToBottom();
+    initializeDualChat();
+    scrollToBottom('guidance');
+    startRealtimePolling();
 });
 
-function initializeChat() {
-    const messageForm = document.getElementById('messageForm');
-    const messageInput = document.querySelector('#message_text');
-    const chatContainer = document.getElementById('chatContainer');
+function initializeDualChat() {
+    // Initialize both chat forms
+    const guidanceForm = document.getElementById('guidanceMessageForm');
+    const facultyForm = document.getElementById('facultyMessageForm');
     
-    if (messageForm) {
-        messageForm.addEventListener('submit', function(e) {
+    if (guidanceForm) {
+        guidanceForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            sendMessage();
-        });
-    }
-    
-    // Auto-resize textarea
-    if (messageInput) {
-        messageInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
+            sendMessage('guidance_office');
         });
         
-        // Send message on Enter key (but not Shift+Enter)
-        messageInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
+        setupTextareaHandlers('guidanceMessageText');
+    }
+    
+    if (facultyForm) {
+        facultyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            sendMessage('faculty_adviser');
         });
+        
+        setupTextareaHandlers('facultyMessageText');
     }
     
     // Initialize suggestion buttons
     initializeSuggestionButtons();
+    
+    // Setup tab change handlers
+    const tabs = document.querySelectorAll('#consultationTabs button');
+    tabs.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(e) {
+            const targetId = e.target.getAttribute('data-bs-target');
+            const chatType = targetId === '#guidance-chat' ? 'guidance' : 'faculty';
+            scrollToBottom(chatType);
+            markAsRead(chatType);
+        });
+    });
+}
+
+function setupTextareaHandlers(textareaId) {
+    const textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+    
+    // Auto-resize textarea
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+    
+    // Send message on Enter key (but not Shift+Enter)
+    textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const conversationType = textareaId.includes('guidance') ? 'guidance_office' : 'faculty_adviser';
+            sendMessage(conversationType);
+        }
+    });
 }
 
 function initializeSuggestionButtons() {
     const suggestionButtons = document.querySelectorAll('.suggestion-btn');
-    const messageInput = document.querySelector('#message_text');
     
     suggestionButtons.forEach(button => {
         button.addEventListener('click', function() {
             const suggestionMessage = this.dataset.message;
+            const target = this.dataset.target;
+            
+            const messageInput = target === 'guidance' ? 
+                document.getElementById('guidanceMessageText') : 
+                document.getElementById('facultyMessageText');
             
             if (messageInput.value.trim() === '') {
                 messageInput.value = suggestionMessage;
@@ -61,8 +92,9 @@ function initializeSuggestionButtons() {
     });
 }
 
-async function sendMessage() {
-    const messageInput = document.querySelector('#message_text');
+async function sendMessage(conversationType) {
+    const isGuidance = conversationType === 'guidance_office';
+    const messageInput = document.getElementById(isGuidance ? 'guidanceMessageText' : 'facultyMessageText');
     const messageText = messageInput.value.trim();
     
     if (!messageText) {
@@ -70,15 +102,19 @@ async function sendMessage() {
         return;
     }
     
-    // Show loading state
-    const sendButton = document.querySelector('.btn-send');
+    // Get the correct form and send button
+    const form = isGuidance ? document.getElementById('guidanceMessageForm') : document.getElementById('facultyMessageForm');
+    const sendButton = form.querySelector('.btn-send');
     const originalContent = sendButton.innerHTML;
+    
+    // Show loading state
     sendButton.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div>';
     sendButton.disabled = true;
     
     try {
         const formData = new FormData();
         formData.append('message_text', messageText);
+        formData.append('conversation_type', conversationType);
         formData.append('csrf_token', document.querySelector('[name=csrf_token]').value);
         
         const response = await fetch('/consultation', {
@@ -88,17 +124,18 @@ async function sendMessage() {
         
         if (response.ok) {
             // Add message to chat immediately for better UX
-            addMessageToChat(messageText, 'student');
+            const chatType = isGuidance ? 'guidance' : 'faculty';
+            addMessageToChat(messageText, 'student', chatType);
             
             // Clear input
             messageInput.value = '';
             messageInput.style.height = 'auto';
             
             // Show success message
-            showNotification('Message sent successfully!', 'success');
+            showNotification(`Message sent to ${isGuidance ? 'Guidance Office' : 'Faculty Adviser'} successfully!`, 'success');
             
             // Scroll to bottom
-            scrollToBottom();
+            scrollToBottom(chatType);
         } else {
             throw new Error('Failed to send message');
         }
@@ -112,8 +149,8 @@ async function sendMessage() {
     }
 }
 
-function addMessageToChat(messageText, type) {
-    const chatContainer = document.getElementById('chatContainer');
+function addMessageToChat(messageText, type, chatType) {
+    const chatContainer = document.getElementById(chatType === 'guidance' ? 'guidanceMessages' : 'facultyMessages');
     const messageDiv = document.createElement('div');
     
     const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -127,15 +164,18 @@ function addMessageToChat(messageText, type) {
             </div>
         `;
     } else {
+        const avatarText = chatType === 'guidance' ? 'GC' : 'FA';
+        const senderText = chatType === 'guidance' ? 'Guidance Counselor' : 'Faculty Adviser';
+        
         messageDiv.className = 'message-bubble admin-message';
         messageDiv.innerHTML = `
             <div class="message-avatar">
                 <div class="avatar-sm">
-                    <div class="avatar-title rounded-circle bg-clsu-green text-white">GC</div>
+                    <div class="avatar-title rounded-circle bg-clsu-green text-white">${avatarText}</div>
                 </div>
             </div>
             <div class="message-content">
-                <div class="message-sender">Guidance Counselor</div>
+                <div class="message-sender">${senderText}</div>
                 <div class="message-text">${messageText}</div>
                 <div class="message-time">${currentTime}</div>
             </div>
@@ -149,14 +189,107 @@ function addMessageToChat(messageText, type) {
     }
     
     chatContainer.appendChild(messageDiv);
-    scrollToBottom();
+    scrollToBottom(chatType);
 }
 
-function scrollToBottom() {
-    const chatContainer = document.getElementById('chatContainer');
+function scrollToBottom(chatType) {
+    const chatContainer = document.getElementById(chatType === 'guidance' ? 'guidanceChatContainer' : 'facultyChatContainer');
     if (chatContainer) {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
+}
+
+// Real-time polling functions
+function startRealtimePolling() {
+    // Poll for new messages every 5 seconds
+    setInterval(checkForNewMessages, 5000);
+}
+
+async function checkForNewMessages() {
+    try {
+        const response = await fetch('/consultation/poll-messages', {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrf_token]')?.value || ''
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Update guidance office messages
+            if (data.guidance_office && data.guidance_office.length > 0) {
+                updateChatMessages(data.guidance_office, 'guidance');
+            }
+            
+            // Update faculty adviser messages
+            if (data.faculty_adviser && data.faculty_adviser.length > 0) {
+                updateChatMessages(data.faculty_adviser, 'faculty');
+            }
+            
+            // Update unread counts
+            updateUnreadCounts(data.unread_counts);
+        }
+    } catch (error) {
+        console.error('Error polling for messages:', error);
+    }
+}
+
+function updateChatMessages(messages, chatType) {
+    const messagesContainer = document.getElementById(chatType === 'guidance' ? 'guidanceMessages' : 'facultyMessages');
+    
+    messages.forEach(message => {
+        // Check if message already exists to avoid duplicates
+        const existingMessage = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
+        if (!existingMessage && message.admin_response) {
+            // Add new admin response
+            addMessageToChat(message.admin_response, 'admin', chatType);
+            
+            // Show notification if not on active tab
+            const activeTab = document.querySelector('#consultationTabs .nav-link.active');
+            const isActiveTab = (chatType === 'guidance' && activeTab.id === 'guidance-tab') ||
+                              (chatType === 'faculty' && activeTab.id === 'faculty-tab');
+            
+            if (!isActiveTab) {
+                showNotification(`New message from ${chatType === 'guidance' ? 'Guidance Office' : 'Faculty Adviser'}!`, 'info');
+            }
+        }
+    });
+}
+
+function updateUnreadCounts(unreadCounts) {
+    const guidanceUnread = document.getElementById('guidance-unread');
+    const facultyUnread = document.getElementById('faculty-unread');
+    
+    if (unreadCounts.guidance_office > 0) {
+        guidanceUnread.textContent = unreadCounts.guidance_office;
+        guidanceUnread.style.display = 'inline';
+    } else {
+        guidanceUnread.style.display = 'none';
+    }
+    
+    if (unreadCounts.faculty_adviser > 0) {
+        facultyUnread.textContent = unreadCounts.faculty_adviser;
+        facultyUnread.style.display = 'inline';
+    } else {
+        facultyUnread.style.display = 'none';
+    }
+}
+
+function markAsRead(chatType) {
+    // Mark messages as read when tab is opened
+    fetch('/consultation/mark-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrf_token]')?.value || ''
+        },
+        body: JSON.stringify({
+            conversation_type: chatType === 'guidance' ? 'guidance_office' : 'faculty_adviser'
+        })
+    }).catch(error => {
+        console.error('Error marking messages as read:', error);
+    });
 }
 
 function showNotification(message, type) {

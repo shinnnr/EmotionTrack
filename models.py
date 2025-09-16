@@ -27,7 +27,8 @@ class User(UserMixin, db.Model):
     # Relationships
     mood_logs = db.relationship('MoodLog', backref='user', lazy=True, cascade='all, delete-orphan')
     dass21_results = db.relationship('DASS21Result', backref='user', lazy=True, cascade='all, delete-orphan')
-    sent_messages = db.relationship('StudentMessage', backref='sender', lazy=True, cascade='all, delete-orphan')
+    sent_messages = db.relationship('StudentMessage', foreign_keys='StudentMessage.sender_user_id', back_populates='sender', lazy=True, cascade='all, delete-orphan')
+    responded_messages = db.relationship('StudentMessage', foreign_keys='StudentMessage.responded_by_admin_id', back_populates='responded_by', lazy=True)
     class_assignments = db.relationship('ClassAssignment', backref='faculty', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):
@@ -109,11 +110,17 @@ class StudentMessage(db.Model):
     is_read = db.Column(db.Boolean, default=False)
     admin_response = db.Column(db.Text)
     is_response_read_by_student = db.Column(db.Boolean, default=False)
+    conversation_type = db.Column(db.String(20), nullable=False, default='guidance_office')  # 'guidance_office' or 'faculty_adviser'
+    responded_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Track which admin responded
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     responded_at = db.Column(db.DateTime)
     
+    # Relationships
+    sender = db.relationship('User', foreign_keys=[sender_user_id], back_populates='sent_messages')
+    responded_by = db.relationship('User', foreign_keys=[responded_by_admin_id], back_populates='responded_messages')
+    
     def __repr__(self):
-        return f'<StudentMessage from User {self.sender_user_id}>'
+        return f'<StudentMessage from User {self.sender_user_id} ({self.conversation_type})>'
 
 class ClassAssignment(db.Model):
     __tablename__ = 'class_assignments'

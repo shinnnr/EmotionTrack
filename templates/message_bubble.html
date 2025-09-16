@@ -1,0 +1,46 @@
+<!-- Student Message -->
+{% if message.message_text and not message.message_text.startswith('[ADMIN]') %}
+    <div class="message-bubble student-message">
+        <div class="message-content">
+            <div class="message-text">{{ message.message_text }}</div>
+            <div class="message-time">
+                {{ message.created_at.strftime('%I:%M %p') }}
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Admin Response -->
+{% if message.admin_response %}
+    <div class="message-bubble admin-message">
+        <div class="message-avatar">
+            <div class="avatar-sm">
+                <div class="avatar-title rounded-circle bg-clsu-green text-white">
+                    {% if message.conversation_type == 'guidance_office' %}
+                        GC
+                    {% else %}
+                        FA
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="message-content">
+            <div class="message-sender">
+                {% if message.conversation_type == 'guidance_office' %}
+                    Guidance Counselor
+                {% else %}
+                    Faculty Adviser
+                {% endif %}
+                {% if message.responded_by %}
+                    ({{ message.responded_by.firstname }})
+                {% endif %}
+            </div>
+            <div class="message-text">{{ message.admin_response }}</div>
+            <div class="message-time">
+                {% if message.responded_at %}
+                    {{ message.responded_at.strftime('%I:%M %p') }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}
