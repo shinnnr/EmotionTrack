@@ -226,6 +226,24 @@ function startRealtimePolling() {
         clearInterval(pollingInterval);
     }
     
+    // Initialize last seen IDs from existing messages on page load
+    const guidanceMessages = document.querySelectorAll('#guidanceMessages [data-message-id]');
+    const facultyMessages = document.querySelectorAll('#facultyMessages [data-message-id]');
+    
+    guidanceMessages.forEach(msg => {
+        const messageId = parseInt(msg.getAttribute('data-message-id'));
+        if (!isNaN(messageId)) {
+            lastSeenIds.guidance = Math.max(lastSeenIds.guidance, messageId);
+        }
+    });
+    
+    facultyMessages.forEach(msg => {
+        const messageId = parseInt(msg.getAttribute('data-message-id'));
+        if (!isNaN(messageId)) {
+            lastSeenIds.faculty = Math.max(lastSeenIds.faculty, messageId);
+        }
+    });
+    
     // Poll for new messages every 5 seconds
     pollingInterval = setInterval(checkForNewMessages, 5000);
 }
