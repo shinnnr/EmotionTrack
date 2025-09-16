@@ -70,8 +70,14 @@ async function openStudentNavigationModal() {
         overlay.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         
-        // Load initial strands
-        await loadNavigationLevel('strands');
+        // Check if user is main admin or faculty admin
+        if (window.adminConfig && !window.adminConfig.isMainAdmin) {
+            // Faculty admin - automatically show their section's students
+            await loadFacultyAdminStudents();
+        } else {
+            // Main admin - show hierarchical browsing starting with strands
+            await loadNavigationLevel('strands');
+        }
         
     } catch (error) {
         console.error('Error opening student navigation modal:', error);
@@ -85,6 +91,52 @@ function closeStudentNavigationModal() {
     
     // Reset state
     currentNavigationState = { strand: null, grade: null, section: null };
+}
+
+async function loadFacultyAdminStudents() {
+    try {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const navigationGrid = document.getElementById('navigationGrid');
+        const studentList = document.getElementById('studentList');
+        const breadcrumb = document.getElementById('navigationBreadcrumb');
+        const title = document.getElementById('navigationTitle');
+        
+        // Show loading
+        loadingIndicator.style.display = 'block';
+        navigationGrid.style.display = 'none';
+        studentList.style.display = 'none';
+        
+        // For faculty admin, directly load all their accessible students
+        const response = await fetch('/admin/api/students-by-hierarchy');
+        if (!response.ok) throw new Error('Failed to fetch students');
+        
+        const data = await response.json();
+        
+        // Hide loading
+        loadingIndicator.style.display = 'none';
+        
+        // Update title and breadcrumb for faculty admin view
+        title.textContent = 'My Advisory Section Students';
+        breadcrumb.innerHTML = '<li class="breadcrumb-item active">My Advisory Section</li>';
+        
+        if (data.type === 'students') {
+            // Faculty admin has students assigned - show them directly
+            displayStudentList(data.data);
+        } else {
+            // Faculty admin has no students or multiple sections - show hierarchy
+            displayNavigationGrid(data.data, data.type);
+        }
+        
+    } catch (error) {
+        console.error('Error loading faculty admin students:', error);
+        document.getElementById('loadingIndicator').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Students</h5>
+                <p class="text-muted">${error.message}</p>
+            </div>
+        `;
+    }
 }
 
 async function loadNavigationLevel(level, selectedValue = null) {

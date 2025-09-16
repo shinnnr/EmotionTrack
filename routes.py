@@ -1592,12 +1592,46 @@ def get_students_by_hierarchy():
         accessible_students_query = get_students_for_faculty(current_user)
         
         if not strand and not grade and not section:
-            # Return all strands from accessible students
-            strands = accessible_students_query.filter(User.strand.isnot(None)).with_entities(User.strand).distinct().all()
-            return jsonify({
-                'type': 'strands',
-                'data': [s[0] for s in strands if s[0]]
-            })
+            # Check if this is main admin or faculty admin
+            if current_user.email == 'admin@emotiontrack.app':
+                # Main admin - return strands for hierarchical browsing
+                strands = accessible_students_query.filter(User.strand.isnot(None)).with_entities(User.strand).distinct().all()
+                return jsonify({
+                    'type': 'strands',
+                    'data': [s[0] for s in strands if s[0]]
+                })
+            else:
+                # Faculty admin - check if they have students from only one section
+                sections_data = accessible_students_query.filter(
+                    User.strand.isnot(None),
+                    User.grade_level.isnot(None),
+                    User.section.isnot(None)
+                ).with_entities(User.strand, User.grade_level, User.section).distinct().all()
+                
+                if len(sections_data) == 1:
+                    # Faculty admin has only one section - return students directly
+                    strand_val, grade_val, section_val = sections_data[0]
+                    students = accessible_students_query.filter_by(
+                        strand=strand_val, 
+                        grade_level=grade_val, 
+                        section=section_val
+                    ).all()
+                    return jsonify({
+                        'type': 'students',
+                        'data': [{
+                            'id': student.id,
+                            'full_name': student.full_name,
+                            'email': student.email,
+                            'created_at': student.created_at.strftime('%B %d, %Y') if student.created_at else ''
+                        } for student in students]
+                    })
+                else:
+                    # Faculty admin has multiple sections or no sections - return strands for hierarchy
+                    strands = accessible_students_query.filter(User.strand.isnot(None)).with_entities(User.strand).distinct().all()
+                    return jsonify({
+                        'type': 'strands',
+                        'data': [s[0] for s in strands if s[0]]
+                    })
         
         elif strand and not grade and not section:
             # Return grades for this strand from accessible students
