@@ -37,7 +37,7 @@
                         {% for message in messages %}
                             <!-- Student Message -->
                             {% if message.message_text and not message.message_text.startswith('[ADMIN]') %}
-                                <div class="message-bubble student-message">
+                                <div class="message-bubble student-message" data-message-id="{{ message.id }}">
                                     <div class="message-content">
                                         <div class="message-text">{{ message.message_text }}</div>
                                         <div class="message-time">
@@ -49,9 +49,15 @@
                             
                             <!-- Admin Response -->
                             {% if message.admin_response %}
-                                <div class="message-bubble admin-message">
+                                <div class="message-bubble admin-message" data-message-id="{{ message.id }}">
                                     <div class="message-content">
-                                        <div class="message-sender">Guidance Counselor</div>
+                                        <div class="message-sender">
+                                            {% if message.conversation_type == 'guidance_office' %}
+                                                Guidance Counselor
+                                            {% else %}
+                                                Faculty Adviser
+                                            {% endif %}
+                                        </div>
                                         <div class="message-text">{{ message.admin_response }}</div>
                                         <div class="message-time">
                                             {% if message.responded_at %}
