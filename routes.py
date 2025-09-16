@@ -731,12 +731,19 @@ def dashboard():
     # Get accessible student IDs for filtering other queries
     accessible_student_ids = [user.id for user in accessible_students_query.all()]
     
+    # Determine conversation type based on admin role
+    is_main_admin = current_user.email == 'admin@emotiontrack.app'
+    conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
+    
     # Filter mood logs and messages based on accessible students
     if accessible_student_ids:
         total_logs = MoodLog.query.filter(MoodLog.user_id.in_(accessible_student_ids)).count()
+        # Only count unread messages for this admin's conversation type that don't have admin responses yet
         unread_messages = StudentMessage.query.filter(
             StudentMessage.sender_user_id.in_(accessible_student_ids),
-            StudentMessage.is_read == False
+            StudentMessage.conversation_type == conversation_type,
+            StudentMessage.is_read == False,
+            StudentMessage.admin_response.is_(None)  # Only messages without admin responses
         ).count()
     else:
         total_logs = 0
