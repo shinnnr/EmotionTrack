@@ -386,24 +386,44 @@ let perPage = 10;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadMessages();
+    startRealTimePolling();
 });
 
-async function loadMessages(page = 1) {
+// Real-time polling for status updates
+let pollingInterval;
+
+function startRealTimePolling() {
+    // Start polling every 10 seconds for status updates
+    pollingInterval = setInterval(updateMessageStatuses, 10000);
+}
+
+async function updateMessageStatuses() {
+    try {
+        // Re-load current page to get fresh status data
+        await loadMessages(currentPage, false); // false = don't show loading spinner
+    } catch (error) {
+        console.error('Error updating message statuses:', error);
+    }
+}
+
+async function loadMessages(page = 1, showLoading = true) {
     try {
         currentPage = page;
         const container = document.getElementById('messagesTableContainer');
         const pagination = document.getElementById('messagesPagination');
         const messageCount = document.getElementById('messageCount');
         
-        // Show loading
-        container.innerHTML = `
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+        // Show loading only if requested (not for polling updates)
+        if (showLoading) {
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading messages...</p>
                 </div>
-                <p class="mt-2 text-muted">Loading messages...</p>
-            </div>
-        `;
+            `;
+        }
         
         const response = await fetch(`/admin/api/admin-messages?page=${page}&per_page=${perPage}`);
         if (!response.ok) throw new Error('Failed to fetch messages');
@@ -475,13 +495,9 @@ async function loadMessages(page = 1) {
                                 '<small class="text-muted">Never</small>'}
                         </td>
                         <td>
-                            ${hasUnread ? 
-                                '<span class="badge bg-warning">New Messages</span>' : 
-                                latestMessage && latestMessage.admin_response ? 
-                                    '<span class="badge bg-success">Responded</span>' : 
-                                    latestMessage ? 
-                                        '<span class="badge bg-secondary">Pending</span>' : 
-                                        '<span class="badge bg-light text-dark">No Activity</span>'}
+                            <span class="badge ${conversation.status.badge}" id="status-${user.id}">
+                                ${conversation.status.text}
+                            </span>
                         </td>
                         <td>
                             <a href="/admin/student-chat/${user.id}" class="btn btn-sm btn-success">
@@ -603,17 +619,9 @@ function showMobileDetails(row) {
     document.getElementById('mobileLastActivity').innerHTML = lastActivity ? 
         lastActivity : '<em class="text-muted">Never</em>';
     
-    // Status
-    let statusHTML = '';
-    if (hasUnread) {
-        statusHTML = '<span class="badge bg-warning">New Messages</span>';
-    } else if (adminResponse) {
-        statusHTML = '<span class="badge bg-success">Responded</span>';
-    } else if (lastMessage) {
-        statusHTML = '<span class="badge bg-secondary">Pending</span>';
-    } else {
-        statusHTML = '<span class="badge bg-light text-dark">No Activity</span>';
-    }
+    // Status - get status from the current row's badge
+    const statusBadge = row.querySelector('.badge');
+    const statusHTML = statusBadge ? statusBadge.outerHTML : '<span class="badge bg-light text-dark">No Activity</span>';
     document.getElementById('mobileStatus').innerHTML = statusHTML;
     
     // Actions

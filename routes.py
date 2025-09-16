@@ -1825,22 +1825,48 @@ def get_admin_messages():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         
+        # Determine conversation type based on admin role
+        is_main_admin = current_user.email == 'admin@emotiontrack.app'
+        conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
+        
         # Get students accessible to this faculty admin (filtered by section)
         accessible_students_query = get_students_for_faculty(current_user)
-        students_with_messages = accessible_students_query.all()
+        all_students = accessible_students_query.all()
         
         conversations = []
-        for student in students_with_messages:
-            latest_message = StudentMessage.query.filter_by(sender_user_id=student.id).order_by(desc(StudentMessage.created_at)).first()
-            has_unread = StudentMessage.query.filter_by(sender_user_id=student.id, is_read=False).count() > 0
+        for student in all_students:
+            # Get latest message for this student in the appropriate conversation type
+            latest_message = StudentMessage.query.filter_by(
+                sender_user_id=student.id,
+                conversation_type=conversation_type
+            ).order_by(desc(StudentMessage.created_at)).first()
             
-            conversations.append({
-                'user': student,
-                'latest_message': latest_message,
-                'has_unread': has_unread
-            })
+            # Count total messages for this conversation type
+            message_count = StudentMessage.query.filter_by(
+                sender_user_id=student.id,
+                conversation_type=conversation_type
+            ).count()
+            
+            # Count unread messages for this conversation type
+            unread_count = StudentMessage.query.filter_by(
+                sender_user_id=student.id, 
+                conversation_type=conversation_type,
+                is_read=False
+            ).count()
+            
+            # Only include students who have messages in this conversation type
+            if message_count > 0:
+                conversation = {
+                    'user': student,
+                    'latest_message': latest_message,
+                    'message_count': message_count,
+                    'unread_count': unread_count,
+                    'has_unread': unread_count > 0,
+                    'conversation_type': conversation_type
+                }
+                conversations.append(conversation)
         
-        # Sort by latest message date
+        # Sort by latest activity (students with recent messages first)
         conversations.sort(key=lambda x: x['latest_message'].created_at if x['latest_message'] else datetime.min, reverse=True)
         
         # Manual pagination
@@ -1867,7 +1893,11 @@ def get_admin_messages():
                     'created_at': conv['latest_message'].created_at.strftime('%B %d, %Y at %I:%M %p') if conv['latest_message'] and conv['latest_message'].created_at else None,
                     'admin_response': conv['latest_message'].admin_response if conv['latest_message'] else None
                 } if conv['latest_message'] else None,
-                'has_unread': conv['has_unread']
+                'has_unread': conv['has_unread'],
+                'message_count': conv['message_count'],
+                'unread_count': conv['unread_count'],
+                'status': determine_conversation_status(conv),
+                'conversation_type': conv['conversation_type']
             } for conv in paginated_conversations],
             'pagination': {
                 'page': page,
@@ -1882,6 +1912,20 @@ def get_admin_messages():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+def determine_conversation_status(conversation):
+    """Determine the status of a conversation for admin interface"""
+    has_unread = conversation['has_unread']
+    latest_message = conversation['latest_message']
+    
+    if has_unread:
+        return {'badge': 'bg-warning', 'text': 'New Messages'}
+    elif latest_message and latest_message.admin_response:
+        return {'badge': 'bg-success', 'text': 'Responded'}
+    elif latest_message:
+        return {'badge': 'bg-secondary', 'text': 'Pending'}
+    else:
+        return {'badge': 'bg-light text-dark', 'text': 'No Activity'}
 
 @admin_bp.route('/api/students-by-hierarchy')
 @login_required
