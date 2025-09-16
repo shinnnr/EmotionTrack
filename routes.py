@@ -1240,6 +1240,7 @@ def export_data():
         from datetime import datetime, timedelta
         
         # Get export parameters from request
+        data = None
         if request.method == 'POST':
             data = request.get_json()
             if not data:
@@ -1268,6 +1269,28 @@ def export_data():
         if end_date:
             end_datetime = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)  # Include end date
         
+        # Get filtering parameters for main admin
+        strand_filter = data.get('strand') if data else request.args.get('strand')
+        grade_filter = data.get('grade') if data else request.args.get('grade')
+        section_filter = data.get('section') if data else request.args.get('section')
+        
+        # Get students accessible to this admin (with optional filtering for main admin)
+        if current_user.email == 'admin@emotiontrack.app':
+            # Main admin - apply optional filters
+            base_query = User.query.filter_by(is_admin=False)
+            if strand_filter:
+                base_query = base_query.filter_by(strand=strand_filter)
+            if grade_filter:
+                base_query = base_query.filter_by(grade_level=grade_filter)
+            if section_filter:
+                base_query = base_query.filter_by(section=section_filter)
+            accessible_students = base_query.all()
+            accessible_student_ids = [user.id for user in accessible_students]
+        else:
+            # Faculty admin - restricted to their sections
+            accessible_students = get_students_for_faculty(current_user).all()
+            accessible_student_ids = [user.id for user in accessible_students]
+        
         # If only one type is selected, return single CSV
         if len(export_types) == 1:
             output = io.StringIO()
@@ -1277,7 +1300,7 @@ def export_data():
                 writer = csv.writer(output)
                 writer.writerow(['ID', 'First Name', 'Last Name', 'Email', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'])
                 
-                query = User.query.filter_by(is_admin=False)
+                query = User.query.filter(User.id.in_(accessible_student_ids))
                 if start_datetime and end_datetime:
                     query = query.filter(User.created_at >= start_datetime, User.created_at < end_datetime)
                 users = query.all()
@@ -1293,7 +1316,7 @@ def export_data():
                 writer = csv.writer(output)
                 writer.writerow(['Log ID', 'User Email', 'User Name', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
                 
-                query = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id)
+                query = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id).filter(User.id.in_(accessible_student_ids))
                 if start_datetime and end_datetime:
                     query = query.filter(MoodLog.log_date >= start_datetime, MoodLog.log_date < end_datetime)
                 logs = query.all()
@@ -1310,7 +1333,7 @@ def export_data():
                 writer.writerow(['ID', 'User Email', 'User Name', 'Depression Score', 'Anxiety Score', 'Stress Score', 
                                'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'])
                 
-                query = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id)
+                query = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id).filter(User.id.in_(accessible_student_ids))
                 if start_datetime and end_datetime:
                     query = query.filter(DASS21Result.created_at >= start_datetime, DASS21Result.created_at < end_datetime)
                 results = query.all()
@@ -1326,7 +1349,7 @@ def export_data():
                 writer = csv.writer(output)
                 writer.writerow(['ID', 'Student Email', 'Student Name', 'Message Text', 'Admin Response', 'Is Read', 'Created At', 'Responded At'])
                 
-                query = db.session.query(StudentMessage, User).join(User, StudentMessage.sender_user_id == User.id)
+                query = db.session.query(StudentMessage, User).join(User, StudentMessage.sender_user_id == User.id).filter(User.id.in_(accessible_student_ids))
                 if start_datetime and end_datetime:
                     query = query.filter(StudentMessage.created_at >= start_datetime, StudentMessage.created_at < end_datetime)
                 messages = query.all()
@@ -1359,7 +1382,7 @@ def export_data():
                         writer = csv.writer(output)
                         writer.writerow(['ID', 'First Name', 'Last Name', 'Email', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'])
                         
-                        query = User.query.filter_by(is_admin=False)
+                        query = User.query.filter(User.id.in_(accessible_student_ids))
                         if start_datetime and end_datetime:
                             query = query.filter(User.created_at >= start_datetime, User.created_at < end_datetime)
                         users = query.all()
@@ -1375,7 +1398,7 @@ def export_data():
                         writer = csv.writer(output)
                         writer.writerow(['Log ID', 'User Email', 'User Name', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
                         
-                        query = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id)
+                        query = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id).filter(User.id.in_(accessible_student_ids))
                         if start_datetime and end_datetime:
                             query = query.filter(MoodLog.log_date >= start_datetime, MoodLog.log_date < end_datetime)
                         logs = query.all()
@@ -1392,7 +1415,7 @@ def export_data():
                         writer.writerow(['ID', 'User Email', 'User Name', 'Depression Score', 'Anxiety Score', 'Stress Score', 
                                        'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'])
                         
-                        query = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id)
+                        query = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id).filter(User.id.in_(accessible_student_ids))
                         if start_datetime and end_datetime:
                             query = query.filter(DASS21Result.created_at >= start_datetime, DASS21Result.created_at < end_datetime)
                         results = query.all()
@@ -1408,7 +1431,7 @@ def export_data():
                         writer = csv.writer(output)
                         writer.writerow(['ID', 'Student Email', 'Student Name', 'Message Text', 'Admin Response', 'Is Read', 'Created At', 'Responded At'])
                         
-                        query = db.session.query(StudentMessage, User).join(User, StudentMessage.sender_user_id == User.id)
+                        query = db.session.query(StudentMessage, User).join(User, StudentMessage.sender_user_id == User.id).filter(User.id.in_(accessible_student_ids))
                         if start_datetime and end_datetime:
                             query = query.filter(StudentMessage.created_at >= start_datetime, StudentMessage.created_at < end_datetime)
                         messages = query.all()
@@ -1443,17 +1466,51 @@ def get_analytics_data():
         return jsonify({'error': 'Access denied'}), 403
     
     try:
-        # Mood distribution
+        # Get filtering parameters for main admin
+        strand_filter = request.args.get('strand')
+        grade_filter = request.args.get('grade') 
+        section_filter = request.args.get('section')
+        
+        # Get students accessible to this admin (with optional filtering for main admin)
+        if current_user.email == 'admin@emotiontrack.app':
+            # Main admin - apply optional filters
+            base_query = User.query.filter_by(is_admin=False)
+            if strand_filter:
+                base_query = base_query.filter_by(strand=strand_filter)
+            if grade_filter:
+                base_query = base_query.filter_by(grade_level=grade_filter)
+            if section_filter:
+                base_query = base_query.filter_by(section=section_filter)
+            accessible_students = base_query.all()
+            accessible_student_ids = [user.id for user in accessible_students]
+        else:
+            # Faculty admin - restricted to their sections
+            accessible_students = get_students_for_faculty(current_user).all()
+            accessible_student_ids = [user.id for user in accessible_students]
+        
+        if not accessible_student_ids:
+            # Return empty analytics if no accessible students
+            return jsonify({
+                'mood_distribution': [],
+                'dass_severity': [],
+                'monthly_activity': [],
+                'total_users': 0,
+                'average_energy': 0.0,
+                'concerning_students': 0,
+                'strand_breakdown': [] if current_user.email == 'admin@emotiontrack.app' else None
+            })
+        
+        # Mood distribution (filtered by accessible students)
         mood_data = db.session.query(
             MoodLog.emotion,
             db.func.count(MoodLog.emotion).label('count')
-        ).group_by(MoodLog.emotion).all()
+        ).filter(MoodLog.user_id.in_(accessible_student_ids)).group_by(MoodLog.emotion).all()
         
-        # DASS-21 severity distribution (based on most recent assessment only)
+        # DASS-21 severity distribution (based on most recent assessment only, filtered)
         latest_dass_subquery_analytics = db.session.query(
             DASS21Result.user_id,
             func.max(DASS21Result.created_at).label('max_created_at')
-        ).group_by(DASS21Result.user_id).subquery()
+        ).filter(DASS21Result.user_id.in_(accessible_student_ids)).group_by(DASS21Result.user_id).subquery()
         
         latest_dass_results_analytics = db.session.query(DASS21Result).join(
             latest_dass_subquery_analytics,
@@ -1466,20 +1523,21 @@ def get_analytics_data():
             db.func.count(latest_dass_results_analytics.c.depression_severity).label('count')
         ).group_by(latest_dass_results_analytics.c.depression_severity).all()
         
-        # Monthly activity
+        # Monthly activity (filtered)
         monthly_logs = db.session.query(
             db.func.date_trunc('month', MoodLog.log_date).label('month'),
             db.func.count(MoodLog.log_id).label('count')
-        ).group_by(db.func.date_trunc('month', MoodLog.log_date)).order_by('month').all()
+        ).filter(MoodLog.user_id.in_(accessible_student_ids)).group_by(db.func.date_trunc('month', MoodLog.log_date)).order_by('month').all()
         
-        # Additional stats for analytics
-        total_users = User.query.filter_by(is_admin=False).count()
-        average_energy = db.session.query(db.func.avg(MoodLog.energy)).scalar()
-        # Get concerning students count (based on most recent assessment only)
+        # Additional stats for analytics (filtered)
+        total_users = len(accessible_student_ids)
+        average_energy = db.session.query(db.func.avg(MoodLog.energy)).filter(MoodLog.user_id.in_(accessible_student_ids)).scalar()
+        
+        # Get concerning students count (filtered)
         latest_dass_subquery = db.session.query(
             DASS21Result.user_id,
             func.max(DASS21Result.created_at).label('max_created_at')
-        ).group_by(DASS21Result.user_id).subquery()
+        ).filter(DASS21Result.user_id.in_(accessible_student_ids)).group_by(DASS21Result.user_id).subquery()
         
         latest_dass_results = db.session.query(DASS21Result).join(
             latest_dass_subquery,
@@ -1496,14 +1554,29 @@ def get_analytics_data():
             (DASS21Result.stress_severity.in_(['Severe', 'Extremely Severe']))
         ).count()
         
-        return jsonify({
+        # For main admin, add strand breakdown when not filtering by specific criteria
+        strand_breakdown = None
+        if current_user.email == 'admin@emotiontrack.app' and not strand_filter:
+            strand_breakdown = db.session.query(
+                User.strand,
+                db.func.count(User.id).label('student_count')
+            ).filter(User.id.in_(accessible_student_ids)).group_by(User.strand).all()
+            strand_breakdown = [{'strand': row.strand, 'count': row.student_count} for row in strand_breakdown if row.strand]
+        
+        result = {
             'mood_distribution': [{'emotion': row.emotion, 'count': row.count} for row in mood_data],
             'dass_severity': [{'severity': row.depression_severity, 'count': row.count} for row in dass_data],
             'monthly_activity': [{'month': row.month.strftime('%Y-%m'), 'count': row.count} for row in monthly_logs],
             'total_users': total_users,
             'average_energy': float(average_energy) if average_energy else 0.0,
             'concerning_students': concerning_students
-        })
+        }
+        
+        # Add strand breakdown for main admin
+        if strand_breakdown is not None:
+            result['strand_breakdown'] = strand_breakdown
+            
+        return jsonify(result)
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
