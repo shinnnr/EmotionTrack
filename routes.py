@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from app import db, csrf
 from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment
-from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm
+from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm
 
 # Create blueprints
 main_bp = Blueprint('main', __name__)
@@ -1316,6 +1316,89 @@ def get_suggested_responses(user_id):
         
     except Exception as e:
         return jsonify({'success': False, 'suggestions': []})
+
+@admin_bp.route('/profile')
+@login_required
+def faculty_profile():
+    """Display faculty profile editing page"""
+    if not current_user.is_admin or not current_user.is_faculty_admin:
+        flash('Access denied. Faculty admin privileges required.', 'error')
+        return redirect(url_for('main.home'))
+    
+    form = FacultyProfileForm()
+    
+    # Pre-populate form with current user data
+    form.strand.data = current_user.strand
+    form.grade_level.data = current_user.grade_level
+    form.section.data = current_user.section
+    
+    return render_template('faculty_profile.html', form=form, user=current_user)
+
+@admin_bp.route('/profile', methods=['POST'])
+@login_required
+def update_faculty_profile():
+    """Update faculty profile information"""
+    if not current_user.is_admin or not current_user.is_faculty_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+    
+    form = FacultyProfileForm()
+    
+    if form.validate_on_submit():
+        try:
+            # Check if the new section assignment already exists
+            existing_assignment = ClassAssignment.query.filter_by(
+                grade_level=form.grade_level.data,
+                section=form.section.data
+            ).filter(ClassAssignment.faculty_id != current_user.id).first()
+            
+            if existing_assignment:
+                return jsonify({
+                    'success': False, 
+                    'message': f'Section {form.section.data} for Grade {form.grade_level.data} is already assigned to another faculty member'
+                })
+            
+            # Update user information
+            current_user.strand = form.strand.data
+            current_user.grade_level = form.grade_level.data
+            current_user.section = form.section.data
+            
+            # Update class assignment
+            assignment = ClassAssignment.query.filter_by(faculty_id=current_user.id).first()
+            if assignment:
+                assignment.grade_level = form.grade_level.data
+                assignment.section = form.section.data
+            else:
+                # Create new assignment if it doesn't exist
+                assignment = ClassAssignment()
+                assignment.faculty_id = current_user.id
+                assignment.grade_level = form.grade_level.data
+                assignment.section = form.section.data
+                db.session.add(assignment)
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Profile updated successfully'
+            })
+            
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'message': f'Error updating profile: {str(e)}'
+            })
+    else:
+        # Return form validation errors
+        errors = []
+        for field, field_errors in form.errors.items():
+            for error in field_errors:
+                errors.append(f'{field}: {error}')
+        
+        return jsonify({
+            'success': False,
+            'message': 'Validation failed: ' + '; '.join(errors)
+        })
 
 
 @main_bp.route('/api/change-password', methods=['POST'])
