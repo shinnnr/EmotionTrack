@@ -170,8 +170,9 @@
     {% endif %}
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+<!-- Delete Confirmation Modal - Commented out as we're using native confirm dialog -->
+<!-- 
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
@@ -188,7 +189,6 @@
                     <strong>Warning:</strong> This action cannot be undone. All student data including mood logs, assessments, and messages will be permanently deleted.
                 </div>
                 <div id="selectedStudentsList" class="mb-3">
-                    <!-- Selected students will be listed here -->
                 </div>
             </div>
             <div class="modal-footer">
@@ -200,6 +200,7 @@
         </div>
     </div>
 </div>
+-->
 
 <style>
 .admin-header {
@@ -293,12 +294,8 @@ document.addEventListener('DOMContentLoaded', function() {
         studentCheckboxes: studentCheckboxes.length
     }); // Debug log
     
-    // Initialize modal with proper options
-    const deleteModal = new bootstrap.Modal(deleteModalElement, {
-        backdrop: true,
-        keyboard: true,
-        focus: true
-    });
+    // Modal is no longer used for group delete - using native confirm dialog instead
+    // const deleteModal = new bootstrap.Modal(deleteModalElement);
 
     // Update selection count and button state
     function updateSelectionState() {
@@ -344,56 +341,44 @@ document.addEventListener('DOMContentLoaded', function() {
         const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
         if (checkedBoxes.length === 0) return;
 
-        // Show selected students in modal
-        const selectedList = document.getElementById('selectedStudentsList');
-        selectedList.innerHTML = '<strong>Students to be deleted:</strong><ul class="mt-2">';
+        // Build confirmation message with student names
+        let confirmMessage = 'Are you sure you want to delete the following student(s)?\n\n';
+        const studentNames = [];
         
         checkedBoxes.forEach(checkbox => {
             const row = checkbox.closest('tr');
             const studentName = row.querySelector('h6').textContent;
-            selectedList.innerHTML += `<li>${studentName}</li>`;
+            studentNames.push(studentName);
+            confirmMessage += '• ' + studentName + '\n';
         });
         
-        selectedList.innerHTML += '</ul>';
+        confirmMessage += '\nThis action cannot be undone. All student data including mood logs, assessments, and messages will be permanently deleted.';
         
-        // Show modal with proper event handling
-        try {
-            deleteModal.show();
-            console.log('Modal shown successfully');
-        } catch (error) {
-            console.error('Error showing modal:', error);
-            // Fallback to native confirm dialog
-            if (confirm('Are you sure you want to delete the selected students? This action cannot be undone.')) {
-                // Trigger delete directly
-                const event = new Event('click');
-                confirmDeleteBtn.dispatchEvent(event);
-            }
+        // Use native confirm dialog for better reliability
+        if (confirm(confirmMessage)) {
+            performGroupDelete(checkedBoxes);
         }
     });
 
-    // Confirm deletion
-    confirmDeleteBtn.addEventListener('click', function() {
-        console.log('Delete button clicked'); // Debug log
-        
-        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+    // Function to perform group delete
+    function performGroupDelete(checkedBoxes) {
         const studentIds = Array.from(checkedBoxes).map(cb => cb.value);
         
-        console.log('Student IDs to delete:', studentIds); // Debug log
-
-        if (studentIds.length === 0) return;
+        console.log('Student IDs to delete:', studentIds);
 
         // Get CSRF token
         const csrfToken = document.querySelector('meta[name=csrf-token]').content;
-        console.log('CSRF Token:', csrfToken ? 'Found' : 'Not found'); // Debug log
+        console.log('CSRF Token:', csrfToken ? 'Found' : 'Not found');
         
         if (!csrfToken) {
             alert('CSRF token not found. Please refresh the page and try again.');
             return;
         }
 
-        // Show loading state
-        confirmDeleteBtn.disabled = true;
-        confirmDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+        // Show loading state on the delete button
+        const originalText = deleteSelectedBtn.innerHTML;
+        deleteSelectedBtn.disabled = true;
+        deleteSelectedBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
 
         // Send delete request
         fetch('{{ url_for("admin.delete_students") }}', {
@@ -407,14 +392,14 @@ document.addEventListener('DOMContentLoaded', function() {
             })
         })
         .then(response => {
-            console.log('Response status:', response.status); // Debug log
+            console.log('Response status:', response.status);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            console.log('Response data:', data); // Debug log
+            console.log('Response data:', data);
             if (data.success) {
                 // Remove deleted rows from table
                 checkedBoxes.forEach(checkbox => {
@@ -425,7 +410,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show success message
                 showAlert('success', data.message);
                 updateSelectionState();
-                deleteModal.hide();
             } else {
                 showAlert('danger', data.message);
             }
@@ -436,10 +420,13 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .finally(() => {
             // Reset button state
-            confirmDeleteBtn.disabled = false;
-            confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-2"></i>Delete Students';
+            deleteSelectedBtn.disabled = false;
+            deleteSelectedBtn.innerHTML = originalText;
         });
-    });
+    }
+
+    // Note: Group delete functionality moved to performGroupDelete function above
+    // This modal-based approach is no longer used due to Bootstrap modal conflicts
 
     // Individual student actions
     window.viewStudentProfile = function(studentId) {
