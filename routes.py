@@ -1636,8 +1636,13 @@ def get_student_profile(user_id):
         # Get recent mood logs
         mood_logs = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.desc()).limit(10).all()
         
-        # Get recent messages
-        messages = StudentMessage.query.filter_by(sender_user_id=user_id).order_by(StudentMessage.created_at.desc()).limit(5).all()
+        # Get recent messages - filter by conversation type based on admin role
+        is_main_admin = current_user.email == 'admin@emotiontrack.app'
+        conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
+        messages = StudentMessage.query.filter_by(
+            sender_user_id=user_id,
+            conversation_type=conversation_type
+        ).order_by(StudentMessage.created_at.desc()).limit(5).all()
         
         # Format the data
         profile_data = {
