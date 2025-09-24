@@ -623,7 +623,7 @@ def register():
         user.gender = form.gender.data
         user.strand = form.strand.data
         user.grade_level = form.grade_level.data
-        user.section = form.section.data
+        user.section = form.section.data.upper().strip() if form.section.data else ""  # Convert to uppercase
         user.set_password(form.password.data)
         
         db.session.add(user)
