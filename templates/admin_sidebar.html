@@ -16,6 +16,14 @@
             <span>View Messages</span>
         </a>
         
+        <!-- Only show Profile Settings for faculty admins -->
+        {% if current_user.is_faculty_admin %}
+        <a href="{{ url_for('admin.faculty_profile') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.faculty_profile' }}">
+            <i class="fas fa-user-cog"></i>
+            <span>Profile Settings</span>
+        </a>
+        {% endif %}
+        
         <!-- Only show Faculty Management for main admin -->
         {% if current_user.email == 'admin@emotiontrack.app' %}
         <a href="{{ url_for('admin.manage_faculty') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.manage_faculty' }}">
