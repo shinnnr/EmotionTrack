@@ -1151,7 +1151,11 @@ def delete_students():
         return jsonify({'success': False, 'message': 'Access denied.'})
     
     try:
-        student_ids = request.json.get('student_ids', [])
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'Invalid request data.'})
+        
+        student_ids = data.get('student_ids', [])
         
         if not student_ids:
             return jsonify({'success': False, 'message': 'No students selected.'})

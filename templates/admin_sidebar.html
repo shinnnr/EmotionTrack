@@ -18,6 +18,11 @@
         
         <!-- Only show Profile Settings for faculty admins -->
         {% if current_user.is_faculty_admin %}
+        <a href="{{ url_for('admin.my_students') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.my_students' }}">
+            <i class="fas fa-users"></i>
+            <span>My Students</span>
+        </a>
+        
         <a href="{{ url_for('admin.faculty_profile') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.faculty_profile' }}">
             <i class="fas fa-user-cog"></i>
             <span>Profile Settings</span>
