@@ -64,7 +64,10 @@ class User(UserMixin, db.Model):
     @property
     def is_student(self):
         """Returns True if user is a student"""
-        return self.role == 'student'
+        if self.role:
+            return self.role == 'student'
+        # Fallback to old is_admin column for legacy records during migration
+        return not self.is_admin
     
     def can_update_profile(self):
         """Check if student can update profile (100 days since last update)"""
