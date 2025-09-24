@@ -200,7 +200,7 @@
                                     <label class="form-check-label text-muted" for="{{ register_form.privacy_agreement.id }}">
                                         <small>
                                             <i class="fas fa-shield-alt me-1"></i>
-                                            I acknowledge that all data entries here are private and secure and will only be used by the guidance office for counseling and support purposes.
+                                            I agree to the <a href="#" class="text-clsu-green fw-bold" data-bs-toggle="modal" data-bs-target="#termsModal" onclick="event.preventDefault();">Terms and Conditions</a> and acknowledge that my data will be handled securely.
                                         </small>
                                     </label>
                                 </div>
@@ -213,7 +213,7 @@
                                 {% endif %}
                             </div>
                             
-                            <button type="submit" class="btn btn-clsu-gold w-100 mb-3">
+                            <button type="submit" class="btn btn-clsu-gold w-100 mb-3" id="registerSubmitBtn">
                                 <i class="fas fa-user-plus me-2"></i>Create Account
                             </button>
                         </form>
@@ -225,6 +225,89 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-clsu-green text-white">
+                <h5 class="modal-title" id="termsModalLabel">
+                    <i class="fas fa-shield-alt me-2"></i>Terms and Conditions
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="terms-content">
+                    <h6 class="text-clsu-green mb-3">
+                        <i class="fas fa-lock me-2"></i>Data Privacy and Security
+                    </h6>
+                    <p>By creating an account with EmotionTrack, you acknowledge and agree to the following terms regarding your personal information and data:</p>
+                    
+                    <div class="mb-4">
+                        <h6 class="text-clsu-green">1. Data Collection and Use</h6>
+                        <ul class="mb-3">
+                            <li>All personal information and wellness data you provide will be kept strictly confidential</li>
+                            <li>Your data will only be accessible to authorized guidance office personnel</li>
+                            <li>Information will be used solely for counseling, support, and mental wellness purposes</li>
+                            <li>We collect emotional tracking data, assessment results, and consultation messages to provide personalized support</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-clsu-green">2. Data Security</h6>
+                        <ul class="mb-3">
+                            <li>All data is encrypted and stored securely using industry-standard security measures</li>
+                            <li>Access to your information is restricted to authorized counselors and administrators only</li>
+                            <li>We implement robust security protocols to protect your sensitive information</li>
+                            <li>Your login credentials are protected using secure password hashing</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-clsu-green">3. Professional Use</h6>
+                        <ul class="mb-3">
+                            <li>Your wellness data may be reviewed by qualified mental health professionals</li>
+                            <li>Information will be used to identify students who may need additional support</li>
+                            <li>Assessment results help counselors provide appropriate interventions</li>
+                            <li>All interactions follow professional counseling and ethical guidelines</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-clsu-green">4. Confidentiality</h6>
+                        <ul class="mb-3">
+                            <li>Your personal information will not be shared with unauthorized third parties</li>
+                            <li>Parents/guardians may be contacted only in cases of serious safety concerns</li>
+                            <li>Aggregated, anonymous data may be used for research and program improvement</li>
+                            <li>Your identity will always be protected in any research or statistical use</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-clsu-green">5. Your Rights</h6>
+                        <ul class="mb-3">
+                            <li>You have the right to access your personal data at any time</li>
+                            <li>You can request corrections to any inaccurate information</li>
+                            <li>You may withdraw from the platform at any time</li>
+                            <li>You can contact the guidance office with any privacy concerns</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Remember:</strong> EmotionTrack is a supportive tool designed to help you track and improve your mental wellness. If you're experiencing a mental health emergency, please contact emergency services or speak directly with a counselor immediately.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-clsu-green" data-bs-dismiss="modal" onclick="acceptTerms()">
+                    <i class="fas fa-check me-2"></i>I Accept These Terms
+                </button>
             </div>
         </div>
     </div>
@@ -383,6 +466,40 @@ document.addEventListener('DOMContentLoaded', function() {
         originalShowRegisterForm();
         setTimeout(setupPasswordValidation, 100);
     };
+
+    // Setup section uppercase conversion
+    setupSectionUppercase();
 });
+
+function acceptTerms() {
+    // Check the privacy agreement checkbox when user accepts terms
+    const privacyCheckbox = document.querySelector('input[name="privacy_agreement"]');
+    if (privacyCheckbox) {
+        privacyCheckbox.checked = true;
+    }
+}
+
+function setupSectionUppercase() {
+    const registerForm = document.querySelector('form[action*="register"]');
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            // Convert section field to uppercase before submission
+            const sectionField = registerForm.querySelector('input[name="section"]');
+            if (sectionField && sectionField.value) {
+                sectionField.value = sectionField.value.toUpperCase().trim();
+            }
+        });
+
+        // Also convert on blur for immediate feedback
+        const sectionField = registerForm.querySelector('input[name="section"]');
+        if (sectionField) {
+            sectionField.addEventListener('blur', function() {
+                if (this.value) {
+                    this.value = this.value.toUpperCase().trim();
+                }
+            });
+        }
+    }
+}
 </script>
 {% endblock %}
