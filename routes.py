@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_wtf.csrf import validate_csrf, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from app import db, csrf
@@ -1151,6 +1152,12 @@ def delete_students():
         return jsonify({'success': False, 'message': 'Access denied.'})
     
     try:
+        # Validate CSRF token
+        try:
+            validate_csrf(request.headers.get('X-CSRFToken'))
+        except ValidationError:
+            return jsonify({'success': False, 'message': 'CSRF token validation failed.'}), 400
+        
         data = request.get_json()
         if not data:
             return jsonify({'success': False, 'message': 'Invalid request data.'})
