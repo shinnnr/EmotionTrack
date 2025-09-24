@@ -67,6 +67,36 @@
                                         Change Password
                                     </button>
                                 </div>
+                                
+                                {% if user.is_student %}
+                                <div class="info-item mt-3">
+                                    <label class="fw-bold text-muted small">Profile Updates</label>
+                                    {% if user.can_update_profile() %}
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-success me-2">
+                                                <i class="fas fa-check-circle"></i>
+                                            </span>
+                                            <small>You can update your grade level and section</small>
+                                        </div>
+                                        <button class="btn btn-outline-success btn-sm mt-2" id="updateProfileBtn">
+                                            <i class="fas fa-edit me-2"></i>
+                                            Update Academic Info
+                                        </button>
+                                    {% else %}
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-warning me-2">
+                                                <i class="fas fa-clock"></i>
+                                            </span>
+                                            <small>You can update your profile in {{ user.days_until_profile_update() }} days</small>
+                                        </div>
+                                        {% if user.last_profile_update %}
+                                            <small class="text-muted d-block mt-1">
+                                                Last updated: {{ user.last_profile_update.strftime('%B %d, %Y') }}
+                                            </small>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -154,6 +184,78 @@
 
 <!-- Custom Modal Container -->
 <div id="customModalContainer"></div>
+
+<!-- Update Profile Modal -->
+{% if user.is_student %}
+<div id="updateProfileModal" class="custom-modal">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-edit me-2"></i>
+                Update Academic Information
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeModal('updateProfileModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body">
+            {% if user.can_update_profile() %}
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Important:</strong> You can only update your academic information once every 100 days (semester basis). 
+                    After updating, you will need to wait 100 days before you can make changes again.
+                </div>
+                
+                <form id="updateProfileForm" method="POST" action="{{ url_for('main.update_student_profile') }}">
+                    {{ profile_form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="{{ profile_form.grade_level.id }}" class="form-label">Grade Level</label>
+                        {{ profile_form.grade_level(class="form-select", value=user.grade_level) }}
+                        {% if profile_form.grade_level.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in profile_form.grade_level.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ profile_form.section.id }}" class="form-label">Section</label>
+                        {{ profile_form.section(class="form-control", value=user.section) }}
+                        {% if profile_form.section.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in profile_form.section.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-muted">Section will be automatically converted to uppercase</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('updateProfileModal')">Cancel</button>
+                        <button type="submit" class="btn btn-clsu-green" id="saveProfileBtn">
+                            <i class="fas fa-save me-2"></i>Update Profile
+                        </button>
+                    </div>
+                </form>
+            {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-clock me-2"></i>
+                    <strong>Profile Update Restricted</strong><br>
+                    You must wait {{ user.days_until_profile_update() }} more days before you can update your profile again.<br>
+                    <small>Profile updates are allowed once every 100 days to prevent frequent changes.</small>
+                    {% if user.last_profile_update %}
+                        <br><small class="text-muted">Last updated: {{ user.last_profile_update.strftime('%B %d, %Y') }}</small>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Change Password Modal -->
 <div id="changePasswordModal" class="custom-modal">
@@ -613,6 +715,12 @@ function initializeProfilePage() {
         changePassBtn.addEventListener('click', showChangePasswordModal);
     }
     
+    // Update Profile Button
+    const updateProfileBtn = document.getElementById('updateProfileBtn');
+    if (updateProfileBtn) {
+        updateProfileBtn.addEventListener('click', showUpdateProfileModal);
+    }
+    
     // Change Password Form
     const changePasswordForm = document.getElementById('changePasswordForm');
     if (changePasswordForm) {
@@ -972,6 +1080,32 @@ function showChangePasswordModal() {
     // Setup password validation after modal is shown
     setTimeout(setupPasswordValidation, 100);
 }
+
+function showUpdateProfileModal() {
+    showModal('updateProfileModal');
+}
+
+// Setup section uppercase conversion for profile update form
+document.addEventListener('DOMContentLoaded', function() {
+    const updateProfileForm = document.getElementById('updateProfileForm');
+    if (updateProfileForm) {
+        const sectionField = updateProfileForm.querySelector('input[name="section"]');
+        if (sectionField) {
+            sectionField.addEventListener('blur', function() {
+                if (this.value) {
+                    this.value = this.value.toUpperCase().trim();
+                }
+            });
+        }
+        
+        updateProfileForm.addEventListener('submit', function(e) {
+            const sectionField = this.querySelector('input[name="section"]');
+            if (sectionField && sectionField.value) {
+                sectionField.value = sectionField.value.toUpperCase().trim();
+            }
+        });
+    }
+});
 
 async function handlePasswordChange(e) {
     e.preventDefault();
