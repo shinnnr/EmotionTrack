@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from app import db, csrf
 from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment
-from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm
+from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm
 
 # Create blueprints
 main_bp = Blueprint('main', __name__)
@@ -107,7 +107,41 @@ def home():
 @main_bp.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html', user=current_user)
+    profile_form = StudentProfileUpdateForm()
+    return render_template('profile.html', user=current_user, profile_form=profile_form)
+
+@main_bp.route('/profile/update', methods=['POST'])
+@login_required
+def update_student_profile():
+    if not current_user.is_student:
+        flash('Access denied. Only students can update their profile.', 'error')
+        return redirect(url_for('main.profile'))
+    
+    if not current_user.can_update_profile():
+        days_remaining = current_user.days_until_profile_update()
+        flash(f'You must wait {days_remaining} more days before you can update your profile again. Profile updates are allowed once every 100 days (semester basis).', 'error')
+        return redirect(url_for('main.profile'))
+    
+    form = StudentProfileUpdateForm()
+    
+    if form.validate_on_submit():
+        try:
+            # Update profile fields
+            current_user.grade_level = form.grade_level.data
+            current_user.section = form.section.data.upper().strip() if form.section.data else ""
+            current_user.last_profile_update = datetime.utcnow()
+            
+            db.session.commit()
+            flash('Profile updated successfully! You can update your profile again in 100 days.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while updating your profile. Please try again.', 'error')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{field}: {error}', 'error')
+    
+    return redirect(url_for('main.profile'))
 
 
 @main_bp.route('/api/mood-logs')
