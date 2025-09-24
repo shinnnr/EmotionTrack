@@ -1120,6 +1120,95 @@ def faculty_students(faculty_id):
                          assignment=assignment, 
                          students=students)
 
+@admin_bp.route('/my-students')
+@login_required
+def my_students():
+    """Faculty admin view their own assigned students"""
+    if not current_user.is_admin or not current_user.is_faculty_admin:
+        flash('Access denied. Faculty admin privileges required.', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Get faculty admin's assignment
+    assignment = ClassAssignment.query.filter_by(faculty_id=current_user.id).first()
+    
+    students = []
+    if assignment:
+        students = User.query.filter(
+            User.grade_level == assignment.grade_level,
+            User.section == assignment.section,
+            User.is_admin == False
+        ).order_by(User.lastname, User.firstname).all()
+    
+    return render_template('my_students.html', 
+                         assignment=assignment, 
+                         students=students)
+
+@admin_bp.route('/delete-students', methods=['POST'])
+@login_required
+def delete_students():
+    """Delete selected students (faculty admin can only delete from their section)"""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied.'})
+    
+    try:
+        student_ids = request.json.get('student_ids', [])
+        
+        if not student_ids:
+            return jsonify({'success': False, 'message': 'No students selected.'})
+        
+        # Convert to integers and validate
+        try:
+            student_ids = [int(id) for id in student_ids]
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'message': 'Invalid student IDs provided.'})
+        
+        # Check access permissions based on admin type
+        if current_user.email == 'admin@emotiontrack.app':
+            # Main admin can delete any non-admin user
+            accessible_students = User.query.filter(
+                User.id.in_(student_ids),
+                User.is_admin == False
+            ).all()
+        else:
+            # Faculty admin can only delete students from their assigned section
+            accessible_students = get_students_for_faculty(current_user).filter(
+                User.id.in_(student_ids)
+            ).all()
+        
+        # Check if all requested students are accessible
+        accessible_ids = [student.id for student in accessible_students]
+        inaccessible_ids = [id for id in student_ids if id not in accessible_ids]
+        
+        if inaccessible_ids:
+            return jsonify({
+                'success': False, 
+                'message': f'Access denied for some students. You can only delete students from your assigned section.'
+            })
+        
+        if not accessible_students:
+            return jsonify({'success': False, 'message': 'No valid students found to delete.'})
+        
+        # Delete the students
+        deleted_count = 0
+        for student in accessible_students:
+            db.session.delete(student)
+            deleted_count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Successfully deleted {deleted_count} student(s).',
+            'deleted_count': deleted_count
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False, 
+            'message': f'An error occurred while deleting students: {str(e)}'
+        })
+
 @admin_bp.route('/send-message/<int:user_id>', methods=['POST'])
 @login_required
 def send_message(user_id):
