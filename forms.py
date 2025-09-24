@@ -64,3 +64,11 @@ class ConsultationForm(FlaskForm):
     message_text = TextAreaField('Your Message', 
                                 validators=[Length(max=500)],
                                 render_kw={"rows": 4, "placeholder": "Describe your concerns or questions..."})
+
+class FacultyProfileForm(FlaskForm):
+    strand = SelectField('Strand', choices=[
+        ('STEM', 'STEM'), ('ABM', 'ABM'), ('HUMSS', 'HUMSS'), 
+        ('GAS', 'GAS'), ('TVL', 'TVL'), ('Other', 'Other')
+    ], validators=[DataRequired()])
+    grade_level = SelectField('Grade Level', choices=[('11', 'Grade 11'), ('12', 'Grade 12')], validators=[DataRequired()])
+    section = StringField('Section', validators=[DataRequired(), Length(max=50)], render_kw={"placeholder": "Example: MARX"})
