@@ -260,13 +260,25 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing student management...'); // Debug log
+    
     const selectAllCheckbox = document.getElementById('selectAll');
     const headerSelectAllCheckbox = document.getElementById('headerSelectAll');
     const studentCheckboxes = document.querySelectorAll('.student-checkbox');
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const selectionCount = document.getElementById('selectionCount');
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    const deleteModalElement = document.getElementById('deleteConfirmModal');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    
+    console.log('Elements found:', {
+        selectAllCheckbox: !!selectAllCheckbox,
+        deleteSelectedBtn: !!deleteSelectedBtn,
+        deleteModalElement: !!deleteModalElement,
+        confirmDeleteBtn: !!confirmDeleteBtn,
+        studentCheckboxes: studentCheckboxes.length
+    }); // Debug log
+    
+    const deleteModal = new bootstrap.Modal(deleteModalElement);
 
     // Update selection count and button state
     function updateSelectionState() {
@@ -328,10 +340,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Confirm deletion
     confirmDeleteBtn.addEventListener('click', function() {
+        console.log('Delete button clicked'); // Debug log
+        
         const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
         const studentIds = Array.from(checkedBoxes).map(cb => cb.value);
+        
+        console.log('Student IDs to delete:', studentIds); // Debug log
 
         if (studentIds.length === 0) return;
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name=csrf-token]').content;
+        console.log('CSRF Token:', csrfToken ? 'Found' : 'Not found'); // Debug log
+        
+        if (!csrfToken) {
+            alert('CSRF token not found. Please refresh the page and try again.');
+            return;
+        }
 
         // Show loading state
         confirmDeleteBtn.disabled = true;
@@ -342,14 +367,21 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').content
+                'X-CSRFToken': csrfToken
             },
             body: JSON.stringify({
                 student_ids: studentIds
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status); // Debug log
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data); // Debug log
             if (data.success) {
                 // Remove deleted rows from table
                 checkedBoxes.forEach(checkbox => {
@@ -366,8 +398,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            showAlert('danger', 'An error occurred while deleting students.');
+            console.error('Fetch Error:', error);
+            showAlert('danger', 'An error occurred while deleting students: ' + error.message);
         })
         .finally(() => {
             // Reset button state
