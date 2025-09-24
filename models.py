@@ -23,6 +23,7 @@ class User(UserMixin, db.Model):
     role = db.Column(Enum('student', 'guidance_admin', 'faculty_admin', name='user_roles'), 
                      default='student', nullable=True)  # Make nullable during migration
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_profile_update = db.Column(db.DateTime, nullable=True)  # Track last time student updated profile info
     
     # Relationships
     mood_logs = db.relationship('MoodLog', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -64,6 +65,25 @@ class User(UserMixin, db.Model):
     def is_student(self):
         """Returns True if user is a student"""
         return self.role == 'student'
+    
+    def can_update_profile(self):
+        """Check if student can update profile (100 days since last update)"""
+        if not self.last_profile_update:
+            return True  # Never updated before, allow update
+        
+        from datetime import timedelta
+        days_since_update = (datetime.utcnow() - self.last_profile_update).days
+        return days_since_update >= 100
+    
+    def days_until_profile_update(self):
+        """Calculate days remaining before student can update profile again"""
+        if not self.last_profile_update:
+            return 0  # Can update immediately
+        
+        from datetime import timedelta
+        days_since_update = (datetime.utcnow() - self.last_profile_update).days
+        days_remaining = 100 - days_since_update
+        return max(0, days_remaining)
     
     def __repr__(self):
         return f'<User {self.email}>'
