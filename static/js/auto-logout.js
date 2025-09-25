@@ -5,12 +5,17 @@
 
 class AutoLogout {
     constructor() {
+        // For testing: Use 30 seconds timeout (comment out for production)
+        // this.timeout = 30 * 1000; // 30 seconds for testing
+        // this.warningTimeout = 20 * 1000; // Show warning at 20 seconds for testing
+        
+        // Production settings: 5 minutes timeout
         this.timeout = 5 * 60 * 1000; // 5 minutes in milliseconds
         this.warningTimeout = 4 * 60 * 1000; // Show warning at 4 minutes
         this.logoutTimer = null;
         this.warningTimer = null;
         this.isWarningShown = false;
-        this.logoutUrl = '/logout';
+        this.logoutUrl = '/auth/logout';
         
         // Events that reset the timer
         this.resetEvents = [
