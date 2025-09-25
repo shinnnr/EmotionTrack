@@ -200,10 +200,16 @@ function showAlert(message, type = 'info') {
 
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show`;
-    alert.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+    
+    // Safely set message content using textContent
+    alert.textContent = message;
+    
+    // Create and append close button safely
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'alert');
+    alert.appendChild(closeButton);
 
     alertContainer.appendChild(alert);
 
@@ -350,6 +356,68 @@ function confirmLogout() {
     });
 }
 
+// Safe DOM rendering utilities to prevent XSS
+const SafeDOM = {
+    // Escape HTML entities to prevent XSS
+    escapeHtml(unsafe) {
+        if (typeof unsafe !== 'string') return unsafe;
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    },
+
+    // Safely set text content (automatically escaped)
+    setText(element, text) {
+        element.textContent = text;
+    },
+
+    // Safely set HTML content with automatic escaping
+    setContent(element, content) {
+        element.textContent = content;
+    },
+
+    // For trusted HTML content only - use with extreme caution
+    setTrustedHTML(element, html) {
+        console.warn('SafeDOM.setTrustedHTML: Only use with verified safe HTML content');
+        element.innerHTML = html;
+    },
+
+    // Create element with safe text content
+    createElement(tagName, textContent = null, className = null) {
+        const element = document.createElement(tagName);
+        if (textContent !== null) {
+            element.textContent = textContent;
+        }
+        if (className) {
+            element.className = className;
+        }
+        return element;
+    },
+
+    // Build safe alert/notification elements
+    createAlert(message, type = 'info', dismissible = true) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}${dismissible ? ' alert-dismissible fade show' : ''}`;
+        
+        // Safely set message content
+        alert.textContent = message;
+        
+        // Add close button if dismissible
+        if (dismissible) {
+            const closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'btn-close';
+            closeButton.setAttribute('data-bs-dismiss', 'alert');
+            alert.appendChild(closeButton);
+        }
+        
+        return alert;
+    }
+};
+
 // Export functions for use in other modules
 window.MindTrack = {
     showAlert,
@@ -359,5 +427,6 @@ window.MindTrack = {
     showModal,
     hideModal,
     apiCall,
-    confirmLogout
+    confirmLogout,
+    SafeDOM
 };

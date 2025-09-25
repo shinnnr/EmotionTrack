@@ -684,10 +684,16 @@ function showAlert(message, type = 'info') {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 1060; max-width: 400px;';
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+    
+    // Safely set message content using textContent
+    alertDiv.textContent = message;
+    
+    // Create and append close button safely
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'alert');
+    alertDiv.appendChild(closeButton);
     
     document.body.appendChild(alertDiv);
     
@@ -2380,21 +2386,21 @@ async function loadRiskStudentsPage(page) {
                                 <div class="risk-item p-3 border rounded h-100">
                                     <div class="d-flex flex-column h-100">
                                         <div class="flex-grow-1">
-                                            <h6 class="fw-bold mb-2">${student.full_name}</h6>
+                                            <h6 class="fw-bold mb-2">${escapeHtml(student.full_name)}</h6>
                                             <div class="risk-scores mb-2">
                                                 ${student.depression_severity ? 
-                                                    `<span class="badge bg-danger mb-1">Depression: ${student.depression_severity}</span><br>` : ''}
+                                                    `<span class="badge bg-danger mb-1">Depression: ${escapeHtml(student.depression_severity)}</span><br>` : ''}
                                                 ${student.anxiety_severity ? 
-                                                    `<span class="badge bg-warning mb-1">Anxiety: ${student.anxiety_severity}</span><br>` : ''}
+                                                    `<span class="badge bg-warning mb-1">Anxiety: ${escapeHtml(student.anxiety_severity)}</span><br>` : ''}
                                                 ${student.stress_severity ? 
-                                                    `<span class="badge bg-info mb-1">Stress: ${student.stress_severity}</span><br>` : ''}
+                                                    `<span class="badge bg-info mb-1">Stress: ${escapeHtml(student.stress_severity)}</span><br>` : ''}
                                             </div>
                                             <small class="text-muted d-block">
-                                                Assessed: ${student.assessment_date}
+                                                Assessed: ${escapeHtml(student.assessment_date)}
                                             </small>
                                         </div>
                                         <div class="mt-3">
-                                            <button class="btn btn-outline-primary btn-sm w-100" onclick="viewStudentProfile(${student.user_id})">
+                                            <button class="btn btn-outline-primary btn-sm w-100" onclick="viewStudentProfile(${parseInt(student.user_id)})">
                                                 <i class="fas fa-user me-1"></i>View Profile
                                             </button>
                                         </div>
@@ -2478,13 +2484,13 @@ async function loadRecentActivityPage(page) {
                             <i class="fas fa-heart text-danger"></i>
                         </div>
                         <div class="activity-content flex-grow-1">
-                            <h6 class="mb-1">${log.user_name}</h6>
-                            <p class="mb-1">Logged emotion: <strong>${log.emotion}</strong></p>
-                            <small class="text-muted">${log.log_date}</small>
+                            <h6 class="mb-1">${escapeHtml(log.user_name)}</h6>
+                            <p class="mb-1">Logged emotion: <strong>${escapeHtml(log.emotion)}</strong></p>
+                            <small class="text-muted">${escapeHtml(log.log_date)}</small>
                         </div>
                         <div class="activity-meta">
-                            <span class="badge bg-light text-dark">Sleep: ${log.sleep}h</span>
-                            <span class="badge bg-light text-dark">Energy: ${log.energy}/10</span>
+                            <span class="badge bg-light text-dark">Sleep: ${escapeHtml(log.sleep)}h</span>
+                            <span class="badge bg-light text-dark">Energy: ${escapeHtml(log.energy)}/10</span>
                         </div>
                     </div>
                 `).join('');

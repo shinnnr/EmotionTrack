@@ -475,10 +475,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function showAlert(type, message) {
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+        
+        // Safely set message content using textContent
+        alertDiv.textContent = message;
+        
+        // Create and append close button safely
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'btn-close';
+        closeButton.setAttribute('data-bs-dismiss', 'alert');
+        alertDiv.appendChild(closeButton);
         
         // Insert at top of container
         const container = document.querySelector('.container-fluid');
