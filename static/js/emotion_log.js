@@ -17,12 +17,37 @@ let selectedList;
 function updateSelectedEmotions() {
     if (selectedEmotions.length > 0) {
         selectedEmotionsContainer.style.display = 'block';
-        selectedList.innerHTML = selectedEmotions.map(emotion => `
-            <span class="badge bg-clsu-green me-2 mb-2 p-2">
-                ${getEmotionIcon(emotion)} ${emotion}
-                <button type="button" class="btn-close btn-close-white ms-2" onclick="removeEmotion('${emotion}')"></button>
-            </span>
-        `).join('');
+        // Clear existing content safely
+        selectedList.innerHTML = '';
+        
+        // Create badges using safe DOM methods
+        selectedEmotions.forEach(emotion => {
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-clsu-green me-2 mb-2 p-2';
+            
+            // Create icon span safely
+            const iconSpan = document.createElement('span');
+            iconSpan.innerHTML = getEmotionIcon(emotion); // getEmotionIcon returns controlled HTML
+            
+            // Create text node safely 
+            const emotionText = document.createTextNode(' ' + emotion);
+            
+            // Create remove button safely
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn-close btn-close-white ms-2';
+            removeBtn.setAttribute('data-emotion', emotion);
+            removeBtn.addEventListener('click', function() {
+                removeEmotion(this.getAttribute('data-emotion'));
+            });
+            
+            // Assemble the badge safely
+            badge.appendChild(iconSpan);
+            badge.appendChild(emotionText);
+            badge.appendChild(removeBtn);
+            
+            selectedList.appendChild(badge);
+        });
     } else {
         selectedEmotionsContainer.style.display = 'none';
     }
@@ -618,19 +643,32 @@ document.addEventListener('DOMContentLoaded', function() {
     if (customEmotionInput && addCustomEmotionBtn) {
         addCustomEmotionBtn.addEventListener('click', function() {
             const customEmotion = customEmotionInput.value.trim();
-            if (customEmotion && !selectedEmotions.includes(customEmotion)) {
+            // Validate input: only allow alphanumeric characters, spaces, and basic punctuation
+            if (customEmotion && /^[a-zA-Z0-9\s\-',.!?]+$/.test(customEmotion) && !selectedEmotions.includes(customEmotion) && customEmotion.length <= 50) {
                 selectedEmotions.push(customEmotion);
                 customEmotionInput.value = '';
                 updateSelectedEmotions();
                 updateHiddenInput();
                 updateSaveButtonState();
+            } else if (customEmotion && (!/^[a-zA-Z0-9\s\-',.!?]+$/.test(customEmotion) || customEmotion.length > 50)) {
+                alert('Please enter a valid emotion using only letters, numbers, spaces, and basic punctuation (max 50 characters).');
             }
         });
         
         customEmotionInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                addCustomEmotionBtn.click();
+                const customEmotion = customEmotionInput.value.trim();
+                // Apply same validation as click handler
+                if (customEmotion && /^[a-zA-Z0-9\s\-',.!?]+$/.test(customEmotion) && !selectedEmotions.includes(customEmotion) && customEmotion.length <= 50) {
+                    selectedEmotions.push(customEmotion);
+                    customEmotionInput.value = '';
+                    updateSelectedEmotions();
+                    updateHiddenInput();
+                    updateSaveButtonState();
+                } else if (customEmotion && (!/^[a-zA-Z0-9\s\-',.!?]+$/.test(customEmotion) || customEmotion.length > 50)) {
+                    alert('Please enter a valid emotion using only letters, numbers, spaces, and basic punctuation (max 50 characters).');
+                }
             }
         });
     }
