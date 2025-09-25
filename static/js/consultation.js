@@ -171,29 +171,64 @@ function addMessageToChat(messageText, type, chatType, messageId = null) {
     
     if (type === 'student') {
         messageDiv.className = 'message-bubble student-message';
-        messageDiv.innerHTML = `
-            <div class="message-content">
-                <div class="message-text">${messageText}</div>
-                <div class="message-time">${currentTime}</div>
-            </div>
-        `;
+        
+        // Create elements safely without innerHTML
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        
+        const messageTextDiv = document.createElement('div');
+        messageTextDiv.className = 'message-text';
+        messageTextDiv.textContent = messageText; // Safe: auto-escapes HTML
+        
+        const messageTimeDiv = document.createElement('div');
+        messageTimeDiv.className = 'message-time';
+        messageTimeDiv.textContent = currentTime;
+        
+        messageContent.appendChild(messageTextDiv);
+        messageContent.appendChild(messageTimeDiv);
+        messageDiv.appendChild(messageContent);
     } else {
         const avatarText = chatType === 'guidance' ? 'GC' : 'FA';
         const senderText = chatType === 'guidance' ? 'Guidance Counselor' : 'Faculty Adviser';
         
         messageDiv.className = 'message-bubble admin-message';
-        messageDiv.innerHTML = `
-            <div class="message-avatar">
-                <div class="avatar-sm">
-                    <div class="avatar-title rounded-circle bg-clsu-green text-white">${avatarText}</div>
-                </div>
-            </div>
-            <div class="message-content">
-                <div class="message-sender">${senderText}</div>
-                <div class="message-text">${messageText}</div>
-                <div class="message-time">${currentTime}</div>
-            </div>
-        `;
+        
+        // Create avatar section
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'message-avatar';
+        
+        const avatarSm = document.createElement('div');
+        avatarSm.className = 'avatar-sm';
+        
+        const avatarTitle = document.createElement('div');
+        avatarTitle.className = 'avatar-title rounded-circle bg-clsu-green text-white';
+        avatarTitle.textContent = avatarText;
+        
+        avatarSm.appendChild(avatarTitle);
+        avatarDiv.appendChild(avatarSm);
+        
+        // Create message content section
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        
+        const messageSenderDiv = document.createElement('div');
+        messageSenderDiv.className = 'message-sender';
+        messageSenderDiv.textContent = senderText;
+        
+        const messageTextDiv = document.createElement('div');
+        messageTextDiv.className = 'message-text';
+        messageTextDiv.textContent = messageText; // Safe: auto-escapes HTML
+        
+        const messageTimeDiv = document.createElement('div');
+        messageTimeDiv.className = 'message-time';
+        messageTimeDiv.textContent = currentTime;
+        
+        messageContent.appendChild(messageSenderDiv);
+        messageContent.appendChild(messageTextDiv);
+        messageContent.appendChild(messageTimeDiv);
+        
+        messageDiv.appendChild(avatarDiv);
+        messageDiv.appendChild(messageContent);
     }
     
     // Remove empty chat message if it exists
@@ -347,10 +382,19 @@ function showNotification(message, type) {
         z-index: 1060;
         max-width: 400px;
     `;
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+    
+    // Create message text safely
+    const messageSpan = document.createElement('span');
+    messageSpan.textContent = message; // Safe: auto-escapes HTML
+    
+    // Create close button
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'alert');
+    
+    notification.appendChild(messageSpan);
+    notification.appendChild(closeButton);
     
     document.body.appendChild(notification);
     
