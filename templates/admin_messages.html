@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Messages - Admin Dashboard{% endblock %}
+{% block title %}Messages - {% if current_user.is_faculty_admin %}Faculty Dashboard{% else %}Admin Dashboard{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">

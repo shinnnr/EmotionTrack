@@ -1099,6 +1099,39 @@ def create_faculty():
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error creating faculty: {str(e)}'})
 
+@admin_bp.route('/delete-faculty', methods=['POST'])
+@login_required
+def delete_faculty():
+    if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Access denied'})
+    
+    try:
+        faculty_id = request.json.get('faculty_id')
+        if not faculty_id:
+            return jsonify({'success': False, 'message': 'Faculty ID is required'})
+        
+        # Find the faculty member
+        faculty = User.query.filter_by(id=faculty_id, is_admin=True, role='faculty_admin').first()
+        if not faculty:
+            return jsonify({'success': False, 'message': 'Faculty member not found'})
+        
+        # Prevent deletion of main admin
+        if faculty.email == 'admin@emotiontrack.app':
+            return jsonify({'success': False, 'message': 'Cannot delete main admin account'})
+        
+        # Delete associated class assignments
+        ClassAssignment.query.filter_by(faculty_id=faculty_id).delete()
+        
+        # Delete the faculty user
+        db.session.delete(faculty)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Faculty member deleted successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error deleting faculty: {str(e)}'})
+
 @admin_bp.route('/faculty-students/<int:faculty_id>')
 @login_required
 def faculty_students(faculty_id):

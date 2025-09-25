@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard - MindTrack{% endblock %}
+{% block title %}{% if current_user.is_faculty_admin %}Faculty Dashboard{% else %}Admin Dashboard{% endif %} - EmotionTrack{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -10,7 +10,7 @@
             <div class="admin-header bg-gradient-dark text-white p-4 rounded">
                 <h1 class="display-6 fw-bold mb-2">
                     <i class="fas fa-tachometer-alt me-3"></i>
-                    Admin Dashboard
+                    {% if current_user.is_faculty_admin %}Faculty Dashboard{% else %}Admin Dashboard{% endif %}
                 </h1>
                 <p class="lead mb-0">Monitor student wellness and manage consultations</p>
             </div>
