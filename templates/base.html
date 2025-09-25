@@ -60,6 +60,11 @@
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
+    <!-- Auto-logout functionality (only for authenticated users) -->
+    {% if current_user.is_authenticated %}
+    <script src="{{ url_for('static', filename='js/auto-logout.js') }}"></script>
+    {% endif %}
+    
     <!-- Sidebar Toggle Script -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
