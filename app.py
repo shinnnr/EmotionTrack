@@ -22,7 +22,22 @@ csrf = CSRFProtect()
 
 # create the app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET")
+
+# Configure session and CSRF settings
+session_secret = os.environ.get("SESSION_SECRET")
+if not session_secret:
+    logger.error("SESSION_SECRET environment variable is required but not set!")
+    raise RuntimeError("SESSION_SECRET environment variable is required")
+
+app.secret_key = session_secret
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'emotiontrack:'
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1) # needed for url_for to generate with https
 
 # configure the database, relative to the app instance folder
