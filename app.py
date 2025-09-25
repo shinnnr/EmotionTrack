@@ -31,9 +31,15 @@ logger.info(f"Database URL present: {database_url is not None}")
 logger.info(f"Database URL length: {len(database_url) if database_url else 0}")
 
 # Ensure we have a valid database URL
-if not database_url or len(database_url.strip()) == 0:
+if not database_url:
     logger.error("DATABASE_URL is empty or None!")
     raise RuntimeError("DATABASE_URL environment variable is required but not set properly")
+
+# Strip whitespace and check again
+database_url = database_url.strip()
+if len(database_url) == 0:
+    logger.error("DATABASE_URL is empty after stripping whitespace!")
+    raise RuntimeError("DATABASE_URL environment variable is empty")
 
 logger.info(f"Database URL starts with: {database_url[:20]}...")
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
