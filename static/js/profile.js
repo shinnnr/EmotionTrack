@@ -247,14 +247,14 @@ function createJournalEntryCard(log) {
                         ${emotionIcon}
                     </div>
                     <div class="flex-grow-1">
-                        <h6 class="mb-1 fw-bold">${log.emotion}</h6>
+                        <h6 class="mb-1 fw-bold">${escapeHtml(log.emotion)}</h6>
                         <small class="text-muted">${timeString}</small>
                     </div>
                 </div>
                 <div class="entry-meta">
                     <small class="text-muted">
-                        <i class="fas fa-bed me-1"></i>${log.sleep}h sleep
-                        <i class="fas fa-battery-three-quarters ms-2 me-1"></i>${log.energy}/10 energy
+                        <i class="fas fa-bed me-1"></i>${escapeHtml(String(log.sleep))}h sleep
+                        <i class="fas fa-battery-three-quarters ms-2 me-1"></i>${escapeHtml(String(log.energy))}/10 energy
                     </small>
                 </div>
             </div>
@@ -299,7 +299,7 @@ function createJournalEntryDetailsContent(log) {
             <div class="entry-header text-center mb-4">
                 <div class="emotion-display mb-3">
                     <div class="emotion-icon-large">${emotionIcon}</div>
-                    <h3 class="fw-bold text-clsu-green">${log.emotion}</h3>
+                    <h3 class="fw-bold text-clsu-green">${escapeHtml(log.emotion)}</h3>
                 </div>
                 <p class="text-muted">
                     ${MindTrack.formatDate(log.log_date)}
@@ -312,7 +312,7 @@ function createJournalEntryDetailsContent(log) {
                         <h6 class="fw-bold text-clsu-green">
                             <i class="fas fa-bed me-2"></i>Sleep
                         </h6>
-                        <p class="h5 mb-0">${log.sleep} hours</p>
+                        <p class="h5 mb-0">${escapeHtml(String(log.sleep))} hours</p>
                     </div>
                 </div>
                 
@@ -321,7 +321,7 @@ function createJournalEntryDetailsContent(log) {
                         <h6 class="fw-bold text-clsu-green">
                             <i class="fas fa-battery-three-quarters me-2"></i>Energy Level
                         </h6>
-                        <p class="h5 mb-0">${log.energy}/10</p>
+                        <p class="h5 mb-0">${escapeHtml(String(log.energy))}/10</p>
                     </div>
                 </div>
                 
@@ -330,7 +330,7 @@ function createJournalEntryDetailsContent(log) {
                         <h6 class="fw-bold text-clsu-green">
                             <i class="fas fa-exclamation-triangle me-2"></i>Main Trigger
                         </h6>
-                        <p class="h5 mb-0">${log.triggers}</p>
+                        <p class="h5 mb-0">${escapeHtml(log.triggers)}</p>
                     </div>
                 </div>
                 
@@ -339,7 +339,7 @@ function createJournalEntryDetailsContent(log) {
                         <h6 class="fw-bold text-clsu-green">
                             <i class="fas fa-heart me-2"></i>Coping Strategy
                         </h6>
-                        <p class="h5 mb-0">${log.coping || 'Not specified'}</p>
+                        <p class="h5 mb-0">${escapeHtml(log.coping || 'Not specified')}</p>
                     </div>
                 </div>
                 
@@ -349,7 +349,7 @@ function createJournalEntryDetailsContent(log) {
                         <h6 class="fw-bold text-clsu-green">
                             <i class="fas fa-sun me-2"></i>Gratitude Note
                         </h6>
-                        <p class="fst-italic">"${log.gratitude}"</p>
+                        <p class="fst-italic">"${escapeHtml(log.gratitude)}"</p>
                     </div>
                 </div>
                 ` : ''}
@@ -373,28 +373,28 @@ function createWellnessInsightsContent(weeklyData, logs) {
                     <div class="insight-card text-center">
                         <i class="fas fa-smile fa-2x text-primary mb-2"></i>
                         <h6 class="fw-bold">Most Common Emotion</h6>
-                        <p class="h5 text-clsu-green">${weeklyData.emotion}</p>
+                        <p class="h5 text-clsu-green">${escapeHtml(weeklyData.emotion)}</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="insight-card text-center">
                         <i class="fas fa-bed fa-2x text-info mb-2"></i>
                         <h6 class="fw-bold">Average Sleep</h6>
-                        <p class="h5 text-clsu-green">${weeklyData.average_sleep} hours</p>
+                        <p class="h5 text-clsu-green">${escapeHtml(String(weeklyData.average_sleep))} hours</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="insight-card text-center">
                         <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
                         <h6 class="fw-bold">Main Trigger</h6>
-                        <p class="h5 text-clsu-green">${weeklyData.trigger}</p>
+                        <p class="h5 text-clsu-green">${escapeHtml(weeklyData.trigger)}</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="insight-card text-center">
                         <i class="fas fa-heart fa-2x text-success mb-2"></i>
                         <h6 class="fw-bold">Top Coping Strategy</h6>
-                        <p class="h5 text-clsu-green">${weeklyData.coping}</p>
+                        <p class="h5 text-clsu-green">${escapeHtml(weeklyData.coping)}</p>
                     </div>
                 </div>
             </div>
@@ -435,8 +435,8 @@ function createWellnessInsightsContent(weeklyData, logs) {
                         Personalized Recommendations
                     </h6>
                     <div class="advice-content">
-                        <p><strong>Sleep:</strong> ${weeklyData.sleep_advice}</p>
-                        <p><strong>Latest Gratitude:</strong> "${weeklyData.gratitude}"</p>
+                        <p><strong>Sleep:</strong> ${escapeHtml(weeklyData.sleep_advice)}</p>
+                        <p><strong>Latest Gratitude:</strong> "${escapeHtml(weeklyData.gratitude)}"</p>
                         <p class="mb-0">
                             <small class="text-muted">
                                 Remember, this tool is here to help you gain self-awareness. 
@@ -466,10 +466,10 @@ function createDASSInsightsContent(data) {
                         <i class="fas fa-cloud-rain fa-3x text-primary mb-3"></i>
                         <h6 class="fw-bold">Depression</h6>
                         <div class="result-score mb-2">
-                            <span class="h3 fw-bold">${data.depression_score}</span>
+                            <span class="h3 fw-bold">${escapeHtml(String(data.depression_score))}</span>
                         </div>
-                        <span class="badge severity-${data.depression_severity.replace(' ', '')} fs-6">
-                            ${data.depression_severity}
+                        <span class="badge severity-${escapeHtml(data.depression_severity.replace(' ', ''))} fs-6">
+                            ${escapeHtml(data.depression_severity)}
                         </span>
                     </div>
                 </div>
@@ -479,10 +479,10 @@ function createDASSInsightsContent(data) {
                         <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
                         <h6 class="fw-bold">Anxiety</h6>
                         <div class="result-score mb-2">
-                            <span class="h3 fw-bold">${data.anxiety_score}</span>
+                            <span class="h3 fw-bold">${escapeHtml(String(data.anxiety_score))}</span>
                         </div>
-                        <span class="badge severity-${data.anxiety_severity.replace(' ', '')} fs-6">
-                            ${data.anxiety_severity}
+                        <span class="badge severity-${escapeHtml(data.anxiety_severity.replace(' ', ''))} fs-6">
+                            ${escapeHtml(data.anxiety_severity)}
                         </span>
                     </div>
                 </div>
@@ -492,10 +492,10 @@ function createDASSInsightsContent(data) {
                         <i class="fas fa-head-side-cough fa-3x text-danger mb-3"></i>
                         <h6 class="fw-bold">Stress</h6>
                         <div class="result-score mb-2">
-                            <span class="h3 fw-bold">${data.stress_score}</span>
+                            <span class="h3 fw-bold">${escapeHtml(String(data.stress_score))}</span>
                         </div>
-                        <span class="badge severity-${data.stress_severity.replace(' ', '')} fs-6">
-                            ${data.stress_severity}
+                        <span class="badge severity-${escapeHtml(data.stress_severity.replace(' ', ''))} fs-6">
+                            ${escapeHtml(data.stress_severity)}
                         </span>
                     </div>
                 </div>
@@ -682,6 +682,15 @@ function createCopingChart(logs) {
 }
 
 // Utility Functions
+function escapeHtml(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
 function getEmotionIcon(emotion) {
     const icons = {
         'Happy': '<i class="fas fa-smile text-success"></i>',
