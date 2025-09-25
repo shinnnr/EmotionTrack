@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import validate_csrf, ValidationError
@@ -624,7 +625,13 @@ def login():
                 
                 next_page = request.args.get('next')
                 if next_page:
-                    return redirect(next_page)
+                    # Validate redirect URL to prevent open redirect attacks
+                    parsed_url = urlparse(next_page)
+                    # Only allow internal relative URLs: must start with '/' but not '//'
+                    if (not parsed_url.netloc and 
+                        next_page.startswith('/') and 
+                        not next_page.startswith('//')):
+                        return redirect(next_page)
                 
                 if user.is_admin:
                     return redirect(url_for('admin.dashboard'))
