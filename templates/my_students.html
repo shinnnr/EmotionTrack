@@ -436,7 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.messageStudent = function(studentId) {
         // Navigate to chat with student
-        window.location.href = `/admin/chat/${studentId}`;
+        window.location.href = `/admin/student-chat/${studentId}`;
     };
 
     window.deleteStudent = function(studentId) {
@@ -500,6 +500,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial state update
     updateSelectionState();
+    
+    // Add missing functions referenced by admin sidebar to prevent console errors
+    window.exportData = function() {
+        alert('Export data functionality not yet implemented.');
+    };
+    
+    window.viewAnalytics = function() {
+        alert('Analytics functionality not yet implemented.');
+    };
+    
+    window.generateReport = function() {
+        alert('Report generation functionality not yet implemented.');
+    };
 });
 </script>
 {% endblock %}

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.full_name }} - Student Profile - EmotionTrack{% endblock %}
+
+{% block head %}
+{{ super() }}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="admin-header bg-gradient-dark text-white p-4 rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-6 fw-bold mb-2">
+                            <i class="fas fa-user me-3"></i>
+                            Student Profile
+                        </h1>
+                        <p class="lead mb-0">{{ student.full_name }} - ID: {{ student.id }}</p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('admin.my_students') }}" class="btn btn-outline-light me-2">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Students
+                        </a>
+                        <a href="{{ url_for('admin.student_chat', user_id=student.id) }}" class="btn btn-warning">
+                            <i class="fas fa-comments me-2"></i>Send Message
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Information -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        Personal Information
+                    </h5>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <p><strong>Full Name:</strong><br>{{ student.full_name }}</p>
+                            <p><strong>Email:</strong><br>{{ student.email }}</p>
+                            <p><strong>Gender:</strong><br>{{ student.gender or 'N/A' }}</p>
+                        </div>
+                        <div class="col-sm-6">
+                            <p><strong>Grade Level:</strong><br>{{ student.grade_level }}</p>
+                            <p><strong>Section:</strong><br>{{ student.section }}</p>
+                            <p><strong>Strand:</strong><br>{{ student.strand or 'N/A' }}</p>
+                        </div>
+                    </div>
+                    <p><strong>Joined:</strong><br>{{ student.created_at.strftime('%B %d, %Y') if student.created_at else 'N/A' }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">
+                        <i class="fas fa-chart-bar text-success me-2"></i>
+                        Quick Stats
+                    </h5>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <h4 class="text-primary">{{ dass21_results|length }}</h4>
+                                <p class="text-muted mb-0">DASS-21<br>Assessments</p>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <h4 class="text-success">{{ mood_logs|length }}</h4>
+                                <p class="text-muted mb-0">Mood<br>Logs</p>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <h4 class="text-info">{{ messages|length }}</h4>
+                                <p class="text-muted mb-0">Recent<br>Messages</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent DASS-21 Results -->
+    {% if dass21_results %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">
+                        <i class="fas fa-clipboard-list text-warning me-2"></i>
+                        Recent DASS-21 Results
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Depression</th>
+                                    <th>Anxiety</th>
+                                    <th>Stress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in dass21_results %}
+                                <tr>
+                                    <td>{{ result.created_at.strftime('%b %d, %Y') if result.created_at else 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge {% if result.depression_severity in ['Severe', 'Extremely Severe'] %}bg-danger{% elif result.depression_severity == 'Moderate' %}bg-warning{% else %}bg-success{% endif %}">
+                                            {{ result.depression_score }} ({{ result.depression_severity }})
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if result.anxiety_severity in ['Severe', 'Extremely Severe'] %}bg-danger{% elif result.anxiety_severity == 'Moderate' %}bg-warning{% else %}bg-success{% endif %}">
+                                            {{ result.anxiety_score }} ({{ result.anxiety_severity }})
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if result.stress_severity in ['Severe', 'Extremely Severe'] %}bg-danger{% elif result.stress_severity == 'Moderate' %}bg-warning{% else %}bg-success{% endif %}">
+                                            {{ result.stress_score }} ({{ result.stress_severity }})
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Mood Logs and Messages -->
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Recent Mood Logs -->
+            {% if mood_logs %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">
+                        <i class="fas fa-heart text-danger me-2"></i>
+                        Recent Mood Logs
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Emotion</th>
+                                    <th>Energy</th>
+                                    <th>Sleep</th>
+                                    <th>Triggers</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in mood_logs %}
+                                <tr>
+                                    <td>{{ log.log_date.strftime('%b %d') if log.log_date else 'N/A' }}</td>
+                                    <td><span class="badge bg-primary">{{ log.emotion }}</span></td>
+                                    <td>{{ log.energy }}/10</td>
+                                    <td>{{ log.sleep }}h</td>
+                                    <td>{{ log.triggers }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Recent Messages -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">
+                        <i class="fas fa-comments text-info me-2"></i>
+                        Recent Messages
+                    </h5>
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="message-item mb-3 p-3 border rounded">
+                            {% if message.message_text %}
+                                <p class="mb-1"><strong>Student:</strong></p>
+                                <p class="text-muted mb-2">{{ message.message_text }}</p>
+                            {% endif %}
+                            {% if message.admin_response %}
+                                <p class="mb-1"><strong>{% if is_main_admin %}Guidance:{% else %}Adviser:{% endif %}</strong></p>
+                                <p class="text-primary mb-2">{{ message.admin_response }}</p>
+                            {% endif %}
+                            <small class="text-muted">{{ message.created_at.strftime('%b %d, %Y') if message.created_at else 'N/A' }}</small>
+                        </div>
+                        {% endfor %}
+                        <div class="text-center">
+                            <a href="{{ url_for('admin.student_chat', user_id=student.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-comments me-1"></i>View All Messages
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No recent messages</p>
+                        <div class="text-center">
+                            <a href="{{ url_for('admin.student_chat', user_id=student.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-paper-plane me-1"></i>Start Conversation
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-header {
+    border-left: 5px solid var(--clsu-gold);
+}
+
+.stat-item {
+    padding: 1rem 0;
+}
+
+.stat-item h4 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.message-item {
+    background-color: #f8f9fa;
+}
+
+.table th {
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+}
+
+@media (max-width: 768px) {
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .stat-item {
+        padding: 0.5rem 0;
+    }
+}
+</style>
+{% endblock %}

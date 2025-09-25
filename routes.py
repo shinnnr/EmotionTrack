@@ -802,13 +802,10 @@ def dashboard():
         )
     else:
         # Create empty pagination if no accessible students
-        from flask_sqlalchemy.pagination import Pagination
-        recent_logs_pagination = Pagination(
-            query=MoodLog.query.filter(MoodLog.user_id == -1),
-            page=1,
-            per_page=activity_per_page,
-            total=0,
-            items=[]
+        recent_logs_pagination = MoodLog.query.filter(MoodLog.user_id == -1).paginate(
+            page=activity_page, 
+            per_page=activity_per_page, 
+            error_out=False
         )
     # Get the associated users for each mood log
     recent_logs = [(log, User.query.get(log.user_id)) for log in recent_logs_pagination.items]
@@ -847,13 +844,10 @@ def dashboard():
         )
     else:
         # Create empty pagination if no accessible students
-        from flask_sqlalchemy.pagination import Pagination
-        concerning_students_pagination = Pagination(
-            query=DASS21Result.query.filter(DASS21Result.user_id == -1),
-            page=1,
-            per_page=risk_per_page,
-            total=0,
-            items=[]
+        concerning_students_pagination = DASS21Result.query.filter(DASS21Result.user_id == -1).paginate(
+            page=risk_page, 
+            per_page=risk_per_page, 
+            error_out=False
         )
     # Get the associated users for each DASS21Result
     concerning_students = [(result, User.query.get(result.user_id)) for result in concerning_students_pagination.items]
@@ -1693,6 +1687,52 @@ def get_student_profile(user_id):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/student-profile/<int:user_id>')
+@login_required
+def view_student_profile(user_id):
+    """View detailed student profile page"""
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('main.home'))
+    
+    try:
+        # Get student details
+        student = User.query.get_or_404(user_id)
+        if student.is_admin:
+            flash('Cannot view admin profiles.', 'error')
+            return redirect(url_for('admin.my_students'))
+        
+        # Check if faculty admin can access this student (section-based access control)
+        accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+        if student.id not in accessible_student_ids:
+            flash('Access denied. You can only view students in your advisory section.', 'error')
+            return redirect(url_for('admin.my_students'))
+        
+        # Get recent DASS-21 results
+        dass21_results = DASS21Result.query.filter_by(user_id=user_id).order_by(DASS21Result.created_at.desc()).limit(5).all()
+        
+        # Get recent mood logs
+        mood_logs = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.desc()).limit(10).all()
+        
+        # Get recent messages - filter by conversation type based on admin role
+        is_main_admin = current_user.email == 'admin@emotiontrack.app'
+        conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
+        messages = StudentMessage.query.filter_by(
+            sender_user_id=user_id,
+            conversation_type=conversation_type
+        ).order_by(StudentMessage.created_at.desc()).limit(5).all()
+        
+        return render_template('student_profile.html', 
+                             student=student, 
+                             dass21_results=dass21_results,
+                             mood_logs=mood_logs,
+                             messages=messages,
+                             is_main_admin=is_main_admin)
+        
+    except Exception as e:
+        flash(f'An error occurred: {str(e)}', 'error')
+        return redirect(url_for('admin.my_students'))
 
 @admin_bp.route('/api/export-data', methods=['GET', 'POST'])
 @login_required

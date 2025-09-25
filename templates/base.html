@@ -188,6 +188,24 @@
             }
         }
     }
+    
+    // Global admin functions to prevent console errors
+    function exportData() {
+        alert('Export data functionality not yet implemented.');
+    }
+    
+    function viewAnalytics() {
+        alert('Analytics functionality not yet implemented.');
+    }
+    
+    function generateReport() {
+        alert('Report generation functionality not yet implemented.');
+    }
+    
+    // Make functions globally available
+    window.exportData = exportData;
+    window.viewAnalytics = viewAnalytics;
+    window.generateReport = generateReport;
     </script>
     
     {% block extra_js %}{% endblock %}
