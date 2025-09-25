@@ -34,6 +34,13 @@ def create_app():
     
     # Session configuration (debugging removed for security)
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "postgresql://localhost/mindtrack_db")
+    #app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+     #   "DATABASE_URL",
+      #  "postgresql://postgres@localhost:5432/mindtrack_db"
+    #)
+
+
+    
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
