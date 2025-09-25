@@ -223,9 +223,9 @@ function displayNavigationGrid(items, type) {
         col.className = 'col-md-4 col-sm-6';
         
         col.innerHTML = `
-            <div class="navigation-card" onclick="handleNavigationClick('${type}', '${item}')">
+            <div class="navigation-card" onclick="handleNavigationClick('${escapeHtml(type)}', '${escapeHtml(item)}')">
                 <i class="${iconMap[type]}"></i>
-                <h6>${item}</h6>
+                <h6>${escapeHtml(item)}</h6>
                 <small>Click to continue</small>
             </div>
         `;
@@ -247,21 +247,21 @@ function displayStudentList(students) {
                 <div class="d-flex align-items-center">
                     <div class="avatar-sm me-3">
                         <div class="avatar-title rounded-circle bg-primary text-white">
-                            ${student.full_name.split(' ').map(n => n[0]).join('')}
+                            ${escapeHtml(student.full_name).split(' ').map(n => n[0]).join('')}
                         </div>
                     </div>
                     <div>
-                        <h6 class="mb-0">${student.full_name}</h6>
+                        <h6 class="mb-0">${escapeHtml(student.full_name)}</h6>
                     </div>
                 </div>
             </td>
-            <td>${student.email}</td>
-            <td>${student.created_at}</td>
+            <td>${escapeHtml(student.email)}</td>
+            <td>${escapeHtml(student.created_at)}</td>
             <td>
-                <button class="btn btn-sm btn-success me-2" onclick="goToStudentChat(${student.id})">
+                <button class="btn btn-sm btn-success me-2" onclick="goToStudentChat(${parseInt(student.id)})">
                     <i class="fas fa-comments"></i> Chat
                 </button>
-                <button class="btn btn-sm btn-outline-primary" onclick="viewStudentProfile(${student.id})">
+                <button class="btn btn-sm btn-outline-primary" onclick="viewStudentProfile(${parseInt(student.id)})">
                     <i class="fas fa-user"></i> Profile
                 </button>
             </td>
@@ -347,6 +347,17 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// HTML escape function to prevent XSS
+function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') return unsafe;
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 function generateProfileHTML(data) {
     const student = data.student;
     const dass21Results = data.dass21_results;
@@ -361,18 +372,18 @@ function generateProfileHTML(data) {
                     <div class="card bg-light border-0">
                         <div class="card-body">
                             <h5 class="card-title fw-bold text-primary">
-                                <i class="fas fa-user me-2"></i>${student.full_name}
+                                <i class="fas fa-user me-2"></i>${escapeHtml(student.full_name)}
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <p class="mb-1"><strong>Email:</strong> ${student.email}</p>
-                                    <p class="mb-1"><strong>Gender:</strong> ${student.gender || 'Not specified'}</p>
-                                    <p class="mb-1"><strong>Strand:</strong> ${student.strand || 'Not specified'}</p>
+                                    <p class="mb-1"><strong>Email:</strong> ${escapeHtml(student.email)}</p>
+                                    <p class="mb-1"><strong>Gender:</strong> ${escapeHtml(student.gender) || 'Not specified'}</p>
+                                    <p class="mb-1"><strong>Strand:</strong> ${escapeHtml(student.strand) || 'Not specified'}</p>
                                 </div>
                                 <div class="col-md-6">
-                                    <p class="mb-1"><strong>Grade Level:</strong> ${student.grade_level || 'Not specified'}</p>
-                                    <p class="mb-1"><strong>Section:</strong> ${student.section || 'Not specified'}</p>
-                                    <p class="mb-1"><strong>Joined:</strong> ${student.created_at}</p>
+                                    <p class="mb-1"><strong>Grade Level:</strong> ${escapeHtml(student.grade_level) || 'Not specified'}</p>
+                                    <p class="mb-1"><strong>Section:</strong> ${escapeHtml(student.section) || 'Not specified'}</p>
+                                    <p class="mb-1"><strong>Joined:</strong> ${escapeHtml(student.created_at)}</p>
                                 </div>
                             </div>
                         </div>
@@ -409,24 +420,24 @@ function generateProfileHTML(data) {
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
-                                            <h6 class="fw-bold">${result.created_at}</h6>
+                                            <h6 class="fw-bold">${escapeHtml(result.created_at)}</h6>
                                             <div class="row">
                                                 <div class="col-md-4">
                                                     <div class="mb-2">
-                                                        <span class="badge bg-danger">Depression: ${result.depression_score}</span>
-                                                        <br><small class="text-muted">${result.depression_severity}</small>
+                                                        <span class="badge bg-danger">Depression: ${escapeHtml(result.depression_score)}</span>
+                                                        <br><small class="text-muted">${escapeHtml(result.depression_severity)}</small>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-4">
                                                     <div class="mb-2">
-                                                        <span class="badge bg-warning">Anxiety: ${result.anxiety_score}</span>
-                                                        <br><small class="text-muted">${result.anxiety_severity}</small>
+                                                        <span class="badge bg-warning">Anxiety: ${escapeHtml(result.anxiety_score)}</span>
+                                                        <br><small class="text-muted">${escapeHtml(result.anxiety_severity)}</small>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-4">
                                                     <div class="mb-2">
-                                                        <span class="badge bg-info">Stress: ${result.stress_score}</span>
-                                                        <br><small class="text-muted">${result.stress_severity}</small>
+                                                        <span class="badge bg-info">Stress: ${escapeHtml(result.stress_score)}</span>
+                                                        <br><small class="text-muted">${escapeHtml(result.stress_severity)}</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -446,18 +457,18 @@ function generateProfileHTML(data) {
                                 <div class="card-body py-3">
                                     <div class="row align-items-center">
                                         <div class="col-md-3">
-                                            <strong>${log.emotion}</strong>
-                                            <br><small class="text-muted">${log.log_date}</small>
+                                            <strong>${escapeHtml(log.emotion)}</strong>
+                                            <br><small class="text-muted">${escapeHtml(log.log_date)}</small>
                                         </div>
                                         <div class="col-md-2">
-                                            <span class="badge bg-light text-dark">Sleep: ${log.sleep}h</span>
+                                            <span class="badge bg-light text-dark">Sleep: ${escapeHtml(log.sleep)}h</span>
                                         </div>
                                         <div class="col-md-2">
-                                            <span class="badge bg-light text-dark">Energy: ${log.energy}/10</span>
+                                            <span class="badge bg-light text-dark">Energy: ${escapeHtml(log.energy)}/10</span>
                                         </div>
                                         <div class="col-md-5">
-                                            ${log.triggers ? `<small><strong>Triggers:</strong> ${log.triggers}</small><br>` : ''}
-                                            ${log.coping ? `<small><strong>Coping:</strong> ${log.coping}</small>` : ''}
+                                            ${log.triggers ? `<small><strong>Triggers:</strong> ${escapeHtml(log.triggers)}</small><br>` : ''}
+                                            ${log.coping ? `<small><strong>Coping:</strong> ${escapeHtml(log.coping)}</small>` : ''}
                                         </div>
                                     </div>
                                 </div>
@@ -474,15 +485,15 @@ function generateProfileHTML(data) {
                                 <div class="card-body">
                                     ${msg.message_text ? `
                                         <div class="mb-2">
-                                            <strong>Student:</strong> ${msg.message_text}
+                                            <strong>Student:</strong> ${escapeHtml(msg.message_text)}
                                         </div>
                                     ` : ''}
                                     ${msg.admin_response ? `
                                         <div class="text-primary">
-                                            <strong>Admin Response:</strong> ${msg.admin_response}
+                                            <strong>Admin Response:</strong> ${escapeHtml(msg.admin_response)}
                                         </div>
                                     ` : ''}
-                                    <small class="text-muted">${msg.created_at}</small>
+                                    <small class="text-muted">${escapeHtml(msg.created_at)}</small>
                                 </div>
                             </div>
                         `).join('') : '<p class="mt-3 text-muted">No messages yet.</p>'}
@@ -492,10 +503,10 @@ function generateProfileHTML(data) {
             
             <!-- Action Buttons -->
             <div class="mt-4 text-end">
-                <button class="btn btn-primary me-2" onclick="openChat(${student.id})">
+                <button class="btn btn-primary me-2" onclick="openChat(${parseInt(student.id)})">
                     <i class="fas fa-comments me-1"></i>Send Message
                 </button>
-                <button class="btn btn-outline-success" onclick="getSuggestedResponses(${student.id})">
+                <button class="btn btn-outline-success" onclick="getSuggestedResponses(${parseInt(student.id)})">
                     <i class="fas fa-lightbulb me-1"></i>Get Suggestions
                 </button>
             </div>
@@ -570,7 +581,7 @@ async function getSuggestedResponses(userId) {
                 <div class="text-center py-4">
                     <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
                     <h5 class="text-danger">Error Loading Suggestions</h5>
-                    <p class="text-muted">${error.message}</p>
+                    <p class="text-muted">${escapeHtml(error.message)}</p>
                 </div>
             `;
         }
@@ -615,7 +626,7 @@ function generateSuggestionsHTML(suggestions) {
             ${Object.entries(grouped).map(([category, categoryMentions]) => `
                 <div class="category-section mb-4">
                     <h6 class="fw-bold text-primary mb-3">
-                        <i class="fas fa-tag me-2"></i>${category}
+                        <i class="fas fa-tag me-2"></i>${escapeHtml(category)}
                     </h6>
                     <div class="suggestions-list">
                         ${categoryMentions.map((suggestion, index) => `
@@ -624,17 +635,17 @@ function generateSuggestionsHTML(suggestions) {
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="flex-grow-1">
                                             <div class="suggestion-text mb-2">
-                                                ${suggestion.text}
+                                                ${escapeHtml(suggestion.text)}
                                             </div>
                                             ${suggestion.reason ? `
                                                 <small class="text-muted">
                                                     <i class="fas fa-info-circle me-1"></i>
-                                                    Based on: ${suggestion.reason}
+                                                    Based on: ${escapeHtml(suggestion.reason)}
                                                 </small>
                                             ` : ''}
                                         </div>
                                         <button class="btn btn-outline-primary btn-sm ms-3" 
-                                                onclick="copySuggestion('${suggestion.text.replace(/'/g, "\\'")}')">
+                                                onclick="copySuggestion('${escapeHtml(suggestion.text).replace(/'/g, "\\'")}')">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                     </div>
