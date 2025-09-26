@@ -1699,16 +1699,18 @@ function initializeChartsWithData(analyticsData) {
 
 async function populateFilterDropdowns() {
     try {
-        // Fetch available strands, grades, and sections for filtering
+        // Fetch available strands for filtering
         const response = await fetch('/admin/api/students-by-hierarchy');
         if (!response.ok) return;
-        
+
         const data = await response.json();
-        
+
         if (data.type === 'strands') {
             // Populate strand dropdown
             const strandSelect = document.getElementById('analyticsStrandFilter');
             if (strandSelect) {
+                // Clear existing options except the first one
+                strandSelect.innerHTML = '<option value="">All Strands</option>';
                 data.data.forEach(strand => {
                     const option = document.createElement('option');
                     option.value = strand;
@@ -1717,14 +1719,106 @@ async function populateFilterDropdowns() {
                 });
             }
         }
-        
+
     } catch (error) {
         console.error('Error populating filter dropdowns:', error);
     }
 }
 
+async function updateGradeDropdown(selectedStrand) {
+    try {
+        const gradeSelect = document.getElementById('analyticsGradeFilter');
+        const sectionSelect = document.getElementById('analyticsSectionFilter');
+
+        if (!selectedStrand) {
+            // Reset grade and section dropdowns
+            if (gradeSelect) {
+                gradeSelect.innerHTML = '<option value="">All Grades</option>';
+            }
+            if (sectionSelect) {
+                sectionSelect.innerHTML = '<option value="">All Sections</option>';
+            }
+            return;
+        }
+
+        // Fetch grades for the selected strand
+        const response = await fetch(`/admin/api/students-by-hierarchy?strand=${encodeURIComponent(selectedStrand)}`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (data.type === 'grades') {
+            // Populate grade dropdown
+            if (gradeSelect) {
+                gradeSelect.innerHTML = '<option value="">All Grades</option>';
+                data.data.forEach(grade => {
+                    const option = document.createElement('option');
+                    option.value = grade;
+                    option.textContent = `Grade ${grade}`;
+                    gradeSelect.appendChild(option);
+                });
+            }
+            // Reset section dropdown
+            if (sectionSelect) {
+                sectionSelect.innerHTML = '<option value="">All Sections</option>';
+            }
+        }
+
+    } catch (error) {
+        console.error('Error updating grade dropdown:', error);
+    }
+}
+
+async function updateSectionDropdown(selectedStrand, selectedGrade) {
+    try {
+        const sectionSelect = document.getElementById('analyticsSectionFilter');
+
+        if (!selectedStrand || !selectedGrade) {
+            // Reset section dropdown
+            if (sectionSelect) {
+                sectionSelect.innerHTML = '<option value="">All Sections</option>';
+            }
+            return;
+        }
+
+        // Fetch sections for the selected strand and grade
+        const response = await fetch(`/admin/api/students-by-hierarchy?strand=${encodeURIComponent(selectedStrand)}&grade=${encodeURIComponent(selectedGrade)}`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (data.type === 'sections') {
+            // Populate section dropdown
+            if (sectionSelect) {
+                sectionSelect.innerHTML = '<option value="">All Sections</option>';
+                data.data.forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section;
+                    option.textContent = section;
+                    sectionSelect.appendChild(option);
+                });
+            }
+        }
+
+    } catch (error) {
+        console.error('Error updating section dropdown:', error);
+    }
+}
+
 window.updateAnalytics = async function() {
-    // Update analytics when filters change
+    // Get current filter values
+    const strandFilter = document.getElementById('analyticsStrandFilter')?.value;
+    const gradeFilter = document.getElementById('analyticsGradeFilter')?.value;
+
+    // Update cascading dropdowns
+    if (strandFilter !== undefined) {
+        await updateGradeDropdown(strandFilter);
+    }
+    if (strandFilter !== undefined && gradeFilter !== undefined) {
+        await updateSectionDropdown(strandFilter, gradeFilter);
+    }
+
+    // Update analytics data
     await updateAnalyticsData();
 };
 
