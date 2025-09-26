@@ -190,7 +190,7 @@
                                                 <div class="flex-grow-1">
                                                     <h6 class="mb-1 fw-bold">{{ log.emotion }}</h6>
                                                     <small class="text-muted">
-                                                        {{ log.log_date.strftime('%B %d, %Y at %I:%M %p') }}
+                                                        {{ log.log_date | manila_time | strftime('%B %d, %Y at %I:%M %p') }}
                                                     </small>
                                                 </div>
                                             </div>
@@ -256,7 +256,7 @@
                     
                     <div class="text-center mt-3">
                         <small class="text-muted">
-                            Assessed on {{ latest_dass.created_at.strftime('%B %d, %Y') }}
+                            Assessed on {{ latest_dass.created_at | manila_time | strftime('%B %d, %Y') }}
                         </small>
                     </div>
                 </div>

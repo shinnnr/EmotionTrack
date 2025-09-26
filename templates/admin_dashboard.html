@@ -111,7 +111,7 @@
                                                         {% endif %}
                                                     </div>
                                                     <small class="text-muted d-block">
-                                                        Assessed: {{ dass_result.created_at.strftime('%B %d, %Y') }}
+                                                        Assessed: {{ dass_result.created_at | manila_time | strftime('%B %d, %Y') }}
                                                     </small>
                                                 </div>
                                                 <div class="mt-3">
@@ -208,7 +208,7 @@
                                     <div class="activity-content flex-grow-1">
                                         <h6 class="mb-1">{{ user.full_name }}</h6>
                                         <p class="mb-1">Logged emotion: <strong>{{ log.emotion }}</strong></p>
-                                        <small class="text-muted">{{ log.log_date.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                        <small class="text-muted">{{ log.log_date | manila_time | strftime('%B %d, %Y at %I:%M %p') }}</small>
                                     </div>
                                     <div class="activity-meta">
                                         <span class="badge bg-light text-dark">Sleep: {{ log.sleep }}h</span>

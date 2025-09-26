@@ -11,6 +11,15 @@ manila_tz = pytz.timezone('Asia/Manila')
 def get_current_time():
     return datetime.now(manila_tz)
 
+def convert_to_manila_time(dt):
+    """Convert a datetime to Manila time, handling both naive and aware datetimes"""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        # Assume naive datetime is UTC
+        dt = dt.replace(tzinfo=pytz.UTC)
+    return dt.astimezone(manila_tz)
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     

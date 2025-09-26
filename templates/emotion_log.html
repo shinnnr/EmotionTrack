@@ -41,10 +41,10 @@
                             <i class="fas fa-check-circle me-3 text-success" style="font-size: 1.5rem;"></i>
                             <div>
                                 <h6 class="alert-heading mb-1">DASS-21 Assessment Completed</h6>
-                                <p class="mb-2">You completed your assessment on {{ dass21_status.last_taken_date.strftime('%B %d, %Y') }}.</p>
+                                <p class="mb-2">You completed your assessment on {{ dass21_status.last_taken_date | manila_time | strftime('%B %d, %Y') }}.</p>
                                 <small class="text-muted">
                                     Next assessment available in {{ dass21_status.days_remaining }} day{{ 's' if dass21_status.days_remaining != 1 else '' }}
-                                    ({{ dass21_status.next_available_date.strftime('%B %d, %Y') }}).
+                                    ({{ dass21_status.next_available_date | manila_time | strftime('%B %d, %Y') }}).
                                 </small>
                             </div>
                         </div>

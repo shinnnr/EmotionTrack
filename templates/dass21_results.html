@@ -17,7 +17,7 @@
                         <p class="lead">Assessment completed successfully</p>
                         <small class="text-light">
                             <i class="fas fa-calendar-alt me-2"></i>
-                            Completed on {{ moment().strftime('%B %d, %Y at %I:%M %p') }}
+                            Completed on {{ moment | manila_time | strftime('%B %d, %Y at %I:%M %p') }}
                         </small>
                     </div>
                 </div>
