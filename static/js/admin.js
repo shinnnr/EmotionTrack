@@ -1725,7 +1725,7 @@ async function populateFilterDropdowns() {
     }
 }
 
-async function updateGradeDropdown(selectedStrand) {
+async function updateGradeDropdown(selectedStrand, preserveGrade = null) {
     try {
         const gradeSelect = document.getElementById('analyticsGradeFilter');
         const sectionSelect = document.getElementById('analyticsSectionFilter');
@@ -1750,11 +1750,15 @@ async function updateGradeDropdown(selectedStrand) {
         if (data.type === 'grades') {
             // Populate grade dropdown
             if (gradeSelect) {
+                const currentValue = preserveGrade || gradeSelect.value;
                 gradeSelect.innerHTML = '<option value="">All Grades</option>';
                 data.data.forEach(grade => {
                     const option = document.createElement('option');
                     option.value = grade;
                     option.textContent = `Grade ${grade}`;
+                    if (currentValue === grade && data.data.includes(grade)) {
+                        option.selected = true;
+                    }
                     gradeSelect.appendChild(option);
                 });
             }
@@ -1769,7 +1773,7 @@ async function updateGradeDropdown(selectedStrand) {
     }
 }
 
-async function updateSectionDropdown(selectedStrand, selectedGrade) {
+async function updateSectionDropdown(selectedStrand, selectedGrade, preserveSection = null) {
     try {
         const sectionSelect = document.getElementById('analyticsSectionFilter');
 
@@ -1790,11 +1794,15 @@ async function updateSectionDropdown(selectedStrand, selectedGrade) {
         if (data.type === 'sections') {
             // Populate section dropdown
             if (sectionSelect) {
+                const currentValue = preserveSection || sectionSelect.value;
                 sectionSelect.innerHTML = '<option value="">All Sections</option>';
                 data.data.forEach(section => {
                     const option = document.createElement('option');
                     option.value = section;
                     option.textContent = section;
+                    if (currentValue === section && data.data.includes(section)) {
+                        option.selected = true;
+                    }
                     sectionSelect.appendChild(option);
                 });
             }
@@ -1805,18 +1813,48 @@ async function updateSectionDropdown(selectedStrand, selectedGrade) {
     }
 }
 
+// Store previous filter values to detect changes
+let previousFilters = {
+    strand: '',
+    grade: '',
+    section: ''
+};
+
 window.updateAnalytics = async function() {
     // Get current filter values
-    const strandFilter = document.getElementById('analyticsStrandFilter')?.value;
-    const gradeFilter = document.getElementById('analyticsGradeFilter')?.value;
+    const strandFilter = document.getElementById('analyticsStrandFilter')?.value || '';
+    const gradeFilter = document.getElementById('analyticsGradeFilter')?.value || '';
+    const sectionFilter = document.getElementById('analyticsSectionFilter')?.value || '';
 
-    // Update cascading dropdowns
-    if (strandFilter !== undefined) {
+    // Check what changed
+    const strandChanged = previousFilters.strand !== strandFilter;
+    const gradeChanged = previousFilters.grade !== gradeFilter;
+    const sectionChanged = previousFilters.section !== sectionFilter;
+
+    // Update cascading dropdowns only when relevant filters change
+    if (strandChanged) {
+        // Strand changed - update grade dropdown
         await updateGradeDropdown(strandFilter);
+        // Reset section dropdown when strand changes
+        const sectionSelect = document.getElementById('analyticsSectionFilter');
+        if (sectionSelect) {
+            sectionSelect.innerHTML = '<option value="">All Sections</option>';
+        }
     }
-    if (strandFilter !== undefined && gradeFilter !== undefined) {
+
+    if (gradeChanged && !strandChanged) {
+        // Grade changed (but strand didn't) - update section dropdown
         await updateSectionDropdown(strandFilter, gradeFilter);
     }
+
+    // Note: Section changes don't affect other dropdowns, just update data
+
+    // Update stored previous values
+    previousFilters = {
+        strand: strandFilter,
+        grade: gradeFilter,
+        section: sectionFilter
+    };
 
     // Update analytics data
     await updateAnalyticsData();
@@ -1827,7 +1865,7 @@ window.clearAnalyticsFilters = function() {
     const strandFilter = document.getElementById('analyticsStrandFilter');
     const gradeFilter = document.getElementById('analyticsGradeFilter');
     const sectionFilter = document.getElementById('analyticsSectionFilter');
-    
+
     if (strandFilter) strandFilter.value = '';
     if (gradeFilter) {
         gradeFilter.innerHTML = '<option value="">All Grades</option>';
@@ -1835,7 +1873,14 @@ window.clearAnalyticsFilters = function() {
     if (sectionFilter) {
         sectionFilter.innerHTML = '<option value="">All Sections</option>';
     }
-    
+
+    // Reset previous filters tracking
+    previousFilters = {
+        strand: '',
+        grade: '',
+        section: ''
+    };
+
     // Refresh analytics
     updateAnalytics();
 }
