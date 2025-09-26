@@ -162,7 +162,12 @@ function addMessageToChat(messageText, type, chatType, messageId = null) {
     
     const messageDiv = document.createElement('div');
     
-    const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const currentTime = new Date().toLocaleTimeString('en-PH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Manila'
+    });
+
     
     // Set message ID if provided to prevent duplicates
     if (messageId) {
