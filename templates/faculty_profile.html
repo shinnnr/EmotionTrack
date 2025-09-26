@@ -18,6 +18,14 @@
                         Update your section assignment below. This will affect which students you can access in the system.
                     </div>
 
+                    <!-- Change Password Button -->
+                    <div class="mb-3">
+                        <button class="btn btn-outline-warning" id="changePasswordBtn">
+                            <i class="fas fa-key me-2"></i>
+                            Change Password
+                        </button>
+                    </div>
+
                     <!-- Current Information Display -->
                     <div class="mb-4">
                         <h5 class="text-muted">Current Information</h5>
@@ -30,12 +38,6 @@
                                 <p><strong>Current Assignment:</strong> {{ user.strand }} {{ user.grade_level }} - {{ user.section }}</p>
                                 <p><strong>Role:</strong> Faculty Admin</p>
                             </div>
-                        </div>
-                        <div class="mt-3">
-                            <button class="btn btn-outline-warning" id="changePasswordBtn">
-                                <i class="fas fa-key me-2"></i>
-                                Change Password
-                            </button>
                         </div>
                     </div>
 
@@ -80,6 +82,61 @@
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Panel -->
+<div class="row g-4" id="changePasswordPanel" style="display: none;">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold mb-4">
+                    <i class="fas fa-key text-warning me-2"></i>
+                    Change Password
+                </h5>
+
+                <form id="changePasswordForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="currentPassword" class="form-label">Current Password</label>
+                            <div class="password-input-group">
+                                <input type="password" class="form-control password-field" id="currentPassword" name="current_password" placeholder=" " required>
+                                <button type="button" class="password-toggle-btn" onclick="togglePassword('currentPassword', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="newPassword" class="form-label">New Password</label>
+                            <div class="password-input-group">
+                                <input type="password" class="form-control password-field" id="newPassword" name="new_password" placeholder=" " required minlength="6">
+                                <button type="button" class="password-toggle-btn" onclick="togglePassword('newPassword', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                            <div class="password-input-group">
+                                <input type="password" class="form-control password-field" id="confirmPassword" name="confirm_password" placeholder=" " required minlength="6">
+                                <button type="button" class="password-toggle-btn" onclick="togglePassword('confirmPassword', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" onclick="hideChangePasswordPanel()">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-clsu-green" id="savePasswordBtn">
+                            <i class="fas fa-save me-2"></i>Update Password
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -164,25 +221,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveSpinner = document.getElementById('saveSpinner');
     const modal = new bootstrap.Modal(document.getElementById('resultModal'));
 
+    // Change Password Button
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    if (changePasswordBtn) {
+        changePasswordBtn.addEventListener('click', showChangePasswordPanel);
+    }
+
+    // Change Password Form
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', handlePasswordChange);
+    }
+
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         // Clear previous error states
         clearErrors();
-        
+
         // Show loading state
         saveBtn.disabled = true;
         saveSpinner.classList.remove('d-none');
-        
+
         try {
             const formData = new FormData(form);
             const response = await fetch('{{ url_for("admin.update_faculty_profile") }}', {
                 method: 'POST',
                 body: formData
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 showModal('Success', result.message, 'success');
                 // Show reload button for successful updates
@@ -213,20 +282,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const modalHeader = document.getElementById('modalHeader');
         const modalTitle = document.getElementById('modalTitle');
         const modalBody = document.getElementById('modalBody');
-        
+
         modalTitle.textContent = title;
         modalBody.textContent = message;
-        
+
         // Update modal styling based on type
         modalHeader.className = type === 'success' ? 'modal-header bg-success text-white' : 'modal-header bg-danger text-white';
-        
+
         modal.show();
     }
 
     function showFieldError(fieldName, message) {
         const field = document.getElementById(fieldName);
         const errorDiv = document.getElementById(fieldName + '-error');
-        
+
         if (field && errorDiv) {
             field.classList.add('is-invalid');
             errorDiv.textContent = message;
@@ -240,8 +309,210 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('reloadBtn').classList.add('d-none');
     }
 });
+
+// Change Password functionality
+function showChangePasswordPanel() {
+    const panel = document.getElementById('changePasswordPanel');
+    if (panel.style.display === 'none' || panel.style.display === '') {
+        panel.style.display = 'block';
+        // Scroll to the panel
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        panel.style.display = 'none';
+    }
+    // Setup password validation after panel is shown
+    setTimeout(setupPasswordValidation, 100);
+}
+
+async function handlePasswordChange(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const newPassword = formData.get('new_password');
+    const confirmPassword = formData.get('confirm_password');
+
+    if (newPassword !== confirmPassword) {
+        showAlert('Passwords do not match!', 'error');
+        return;
+    }
+
+    const saveBtn = document.getElementById('savePasswordBtn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+    saveBtn.disabled = true;
+
+    try {
+        const response = await fetch('/api/change-password', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showAlert('Password updated successfully!', 'success');
+            hideChangePasswordPanel();
+            form.reset();
+        } else {
+            showAlert(result.message || 'Failed to update password', 'error');
+        }
+
+    } catch (error) {
+        showAlert('An error occurred. Please try again.', 'error');
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+function togglePassword(fieldId, button) {
+    const passwordField = document.getElementById(fieldId);
+    const icon = button.querySelector('i');
+
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+        button.setAttribute('title', 'Hide password');
+    } else {
+        passwordField.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+        button.setAttribute('title', 'Show password');
+    }
+}
+
+// Add password matching validation for change password form
+function setupPasswordValidation() {
+    const newPasswordField = document.getElementById('newPassword');
+    const confirmPasswordField = document.getElementById('confirmPassword');
+
+    if (newPasswordField && confirmPasswordField) {
+        function validatePasswordMatch() {
+            if (confirmPasswordField.value && newPasswordField.value !== confirmPasswordField.value) {
+                confirmPasswordField.setCustomValidity('Passwords do not match');
+            } else {
+                confirmPasswordField.setCustomValidity('');
+            }
+        }
+
+        newPasswordField.addEventListener('input', validatePasswordMatch);
+        confirmPasswordField.addEventListener('input', validatePasswordMatch);
+    }
+}
+
+function showAlert(message, type = 'info') {
+    const alertColors = {
+        success: 'var(--clsu-green)',
+        error: '#dc3545',
+        warning: '#ffc107',
+        info: '#0dcaf0'
+    };
+
+    const alert = document.createElement('div');
+    alert.className = 'position-fixed top-0 end-0 m-3';
+    alert.style.zIndex = '9999999';
+
+    // Create alert container safely
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    alertDiv.setAttribute('role', 'alert');
+
+    // Create icon element
+    const icon = document.createElement('i');
+    icon.className = `fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2`;
+    alertDiv.appendChild(icon);
+
+    // Safely add message text
+    const messageText = document.createTextNode(message);
+    alertDiv.appendChild(messageText);
+
+    // Create close button safely
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'alert');
+    alertDiv.appendChild(closeButton);
+
+    alert.appendChild(alertDiv);
+
+    document.body.appendChild(alert);
+
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+function hideChangePasswordPanel() {
+    const panel = document.getElementById('changePasswordPanel');
+    if (panel) {
+        panel.style.display = 'none';
+    }
+}
 </script>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+
+{% block extra_css %}
+<style>
+/* Password Input Group Styles */
+.password-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-group .password-field {
+    padding-right: 45px;
+}
+
+.password-input-group .password-field:valid {
+    padding-right: 75px;
+}
+
+.password-input-group .password-field:invalid:not(:placeholder-shown) {
+    padding-right: 75px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 5px;
+    z-index: 10;
+    transition: all 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.password-input-group .password-field:not(:placeholder-shown) + .password-toggle-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+.password-input-group .password-field:valid + .password-toggle-btn {
+    right: 40px;
+}
+
+.password-input-group .password-field:invalid:not(:placeholder-shown) + .password-toggle-btn {
+    right: 40px;
+}
+
+.password-toggle-btn:hover {
+    color: var(--clsu-green);
+}
+
+.password-toggle-btn:focus {
+    outline: none;
+    color: var(--clsu-green);
+}
+</style>
+{% endblock %}
 {% endblock %}
 
 {% block extra_css %}

@@ -410,59 +410,63 @@
     </div>
 </div>
 
-<!-- Change Password Modal -->
-<div id="changePasswordModal" class="custom-modal">
-    <div class="custom-modal-content">
-        <div class="custom-modal-header">
-            <h5 class="custom-modal-title">
-                <i class="fas fa-key me-2"></i>
-                Change Password
-            </h5>
-            <button type="button" class="custom-modal-close" onclick="closeModal('changePasswordModal')">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="custom-modal-body">
-            <form id="changePasswordForm">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <div class="mb-3">
-                    <label for="currentPassword" class="form-label">Current Password</label>
-                    <div class="password-input-group">
-                        <input type="password" class="form-control password-field" id="currentPassword" name="current_password" placeholder=" " required>
-                        <button type="button" class="password-toggle-btn" onclick="togglePassword('currentPassword', this)">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
+
+    <!-- Change Password Panel -->
+    <div class="row g-4" id="changePasswordPanel" style="display: none;">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-key text-warning me-2"></i>
+                        Change Password
+                    </h5>
+
+                    <form id="changePasswordForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="currentPassword" class="form-label">Current Password</label>
+                                <div class="password-input-group">
+                                    <input type="password" class="form-control password-field" id="currentPassword" name="current_password" placeholder=" " required>
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('currentPassword', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="newPassword" class="form-label">New Password</label>
+                                <div class="password-input-group">
+                                    <input type="password" class="form-control password-field" id="newPassword" name="new_password" placeholder=" " required minlength="6">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('newPassword', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                <div class="password-input-group">
+                                    <input type="password" class="form-control password-field" id="confirmPassword" name="confirm_password" placeholder=" " required minlength="6">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('confirmPassword', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary" onclick="hideChangePasswordPanel()">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </button>
+                            <button type="submit" class="btn btn-clsu-green" id="savePasswordBtn">
+                                <i class="fas fa-save me-2"></i>Update Password
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="mb-3">
-                    <label for="newPassword" class="form-label">New Password</label>
-                    <div class="password-input-group">
-                        <input type="password" class="form-control password-field" id="newPassword" name="new_password" placeholder=" " required minlength="6">
-                        <button type="button" class="password-toggle-btn" onclick="togglePassword('newPassword', this)">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label for="confirmPassword" class="form-label">Confirm New Password</label>
-                    <div class="password-input-group">
-                        <input type="password" class="form-control password-field" id="confirmPassword" name="confirm_password" placeholder=" " required minlength="6">
-                        <button type="button" class="password-toggle-btn" onclick="togglePassword('confirmPassword', this)">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('changePasswordModal')">Cancel</button>
-                    <button type="submit" class="btn btn-clsu-green" id="savePasswordBtn">
-                        <i class="fas fa-save me-2"></i>Update Password
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
 
+</div>
 <script>
 // User configuration for admin functionality
 window.adminConfig = {
@@ -489,8 +493,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showChangePasswordModal() {
-    showModal('changePasswordModal');
-    // Setup password validation after modal is shown
+    const panel = document.getElementById('changePasswordPanel');
+    if (panel.style.display === 'none' || panel.style.display === '') {
+        panel.style.display = 'block';
+        // Scroll to the panel
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        panel.style.display = 'none';
+    }
+    // Setup password validation after panel is shown
     setTimeout(setupPasswordValidation, 100);
 }
 
@@ -522,7 +533,7 @@ async function handlePasswordChange(e) {
 
         if (result.success) {
             showAlert('Password updated successfully!', 'success');
-            closeModal('changePasswordModal');
+            hideChangePasswordPanel();
             form.reset();
         } else {
             showAlert(result.message || 'Failed to update password', 'error');
@@ -644,6 +655,13 @@ function closeModal(modalId) {
 
         // Remove modal state from body
         document.body.classList.remove('modal-open');
+    }
+}
+
+function hideChangePasswordPanel() {
+    const panel = document.getElementById('changePasswordPanel');
+    if (panel) {
+        panel.style.display = 'none';
     }
 }
 </script>
