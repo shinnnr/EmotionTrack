@@ -1211,21 +1211,27 @@ def my_students():
     if not current_user.is_admin or not current_user.is_faculty_admin:
         flash('Access denied. Faculty admin privileges required.', 'error')
         return redirect(url_for('main.home'))
-    
+
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # 10 students per page
+
     # Get faculty admin's assignment
     assignment = ClassAssignment.query.filter_by(faculty_id=current_user.id).first()
-    
-    students = []
+
+    students_pagination = None
     if assignment:
-        students = User.query.filter(
+        students_query = User.query.filter(
             User.grade_level == assignment.grade_level,
             User.section == assignment.section,
             User.is_admin == False
-        ).order_by(User.lastname, User.firstname).all()
-    
-    return render_template('my_students.html', 
-                         assignment=assignment, 
-                         students=students)
+        ).order_by(User.lastname, User.firstname)
+
+        students_pagination = students_query.paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('my_students.html',
+                          assignment=assignment,
+                          students_pagination=students_pagination)
 
 @admin_bp.route('/delete-students', methods=['POST'])
 @login_required

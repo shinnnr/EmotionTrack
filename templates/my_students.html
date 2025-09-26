@@ -20,7 +20,9 @@
                 {% if assignment %}
                     <p class="lead mb-0">
                         Managing: Grade {{ assignment.grade_level }} - {{ assignment.strand }} - Section {{ assignment.section }}
-                        <span class="badge bg-light text-dark ms-2">{{ students|length }} Students</span>
+                        {% if students_pagination %}
+                            <span class="badge bg-light text-dark ms-2">{{ students_pagination.total }} Students</span>
+                        {% endif %}
                     </p>
                 {% else %}
                     <p class="lead mb-0 text-warning">No class assignment found</p>
@@ -83,59 +85,124 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for student in students %}
-                                        <tr data-student-id="{{ student.id }}">
-                                            <td>
-                                                <div class="form-check">
-                                                    <input class="form-check-input student-checkbox" 
-                                                           type="checkbox" 
-                                                           value="{{ student.id }}"
-                                                           id="student_{{ student.id }}">
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="student-avatar me-3">
-                                                        <div class="avatar-circle bg-primary text-white">
-                                                            {{ student.firstname[0] }}{{ student.lastname[0] }}
+                                    {% if students_pagination %}
+                                        {% for student in students_pagination.items %}
+                                            <tr data-student-id="{{ student.id }}">
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input student-checkbox"
+                                                               type="checkbox"
+                                                               value="{{ student.id }}"
+                                                               id="student_{{ student.id }}">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="student-avatar me-3">
+                                                            <div class="avatar-circle bg-primary text-white">
+                                                                {{ student.firstname[0] }}{{ student.lastname[0] }}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0 fw-bold">{{ student.full_name }}</h6>
                                                         </div>
                                                     </div>
-                                                    <div>
-                                                        <h6 class="mb-0 fw-bold">{{ student.full_name }}</h6>
+                                                </td>
+                                                <td>{{ student.email }}</td>
+                                                <td>
+                                                    <span class="badge bg-secondary">{{ student.gender or 'N/A' }}</span>
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">{{ student.created_at | manila_time | strftime('%b %d, %Y') }}</small>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-outline-info btn-sm"
+                                                                onclick="viewStudentProfile({{ student.id }})"
+                                                                title="View Profile">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-primary btn-sm"
+                                                                onclick="messageStudent({{ student.id }})"
+                                                                title="Send Message">
+                                                            <i class="fas fa-comments"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-danger btn-sm"
+                                                                onclick="deleteStudent({{ student.id }})"
+                                                                title="Delete Student">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td>{{ student.email }}</td>
-                                            <td>
-                                                <span class="badge bg-secondary">{{ student.gender or 'N/A' }}</span>
-                                            </td>
-                                            <td>
-                                                <small class="text-muted">{{ student.created_at | manila_time | strftime('%b %d, %Y') }}</small>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group" role="group">
-                                                    <button class="btn btn-outline-info btn-sm" 
-                                                            onclick="viewStudentProfile({{ student.id }})" 
-                                                            title="View Profile">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
-                                                    <button class="btn btn-outline-primary btn-sm" 
-                                                            onclick="messageStudent({{ student.id }})" 
-                                                            title="Send Message">
-                                                        <i class="fas fa-comments"></i>
-                                                    </button>
-                                                    <button class="btn btn-outline-danger btn-sm" 
-                                                            onclick="deleteStudent({{ student.id }})" 
-                                                            title="Delete Student">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% endif %}
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Pagination Controls -->
+                        {% if students_pagination and students_pagination.pages > 1 %}
+                            <div class="d-flex justify-content-center mt-4">
+                                <nav aria-label="Student list pagination">
+                                    <ul class="pagination">
+                                        {% if students_pagination.has_prev %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('admin.my_students', page=students_pagination.prev_num) }}">
+                                                    <i class="fas fa-chevron-left"></i> Previous
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">
+                                                    <i class="fas fa-chevron-left"></i> Previous
+                                                </span>
+                                            </li>
+                                        {% endif %}
+
+                                        {% for page_num in students_pagination.iter_pages() %}
+                                            {% if page_num %}
+                                                {% if page_num == students_pagination.page %}
+                                                    <li class="page-item active">
+                                                        <span class="page-link">{{ page_num }}</span>
+                                                    </li>
+                                                {% else %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="{{ url_for('admin.my_students', page=page_num) }}">{{ page_num }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% else %}
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if students_pagination.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('admin.my_students', page=students_pagination.next_num) }}">
+                                                    Next <i class="fas fa-chevron-right"></i>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">
+                                                    Next <i class="fas fa-chevron-right"></i>
+                                                </span>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            </div>
+
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    Showing {{ students_pagination.page * students_pagination.per_page - students_pagination.per_page + 1 }} to
+                                    {{ [students_pagination.page * students_pagination.per_page, students_pagination.total]|min }} of
+                                    {{ students_pagination.total }} students
+                                </small>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
