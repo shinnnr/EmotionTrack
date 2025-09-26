@@ -1,6 +1,11 @@
 import os
 import logging
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file if it exists
+load_dotenv()
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -11,6 +16,14 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+# Debug: Check if .env file exists and try to load it explicitly
+env_file_path = os.path.join(os.getcwd(), '.env')
+logger.info(f"Current working directory: {os.getcwd()}")
+logger.info(f".env file exists: {os.path.exists(env_file_path)}")
+if os.path.exists(env_file_path):
+    logger.info("Loading .env file explicitly")
+    load_dotenv(env_file_path)
 
 class Base(DeclarativeBase):
     pass
