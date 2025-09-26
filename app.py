@@ -135,7 +135,7 @@ with app.app_context():
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
     # Add template filters for time handling
-    from models import convert_to_manila_time
+    from models import convert_to_manila_time, get_current_time
     @app.template_filter('manila_time')
     def manila_time_filter(dt):
         return convert_to_manila_time(dt)
