@@ -7,7 +7,8 @@ from flask_wtf.csrf import validate_csrf, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from app import db, csrf
-from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, get_current_time
+from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, get_current_time, convert_to_manila_time
+import pytz
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm
 
 # Create blueprints
@@ -76,8 +77,9 @@ def home():
     
     if latest_dass:
         week_ago = get_current_time() - timedelta(days=7)
-        if latest_dass.created_at > week_ago:
-            days_passed = (get_current_time() - latest_dass.created_at).days
+        latest_dass_time = convert_to_manila_time(latest_dass.created_at)
+        if latest_dass_time > week_ago:
+            days_passed = (get_current_time() - latest_dass_time).days
             dass21_status['can_take'] = False
             dass21_status['days_remaining'] = 7 - days_passed
             dass21_status['next_available_date'] = latest_dass.created_at + timedelta(days=7)
@@ -258,7 +260,7 @@ def emotion_log():
     }
     
     if latest_dass:
-        days_passed = (get_current_time() - latest_dass.created_at).days
+        days_passed = (get_current_time() - convert_to_manila_time(latest_dass.created_at)).days
         if days_passed < 7:
             dass21_status['can_take'] = False
             dass21_status['days_remaining'] = 7 - days_passed
@@ -356,11 +358,11 @@ def dass21_quiz():
     week_ago = get_current_time() - timedelta(days=7)
     recent_assessment = DASS21Result.query.filter(
         DASS21Result.user_id == current_user.id,
-        DASS21Result.created_at >= week_ago
+        convert_to_manila_time(DASS21Result.created_at) >= week_ago
     ).first()
 
     if recent_assessment:
-        days_remaining = 7 - (get_current_time() - recent_assessment.created_at).days
+        days_remaining = 7 - (get_current_time() - convert_to_manila_time(recent_assessment.created_at)).days
         flash(f'You can take the DASS-21 assessment again in {days_remaining} day(s). You completed your last assessment on {recent_assessment.created_at.strftime("%B %d, %Y")}.', 'info')
         return redirect(url_for('main.home'))
     
@@ -699,10 +701,10 @@ def check_login_status():
 @login_required
 def weekly_insights():
     # Get last 7 mood logs
-    week_ago = get_current_time() - timedelta(days=7)
+    week_ago_utc = (get_current_time() - timedelta(days=7)).astimezone(pytz.UTC).replace(tzinfo=None)
     logs = MoodLog.query.filter(
         MoodLog.user_id == current_user.id,
-        MoodLog.log_date >= week_ago
+        MoodLog.log_date >= week_ago_utc
     ).all()
     
     if not logs:
@@ -1378,13 +1380,16 @@ def get_suggested_responses(user_id):
     
     try:
         # Get recent DASS-21 results (within last 30 days)
+        # Convert Manila time threshold to UTC naive for database comparison
+        thirty_days_ago_utc = (get_current_time() - timedelta(days=30)).astimezone(pytz.UTC).replace(tzinfo=None)
         recent_dass = DASS21Result.query.filter_by(user_id=user_id).filter(
-            DASS21Result.created_at >= get_current_time() - timedelta(days=30)
+            DASS21Result.created_at >= thirty_days_ago_utc
         ).order_by(DASS21Result.created_at.desc()).first()
 
         # Get recent mood logs (within last 7 days)
+        seven_days_ago_utc = (get_current_time() - timedelta(days=7)).astimezone(pytz.UTC).replace(tzinfo=None)
         recent_moods = MoodLog.query.filter_by(user_id=user_id).filter(
-            MoodLog.log_date >= get_current_time() - timedelta(days=7)
+            MoodLog.log_date >= seven_days_ago_utc
         ).order_by(MoodLog.log_date.desc()).limit(10).all()
         
         # Generate suggestions based on DASS-21 results
