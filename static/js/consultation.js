@@ -151,7 +151,7 @@ async function sendMessage(conversationType) {
 
 function addMessageToChat(messageText, type, chatType, messageId = null) {
     const chatContainer = document.getElementById(chatType === 'guidance' ? 'guidanceMessages' : 'facultyMessages');
-    
+
     // Check for duplicate messages if messageId is provided
     if (messageId) {
         const existingMessage = chatContainer.querySelector(`[data-message-id="${messageId}"]`);
@@ -159,16 +159,26 @@ function addMessageToChat(messageText, type, chatType, messageId = null) {
             return; // Message already exists, don't add duplicate
         }
     }
-    
+
     const messageDiv = document.createElement('div');
-    
-    const currentTime = new Date().toLocaleTimeString('en-PH', {
+
+    // Get current Manila time for comparison
+    const now = new Date();
+    const manilaOffset = 8 * 60; // Manila is UTC+8
+    const manilaNow = new Date(now.getTime() + (manilaOffset * 60 * 1000));
+
+    // For new messages, assume they are from today
+    // For polled messages, we don't have the exact timestamp, so show time only
+    const time = new Date().toLocaleTimeString('en-PH', {
         hour: '2-digit',
         minute: '2-digit',
         timeZone: 'Asia/Manila'
     });
 
-    
+    // For new messages (no messageId), show time only
+    // For polled messages, also show time only (since we don't have exact date)
+    const timeDisplay = time;
+
     // Set message ID if provided to prevent duplicates
     if (messageId) {
         messageDiv.setAttribute('data-message-id', messageId);
@@ -187,7 +197,7 @@ function addMessageToChat(messageText, type, chatType, messageId = null) {
         
         const messageTimeDiv = document.createElement('div');
         messageTimeDiv.className = 'message-time';
-        messageTimeDiv.textContent = currentTime;
+        messageTimeDiv.innerHTML = timeDisplay;
         
         messageContent.appendChild(messageTextDiv);
         messageContent.appendChild(messageTimeDiv);
@@ -226,7 +236,7 @@ function addMessageToChat(messageText, type, chatType, messageId = null) {
         
         const messageTimeDiv = document.createElement('div');
         messageTimeDiv.className = 'message-time';
-        messageTimeDiv.textContent = currentTime;
+        messageTimeDiv.innerHTML = timeDisplay;
         
         messageContent.appendChild(messageSenderDiv);
         messageContent.appendChild(messageTextDiv);

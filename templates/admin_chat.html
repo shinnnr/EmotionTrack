@@ -41,7 +41,7 @@
                                     <div class="message-content">
                                         <div class="message-text">{{ message.message_text }}</div>
                                         <div class="message-time">
-                                            {{ message.created_at | manila_time | strftime('%I:%M %p') }}
+                                            {{ message.created_at | message_time | safe }}
                                         </div>
                                     </div>
                                 </div>
@@ -61,7 +61,7 @@
                                         <div class="message-text">{{ message.admin_response }}</div>
                                         <div class="message-time">
                                             {% if message.responded_at %}
-                                                {{ message.responded_at | manila_time | strftime('%I:%M %p') }}
+                                                {{ message.responded_at | message_time | safe }}
                                             {% endif %}
                                         </div>
                                     </div>
@@ -287,53 +287,70 @@ function addMessageToChat(messageText, messageType, timestamp, messageId = null)
         messageDiv.setAttribute('data-message-id', messageId);
     }
     
-    const time = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+    const time = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
                            : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    const date = timestamp ? new Date(timestamp).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
-                           : new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'});
-    
+
+    // Check if message is from today (in Manila time)
+    const now = new Date();
+    const manilaOffset = 8 * 60; // Manila is UTC+8
+    const manilaNow = new Date(now.getTime() + (manilaOffset * 60 * 1000));
+    const messageDate = timestamp ? new Date(timestamp) : new Date();
+    const manilaMessageDate = new Date(messageDate.getTime() + (manilaOffset * 60 * 1000));
+
+    const isToday = manilaMessageDate.toDateString() === manilaNow.toDateString();
+
+    let timeDisplay;
+    if (isToday) {
+        // Today: show time only
+        timeDisplay = time;
+    } else {
+        // Previous day: show time and date
+        const date = manilaMessageDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
+        timeDisplay = `${time}<br><small class="text-muted">${date}</small>`;
+    }
+
     if (messageType === 'student') {
         messageDiv.classList.add('student-message');
-        
+
         // Create DOM elements safely to prevent XSS
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
-        
+
         const messageSender = document.createElement('div');
         messageSender.className = 'message-sender';
         messageSender.textContent = '{{ student.full_name }}';
-        
+
         const messageTextElement = document.createElement('div');
         messageTextElement.className = 'message-text';
         messageTextElement.textContent = messageText; // Safe - uses textContent instead of innerHTML
-        
+
         const messageTime = document.createElement('div');
         messageTime.className = 'message-time';
-        messageTime.innerHTML = `${time}<br><small class="text-muted">${date}</small>`;
-        
+        messageTime.innerHTML = timeDisplay;
+
         messageContent.appendChild(messageSender);
         messageContent.appendChild(messageTextElement);
         messageContent.appendChild(messageTime);
         messageDiv.appendChild(messageContent);
     } else {
         messageDiv.classList.add('admin-message');
-        
+
         // Create DOM elements safely to prevent XSS
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
-        
+
         const messageSender = document.createElement('div');
         messageSender.className = 'message-sender';
         messageSender.textContent = 'You ({{ "Guidance Counselor" if current_user.email == "admin@emotiontrack.app" else "Faculty Adviser" }})';
-        
+
         const messageTextElement = document.createElement('div');
         messageTextElement.className = 'message-text';
         messageTextElement.textContent = messageText; // Safe - uses textContent instead of innerHTML
-        
+
         const messageTime = document.createElement('div');
         messageTime.className = 'message-time';
-        messageTime.innerHTML = `${time}<br><small class="text-muted">${date}</small>`;
-        
+        messageTime.innerHTML = timeDisplay;
+
         messageContent.appendChild(messageSender);
         messageContent.appendChild(messageTextElement);
         messageContent.appendChild(messageTime);

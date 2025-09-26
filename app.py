@@ -145,3 +145,19 @@ with app.app_context():
         if dt is None:
             return ''
         return dt.strftime(format_str)
+
+    @app.template_filter('message_time')
+    def message_time_filter(dt):
+        if dt is None:
+            return ''
+        # Convert to Manila time
+        manila_dt = convert_to_manila_time(dt)
+        now = get_current_time()
+
+        # Check if message is from today
+        if (manila_dt.date() == now.date()):
+            # Today: show time only
+            return manila_dt.strftime('%I:%M %p')
+        else:
+            # Previous day: show time and date
+            return manila_dt.strftime('%I:%M %p<br><small class="text-muted">%b %d, %Y</small>')

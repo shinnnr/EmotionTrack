@@ -4,7 +4,7 @@
         <div class="message-content">
             <div class="message-text">{{ message.message_text }}</div>
             <div class="message-time">
-                {{ message.created_at | manila_time | strftime('%I:%M %p') }}
+                {{ message.created_at | message_time | safe }}
             </div>
         </div>
     </div>
@@ -38,7 +38,7 @@
             <div class="message-text">{{ message.admin_response }}</div>
             <div class="message-time">
                 {% if message.responded_at %}
-                    {{ message.responded_at | manila_time | strftime('%I:%M %p') }}
+                    {{ message.responded_at | message_time | safe }}
                 {% endif %}
             </div>
         </div>
