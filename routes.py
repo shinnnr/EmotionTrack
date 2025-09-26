@@ -1106,6 +1106,12 @@ def delete_faculty():
         return jsonify({'success': False, 'message': 'Access denied'})
     
     try:
+        # Validate CSRF token
+        try:
+            validate_csrf(request.headers.get('X-CSRFToken'))
+        except ValidationError:
+            return jsonify({'success': False, 'message': 'CSRF token validation failed.'}), 400
+        
         faculty_id = request.json.get('faculty_id')
         if not faculty_id:
             return jsonify({'success': False, 'message': 'Faculty ID is required'})
