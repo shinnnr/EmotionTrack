@@ -2139,7 +2139,7 @@ def get_analytics_data():
         result = {
             'mood_distribution': [{'emotion': row.emotion, 'count': row.count} for row in mood_data],
             'dass_severity': [{'severity': row.depression_severity, 'count': row.count} for row in dass_data],
-            'weekly_activity': [{'week': row.week.strftime('%Y-%m-%d'), 'count': row.count} for row in weekly_logs],
+            'weekly_activity': [{'week': f"Week of {convert_to_manila_time(row.week).strftime('%b %d')}", 'count': row.count} for row in weekly_logs],
             'total_users': total_users,
             'average_energy': float(average_energy) if average_energy else 0.0,
             'concerning_students': concerning_students
