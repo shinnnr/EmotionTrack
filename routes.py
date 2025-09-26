@@ -1116,7 +1116,7 @@ def delete_faculty():
             return jsonify({'success': False, 'message': 'Invalid faculty ID format'})
 
         # Find the faculty member
-        faculty = User.query.filter_by(id=faculty_id, is_admin=True, role='faculty_admin').first()
+        faculty = User.query.filter_by(id=faculty_id, is_admin=True).filter(User.role.in_(['faculty_admin', 'guidance_admin'])).first()
         if not faculty:
             return jsonify({'success': False, 'message': 'Faculty member not found'})
 
