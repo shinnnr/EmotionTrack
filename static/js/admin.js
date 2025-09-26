@@ -707,7 +707,7 @@ function showAlert(message, type = 'info') {
                 }
             }, 150);
         }
-    }, 5000);
+    }, 5023);
 }
 
 // Make functions available globally

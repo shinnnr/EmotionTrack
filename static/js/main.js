@@ -87,7 +87,7 @@ function initializeFlashMessages() {
                     }
                 }, 300);
             }
-        }, 5000);
+        }, 5023);
     });
 }
 
@@ -224,7 +224,7 @@ function showAlert(message, type = 'info') {
                 }
             }, 300);
         }
-    }, 5000);
+    }, 5023);
 }
 
 function showLoading(element, text = 'Loading...') {
