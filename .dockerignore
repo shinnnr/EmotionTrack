@@ -1,0 +1,16 @@
+.env
+.git
+.gitignore
+.vscode
+__pycache__
+*.pyc
+*.pyo
+attached_assets/
+.replit
+cookies.txt
+fresh_cookies.txt
+login_cookies.txt
+session_cookies.txt
+test_cookies.txt
+response_headers.txt
+uv.lock

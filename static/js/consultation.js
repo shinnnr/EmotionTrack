@@ -280,7 +280,7 @@ function startRealtimePolling() {
     });
     
     // Poll for new messages every 5 seconds
-    pollingInterval = setInterval(checkForNewMessages, 5000);
+    pollingInterval = setInterval(checkForNewMessages, 5023);
 }
 
 async function checkForNewMessages() {
