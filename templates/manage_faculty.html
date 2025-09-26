@@ -165,7 +165,12 @@ function deleteFaculty(facultyId, facultyName) {
                 faculty_id: facultyId
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 alert('Faculty deleted successfully!');
@@ -176,7 +181,7 @@ function deleteFaculty(facultyId, facultyName) {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while deleting faculty.');
+            alert('An error occurred while deleting faculty: ' + error.message);
         });
     }
 }

@@ -1106,9 +1106,14 @@ def delete_faculty():
         return jsonify({'success': False, 'message': 'Access denied'})
 
     try:
-        faculty_id = request.json.get('faculty_id')
-        if not faculty_id:
+        faculty_id_str = request.json.get('faculty_id')
+        if not faculty_id_str:
             return jsonify({'success': False, 'message': 'Faculty ID is required'})
+
+        try:
+            faculty_id = int(faculty_id_str)
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'message': 'Invalid faculty ID format'})
 
         # Find the faculty member
         faculty = User.query.filter_by(id=faculty_id, is_admin=True, role='faculty_admin').first()
