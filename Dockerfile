@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["uv", "run", "gunicorn", "main:app", "--bind", "0.0.0.0:$PORT"]
+CMD uv run gunicorn main:app --bind 0.0.0.0:$PORT
