@@ -123,6 +123,36 @@
     </div>
 </div>
 
+<!-- Delete Faculty Confirmation Modal -->
+<div class="modal fade" id="deleteFacultyModal" tabindex="-1" aria-labelledby="deleteFacultyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteFacultyModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                    Confirm Faculty Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to delete <strong id="facultyNameToDelete"></strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    This action cannot be undone and will remove all associated class assignments.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteFacultyBtn">
+                    <i class="fas fa-trash me-2"></i>Delete Faculty
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.getElementById('createFacultyForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -151,9 +181,21 @@ document.getElementById('createFacultyForm').addEventListener('submit', function
     });
 });
 
-// Function to delete faculty
+// Function to delete faculty - now using modal
 function deleteFaculty(facultyId, facultyName) {
-    if (confirm(`Are you sure you want to delete ${facultyName}? This action cannot be undone and will remove all associated class assignments.`)) {
+    // Set the faculty name in the modal
+    document.getElementById('facultyNameToDelete').textContent = facultyName;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteFacultyModal'));
+    modal.show();
+    
+    // Store faculty ID for confirmation
+    document.getElementById('confirmDeleteFacultyBtn').onclick = function() {
+        // Hide the modal first
+        modal.hide();
+        
+        // Perform the delete request
         fetch('{{ url_for("admin.delete_faculty") }}', {
             method: 'POST',
             headers: {
@@ -167,17 +209,51 @@ function deleteFaculty(facultyId, facultyName) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Faculty deleted successfully!');
-                location.reload();
+                // Show success message and reload
+                const successAlert = document.createElement('div');
+                successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                successAlert.style.top = '20px';
+                successAlert.style.right = '20px';
+                successAlert.style.zIndex = '9999';
+                successAlert.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>Faculty deleted successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(successAlert);
+                
+                // Reload after a short delay
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
             } else {
-                alert('Error: ' + data.message);
+                // Show error message
+                const errorAlert = document.createElement('div');
+                errorAlert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+                errorAlert.style.top = '20px';
+                errorAlert.style.right = '20px';
+                errorAlert.style.zIndex = '9999';
+                errorAlert.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>Error: ${data.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(errorAlert);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while deleting faculty.');
+            // Show error message
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+            errorAlert.style.top = '20px';
+            errorAlert.style.right = '20px';
+            errorAlert.style.zIndex = '9999';
+            errorAlert.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>An error occurred while deleting faculty.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(errorAlert);
         });
-    }
+    };
 }
 </script>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
