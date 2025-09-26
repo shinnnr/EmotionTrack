@@ -100,8 +100,9 @@
                                                    class="btn btn-outline-primary btn-sm w-100 mb-2">
                                                     <i class="fas fa-eye me-1"></i>View Students
                                                 </a>
-                                                <button onclick="deleteFaculty({{ data.faculty.id }}, {{ (data.faculty.firstname ~ ' ' ~ data.faculty.lastname) | tojson }})" 
-                                                        class="btn btn-outline-danger btn-sm w-100">
+                                                <button class="btn btn-outline-danger btn-sm w-100 delete-faculty-btn"
+                                                        data-faculty-id="{{ data.faculty.id }}"
+                                                        data-faculty-name="{{ (data.faculty.firstname ~ ' ' ~ data.faculty.lastname) | tojson }}">
                                                     <i class="fas fa-trash me-1"></i>Delete Faculty
                                                 </button>
                                             </div>
@@ -158,8 +159,7 @@ function deleteFaculty(facultyId, facultyName) {
         fetch('{{ url_for("admin.delete_faculty") }}', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 faculty_id: facultyId
@@ -180,6 +180,17 @@ function deleteFaculty(facultyId, facultyName) {
         });
     }
 }
+
+// Add event listeners to delete buttons
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.delete-faculty-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const facultyId = this.dataset.facultyId;
+            const facultyName = this.dataset.facultyName;
+            deleteFaculty(facultyId, facultyName);
+        });
+    });
+});
 </script>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %}
