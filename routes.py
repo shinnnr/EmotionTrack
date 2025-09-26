@@ -1609,7 +1609,11 @@ def change_password():
         # Verify current password
         if not check_password_hash(current_user.password_hash, current_password):
             return jsonify({'success': False, 'message': 'Current password is incorrect'})
-        
+
+        # Check if new password is different from current password
+        if check_password_hash(current_user.password_hash, new_password):
+            return jsonify({'success': False, 'message': 'New password must be different from your current password'})
+
         # Validate new password length
         if len(new_password) < 6:
             return jsonify({'success': False, 'message': 'New password must be at least 6 characters long'})
