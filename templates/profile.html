@@ -1149,6 +1149,10 @@ async function handlePasswordChange(e) {
             form.reset();
             // Set flag to show warning on next button click
             localStorage.setItem('passwordChangedRecently', 'true');
+            // Reload the page after successful password change
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
         } else {
             showAlert(result.message || 'Failed to update password', 'error');
         }
