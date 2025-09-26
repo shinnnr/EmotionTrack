@@ -166,15 +166,58 @@ class StudentMessage(db.Model):
 
 class ClassAssignment(db.Model):
     __tablename__ = 'class_assignments'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     faculty_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     grade_level = db.Column(db.String(20), nullable=False)
     section = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime, default=get_current_time)
-    
+
     # Add unique constraint to ensure one faculty per section
     __table_args__ = (db.UniqueConstraint('grade_level', 'section', name='unique_grade_section'),)
-    
+
     def __repr__(self):
         return f'<ClassAssignment Faculty {self.faculty_id} - {self.grade_level}-{self.section}>'
+
+class GuidanceAlert(db.Model):
+    __tablename__ = 'guidance_alerts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    alert_type = db.Column(db.String(50), nullable=False)  # 'dass21_severe', 'emotional_pattern', 'crisis_indicator'
+    severity = db.Column(db.String(20), nullable=False)  # 'low', 'medium', 'high', 'critical'
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_resolved = db.Column(db.Boolean, default=False)
+    resolved_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    resolved_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=get_current_time)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='alerts')
+    resolver = db.relationship('User', foreign_keys=[resolved_by])
+
+    def __repr__(self):
+        return f'<GuidanceAlert {self.alert_type} for User {self.user_id} - {self.severity}>'
+
+class StudentFeedback(db.Model):
+    __tablename__ = 'student_feedback'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    feedback_type = db.Column(db.String(50), nullable=False)  # 'general', 'feature_request', 'bug_report', 'satisfaction'
+    rating = db.Column(db.Integer, nullable=True)  # 1-5 scale for satisfaction
+    subject = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_anonymous = db.Column(db.Boolean, default=False)
+    admin_response = db.Column(db.Text, nullable=True)
+    responded_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    responded_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=get_current_time)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='feedback')
+    responder = db.relationship('User', foreign_keys=[responded_by])
+
+    def __repr__(self):
+        return f'<StudentFeedback {self.feedback_type} by User {self.user_id}>'

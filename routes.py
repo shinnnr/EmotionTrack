@@ -7,9 +7,11 @@ from flask_wtf.csrf import validate_csrf, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from app import db, csrf
-from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, get_current_time, convert_to_manila_time
+from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, get_current_time, convert_to_manila_time
 import pytz
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm
+from coping_recommendations import get_user_coping_recommendations, get_user_motivational_quote
+from alert_templates import get_alert_template, get_severity_level
 
 # Create blueprints
 main_bp = Blueprint('main', __name__)
@@ -209,6 +211,27 @@ def get_wellness_insights():
         return jsonify({'error': str(e)}), 500
 
 
+@main_bp.route('/api/coping-recommendations')
+@login_required
+def get_coping_recommendations():
+    try:
+        limit = request.args.get('limit', 5, type=int)
+        recommendations = get_user_coping_recommendations(current_user.id, limit)
+        return jsonify({'recommendations': recommendations})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@main_bp.route('/api/motivational-quote')
+@login_required
+def get_motivational_quote():
+    try:
+        quote = get_user_motivational_quote(current_user.id)
+        return jsonify({'quote': quote})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @main_bp.route('/api/dass21-results')
 @login_required
 def get_dass21_results():
@@ -329,9 +352,16 @@ def emotion_log():
             
             
             db.session.commit()
-            
+
+            # Generate alerts based on emotional patterns
+            try:
+                generate_guidance_alerts(current_user.id)
+            except Exception as e:
+                print(f"Error generating alerts for mood log: {e}")
+                # Don't fail the mood log submission if alert generation fails
+
             flash('Mood log saved successfully!', 'success')
-            
+
             return redirect(url_for('main.home'))
             
         except ValueError as e:
@@ -458,7 +488,14 @@ def process_dass21():
         
         db.session.add(dass_result)
         db.session.commit()
-        
+
+        # Generate alerts based on DASS-21 results
+        try:
+            generate_guidance_alerts(current_user.id)
+        except Exception as e:
+            print(f"Error generating alerts for DASS-21: {e}")
+            # Don't fail the DASS-21 submission if alert generation fails
+
         return render_template('dass21_results.html',
                               depression_score=depression_final,
                               anxiety_score=anxiety_final,
@@ -1369,6 +1406,369 @@ def poll_student_messages(user_id):
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# Alert System Functions
+def check_dass21_alerts(user_id):
+    """Check for DASS-21 related alerts"""
+    alerts = []
+
+    # Get latest DASS-21 result
+    latest_dass = DASS21Result.query.filter_by(user_id=user_id).order_by(
+        DASS21Result.created_at.desc()
+    ).first()
+
+    if not latest_dass:
+        return alerts
+
+    user = User.query.get(user_id)
+    if not user:
+        return alerts
+
+    # Check each scale for concerning scores
+    scales = [
+        ('depression', latest_dass.depression_score, latest_dass.depression_severity),
+        ('anxiety', latest_dass.anxiety_score, latest_dass.anxiety_severity),
+        ('stress', latest_dass.stress_score, latest_dass.stress_severity)
+    ]
+
+    for scale_name, score, severity in scales:
+        if severity in ['Severe', 'Extremely Severe']:
+            severity_level = 'high' if severity == 'Severe' else 'critical'
+
+            # Check if alert already exists
+            existing_alert = GuidanceAlert.query.filter_by(
+                user_id=user_id,
+                alert_type='dass21_severe',
+                is_resolved=False
+            ).filter(
+                GuidanceAlert.message.contains(scale_name)
+            ).first()
+
+            if not existing_alert:
+                template = get_alert_template('dass21_severe', severity_level, {
+                    'name': user.full_name
+                }, {
+                    'scale': scale_name,
+                    'score': score
+                })
+
+                alert = GuidanceAlert(
+                    user_id=user_id,
+                    alert_type='dass21_severe',
+                    severity=severity_level,
+                    title=template['title'],
+                    message=template['message']
+                )
+                alerts.append(alert)
+
+    return alerts
+
+def check_emotional_pattern_alerts(user_id):
+    """Check for concerning emotional patterns"""
+    alerts = []
+
+    # Get last 7 days of mood logs
+    week_ago = get_current_time() - timedelta(days=7)
+    recent_logs = MoodLog.query.filter(
+        MoodLog.user_id == user_id,
+        MoodLog.log_date >= week_ago
+    ).all()
+
+    if len(recent_logs) < 3:
+        return alerts
+
+    user = User.query.get(user_id)
+    if not user:
+        return alerts
+
+    # Count negative emotions
+    negative_emotions = ['sad', 'angry', 'frustrated', 'anxious', 'lonely', 'depressed', 'overwhelmed']
+    negative_count = sum(1 for log in recent_logs if log.emotion.lower() in negative_emotions)
+
+    # Calculate severity based on negative emotion ratio
+    negative_ratio = negative_count / len(recent_logs)
+
+    if negative_ratio >= 0.8:  # 80% or more negative emotions
+        severity_level = 'high'
+    elif negative_ratio >= 0.6:  # 60% or more
+        severity_level = 'medium'
+    elif negative_ratio >= 0.4:  # 40% or more
+        severity_level = 'low'
+    else:
+        return alerts
+
+    # Check if alert already exists
+    existing_alert = GuidanceAlert.query.filter_by(
+        user_id=user_id,
+        alert_type='emotional_pattern',
+        is_resolved=False
+    ).first()
+
+    if not existing_alert:
+        template = get_alert_template('emotional_pattern', severity_level, {
+            'name': user.full_name
+        }, {
+            'days': len(recent_logs)
+        })
+
+        alert = GuidanceAlert(
+            user_id=user_id,
+            alert_type='emotional_pattern',
+            severity=severity_level,
+            title=template['title'],
+            message=template['message']
+        )
+        alerts.append(alert)
+
+    return alerts
+
+def check_crisis_indicators(user_id):
+    """Check for crisis indicators in user input"""
+    alerts = []
+
+    # Crisis keywords to monitor
+    crisis_keywords = [
+        'suicide', 'kill myself', 'end it all', 'not worth living',
+        'harm myself', 'self-harm', 'cutting', 'overdose',
+        'give up', 'no hope', 'can\'t go on'
+    ]
+
+    user = User.query.get(user_id)
+    if not user:
+        return alerts
+
+    # Check recent mood logs for crisis keywords
+    week_ago = get_current_time() - timedelta(days=7)
+    recent_logs = MoodLog.query.filter(
+        MoodLog.user_id == user_id,
+        MoodLog.log_date >= week_ago
+    ).all()
+
+    crisis_count = 0
+    for log in recent_logs:
+        text_to_check = f"{log.triggers or ''} {log.coping or ''} {log.gratitude or ''}".lower()
+        for keyword in crisis_keywords:
+            if keyword in text_to_check:
+                crisis_count += 1
+                break
+
+    # Check recent messages
+    recent_messages = StudentMessage.query.filter_by(
+        sender_user_id=user_id
+    ).filter(
+        StudentMessage.created_at >= week_ago
+    ).all()
+
+    for message in recent_messages:
+        if message.message_text:
+            text_to_check = message.message_text.lower()
+            for keyword in crisis_keywords:
+                if keyword in text_to_check:
+                    crisis_count += 1
+                    break
+
+    if crisis_count > 0:
+        severity_level = get_severity_level(crisis_count, 'crisis_words')
+
+        # Check if alert already exists
+        existing_alert = GuidanceAlert.query.filter_by(
+            user_id=user_id,
+            alert_type='crisis_indicator',
+            is_resolved=False
+        ).first()
+
+        if not existing_alert:
+            template = get_alert_template('crisis_indicator', severity_level, {
+                'name': user.full_name
+            })
+
+            alert = GuidanceAlert(
+                user_id=user_id,
+                alert_type='crisis_indicator',
+                severity=severity_level,
+                title=template['title'],
+                message=template['message']
+            )
+            alerts.append(alert)
+
+    return alerts
+
+def generate_guidance_alerts(user_id=None):
+    """Generate alerts for all users or specific user"""
+    alerts_created = []
+
+    if user_id:
+        users_to_check = [User.query.get(user_id)]
+    else:
+        users_to_check = User.query.filter_by(is_admin=False).all()
+
+    for user in users_to_check:
+        if not user:
+            continue
+
+        # Check all alert types
+        dass_alerts = check_dass21_alerts(user.id)
+        pattern_alerts = check_emotional_pattern_alerts(user.id)
+        crisis_alerts = check_crisis_indicators(user.id)
+
+        all_alerts = dass_alerts + pattern_alerts + crisis_alerts
+
+        # Save alerts to database
+        for alert in all_alerts:
+            db.session.add(alert)
+            alerts_created.append(alert)
+
+    if alerts_created:
+        db.session.commit()
+
+    return alerts_created
+
+# Alert Management Routes
+@admin_bp.route('/alerts')
+@login_required
+def view_alerts():
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('main.home'))
+
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    status_filter = request.args.get('status', 'all')  # 'all', 'active', 'resolved'
+
+    # Get accessible student IDs
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+
+    # Build query
+    query = GuidanceAlert.query
+    if accessible_student_ids:
+        query = query.filter(GuidanceAlert.user_id.in_(accessible_student_ids))
+
+    if status_filter == 'active':
+        query = query.filter_by(is_resolved=False)
+    elif status_filter == 'resolved':
+        query = query.filter_by(is_resolved=True)
+
+    # Order by creation date, unresolved first
+    query = query.order_by(GuidanceAlert.is_resolved.asc(), GuidanceAlert.created_at.desc())
+
+    alerts_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('admin_alerts.html',
+                          alerts=alerts_pagination.items,
+                          pagination=alerts_pagination,
+                          status_filter=status_filter)
+
+@admin_bp.route('/alert/<int:alert_id>/resolve', methods=['POST'])
+@login_required
+def resolve_alert(alert_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    alert = GuidanceAlert.query.get_or_404(alert_id)
+
+    # Check if admin can access this alert
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+    if alert.user_id not in accessible_student_ids:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    alert.is_resolved = True
+    alert.resolved_by = current_user.id
+    alert.resolved_at = get_current_time()
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Alert resolved successfully'})
+
+@admin_bp.route('/api/generate-alerts', methods=['POST'])
+@login_required
+def api_generate_alerts():
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    try:
+        user_id = request.json.get('user_id') if request.json else None
+        alerts_created = generate_guidance_alerts(user_id)
+
+        return jsonify({
+            'success': True,
+            'alerts_created': len(alerts_created),
+            'message': f'Successfully generated {len(alerts_created)} alerts'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+# Student Feedback Routes
+@main_bp.route('/feedback', methods=['GET', 'POST'])
+@login_required
+def submit_feedback():
+    if current_user.is_admin:
+        flash('Feedback submission is for students only.', 'error')
+        return redirect(url_for('admin.dashboard'))
+
+    form = FeedbackForm()
+    if form.validate_on_submit():
+        feedback = StudentFeedback(
+            user_id=current_user.id,
+            feedback_type=form.feedback_type.data,
+            rating=form.rating.data if form.feedback_type.data == 'satisfaction' else None,
+            subject=form.subject.data,
+            message=form.message.data,
+            is_anonymous=form.is_anonymous.data
+        )
+        db.session.add(feedback)
+        db.session.commit()
+
+        flash('Thank you for your feedback! Your input helps us improve the system.', 'success')
+        return redirect(url_for('main.home'))
+
+    return render_template('feedback.html', form=form)
+
+@admin_bp.route('/feedback')
+@login_required
+def manage_feedback():
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('main.home'))
+
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    type_filter = request.args.get('type', 'all')
+
+    # Build query
+    query = StudentFeedback.query
+
+    if type_filter != 'all':
+        query = query.filter_by(feedback_type=type_filter)
+
+    # Order by creation date
+    query = query.order_by(StudentFeedback.created_at.desc())
+
+    feedback_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('admin_feedback.html',
+                          feedback_items=feedback_pagination.items,
+                          pagination=feedback_pagination,
+                          type_filter=type_filter)
+
+@admin_bp.route('/feedback/<int:feedback_id>/respond', methods=['POST'])
+@login_required
+def respond_to_feedback(feedback_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    feedback = StudentFeedback.query.get_or_404(feedback_id)
+    response_text = request.form.get('response_text')
+
+    if response_text:
+        feedback.admin_response = response_text
+        feedback.responded_by = current_user.id
+        feedback.responded_at = get_current_time()
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Response sent successfully'})
+
+    return jsonify({'success': False, 'message': 'Response text is required'})
 
 @admin_bp.route('/suggested-responses/<int:user_id>')
 @login_required

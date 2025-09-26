@@ -76,3 +76,22 @@ class FacultyProfileForm(FlaskForm):
 class StudentProfileUpdateForm(FlaskForm):
     grade_level = SelectField('Grade Level', choices=[('11', 'Grade 11'), ('12', 'Grade 12')], validators=[DataRequired()])
     section = StringField('Section', validators=[DataRequired(), Length(max=50)], render_kw={"placeholder": "Example: MARX"})
+
+class FeedbackForm(FlaskForm):
+    feedback_type = SelectField('Feedback Type', choices=[
+        ('general', 'General Feedback'),
+        ('feature_request', 'Feature Request'),
+        ('bug_report', 'Bug Report'),
+        ('satisfaction', 'Satisfaction Survey')
+    ], validators=[DataRequired()])
+    rating = SelectField('Overall Satisfaction (1-5)', choices=[
+        ('1', '1 - Very Dissatisfied'),
+        ('2', '2 - Dissatisfied'),
+        ('3', '3 - Neutral'),
+        ('4', '4 - Satisfied'),
+        ('5', '5 - Very Satisfied')
+    ])
+    subject = StringField('Subject', validators=[DataRequired(), Length(max=100)])
+    message = TextAreaField('Your Feedback', validators=[DataRequired(), Length(max=1000)],
+                           render_kw={"rows": 5, "placeholder": "Please share your thoughts, suggestions, or concerns..."})
+    is_anonymous = BooleanField('Submit anonymously')
