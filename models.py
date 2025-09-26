@@ -88,18 +88,22 @@ class User(UserMixin, db.Model):
         """Check if student can update profile (100 days since last update)"""
         if not self.last_profile_update:
             return True  # Never updated before, allow update
-        
+
         from datetime import timedelta
-        days_since_update = (get_current_time() - self.last_profile_update).days
+        # Convert last_profile_update to Manila time for consistent comparison
+        last_update_manila = convert_to_manila_time(self.last_profile_update)
+        days_since_update = (get_current_time() - last_update_manila).days
         return days_since_update >= 100
-    
+
     def days_until_profile_update(self):
         """Calculate days remaining before student can update profile again"""
         if not self.last_profile_update:
             return 0  # Can update immediately
-        
+
         from datetime import timedelta
-        days_since_update = (get_current_time() - self.last_profile_update).days
+        # Convert last_profile_update to Manila time for consistent comparison
+        last_update_manila = convert_to_manila_time(self.last_profile_update)
+        days_since_update = (get_current_time() - last_update_manila).days
         days_remaining = 100 - days_since_update
         return max(0, days_remaining)
     

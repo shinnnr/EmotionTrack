@@ -353,19 +353,23 @@ def emotion_log():
 def dass21_quiz():
     # Check if user can take assessment (once per week)
     from datetime import datetime, timedelta
-    
+
     # Check for recent assessment (within last 7 days)
     week_ago = get_current_time() - timedelta(days=7)
-    recent_assessment = DASS21Result.query.filter(
-        DASS21Result.user_id == current_user.id,
-        convert_to_manila_time(DASS21Result.created_at) >= week_ago
-    ).first()
+    recent_assessments = DASS21Result.query.filter_by(user_id=current_user.id).all()
+
+    # Check if any assessment was taken within the last 7 days
+    recent_assessment = None
+    for assessment in recent_assessments:
+        if convert_to_manila_time(assessment.created_at) >= week_ago:
+            recent_assessment = assessment
+            break
 
     if recent_assessment:
         days_remaining = 7 - (get_current_time() - convert_to_manila_time(recent_assessment.created_at)).days
         flash(f'You can take the DASS-21 assessment again in {days_remaining} day(s). You completed your last assessment on {convert_to_manila_time(recent_assessment.created_at).strftime("%B %d, %Y")}.', 'info')
         return redirect(url_for('main.home'))
-    
+
     # DASS-21 questions with their subscales
     dass21_questions = [
         {'id': 1, 'text': "I found it hard to wind down.", 'scale': 'S'},
@@ -390,7 +394,7 @@ def dass21_quiz():
         {'id': 20, 'text': "I felt scared without any good reason.", 'scale': 'A'},
         {'id': 21, 'text': "I felt that life was meaningless.", 'scale': 'D'}
     ]
-    
+
     return render_template('dass21_quiz.html', questions=dass21_questions)
 
 @main_bp.route('/process-dass21', methods=['POST'])
