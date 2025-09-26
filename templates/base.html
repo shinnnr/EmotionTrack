@@ -137,18 +137,19 @@
         
         // Close sidebar when clicking on logo or username in mobile
         if (sidebar) {
-            const sidebarHeader = sidebar.querySelector('.sidebar-header');
+            const sidebarHeader = sidebar.querySelector('.sidebar-header-link') || sidebar.querySelector('.sidebar-header');
             if (sidebarHeader) {
                 sidebarHeader.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
                     // Only close on mobile (when overlay is visible)
                     if (sidebarOverlay && sidebarOverlay.classList.contains('show')) {
+                        e.preventDefault();
+                        e.stopPropagation();
                         closeSidebar();
                     }
+                    // If not mobile, allow the link to navigate
                 });
-                
-                // Add cursor pointer to indicate it's clickable on mobile
+
+                // Add cursor pointer to indicate it's clickable
                 sidebarHeader.style.cursor = 'pointer';
             }
         }
