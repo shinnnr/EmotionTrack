@@ -167,7 +167,7 @@ def get_mood_logs():
                 'triggers': log.triggers,
                 'coping': log.coping,
                 'gratitude': log.gratitude,
-                'log_date': log.log_date.isoformat() if log.log_date else None
+                'log_date': convert_to_manila_time(log.log_date).isoformat() if log.log_date else None
             } for log in logs_paginated.items],
             'pagination': {
                 'page': logs_paginated.page,
@@ -228,7 +228,7 @@ def get_dass21_results():
                 'depression_severity': result.depression_severity,
                 'anxiety_severity': result.anxiety_severity,
                 'stress_severity': result.stress_severity,
-                'created_at': result.created_at.isoformat() if result.created_at else None
+                'created_at': convert_to_manila_time(result.created_at).isoformat() if result.created_at else None
             } for result in results_paginated.items],
             'pagination': {
                 'page': results_paginated.page,
@@ -558,7 +558,7 @@ def poll_messages():
             return {
                 'id': message.id,
                 'admin_response': message.admin_response,
-                'responded_at': message.responded_at.isoformat() if message.responded_at else None,
+                'responded_at': convert_to_manila_time(message.responded_at).isoformat() if message.responded_at else None,
                 'conversation_type': message.conversation_type,
                 'responded_by_admin_id': message.responded_by_admin_id
             }
@@ -1346,8 +1346,8 @@ def poll_student_messages(user_id):
                 'id': message.id,
                 'message_text': message.message_text,
                 'admin_response': message.admin_response,
-                'created_at': message.created_at.isoformat() if message.created_at else None,
-                'responded_at': message.responded_at.isoformat() if message.responded_at else None,
+                'created_at': convert_to_manila_time(message.created_at).isoformat() if message.created_at else None,
+                'responded_at': convert_to_manila_time(message.responded_at).isoformat() if message.responded_at else None,
                 'conversation_type': message.conversation_type,
                 'responded_by_admin_id': message.responded_by_admin_id,
                 'is_student_message': bool(message.message_text),
@@ -1708,7 +1708,7 @@ def get_student_profile(user_id):
                 'depression_severity': result.depression_severity,
                 'anxiety_severity': result.anxiety_severity,
                 'stress_severity': result.stress_severity,
-                'created_at': result.created_at.strftime('%B %d, %Y') if result.created_at else ''
+                'created_at': convert_to_manila_time(result.created_at).strftime('%B %d, %Y') if result.created_at else ''
             } for result in dass21_results],
             'mood_logs': [{
                 'emotion': log.emotion,
@@ -1717,12 +1717,12 @@ def get_student_profile(user_id):
                 'triggers': log.triggers,
                 'coping': log.coping,
                 'gratitude': log.gratitude,
-                'log_date': log.log_date.strftime('%B %d, %Y') if log.log_date else ''
+                'log_date': convert_to_manila_time(log.log_date).strftime('%B %d, %Y') if log.log_date else ''
             } for log in mood_logs],
             'recent_messages': [{
                 'message_text': msg.message_text,
                 'admin_response': msg.admin_response,
-                'created_at': msg.created_at.strftime('%B %d, %Y at %I:%M %p') if msg.created_at else '',
+                'created_at': convert_to_manila_time(msg.created_at).strftime('%B %d, %Y at %I:%M %p') if msg.created_at else '',
                 'is_read': msg.is_read
             } for msg in messages]
         }
@@ -2210,7 +2210,7 @@ def get_admin_messages():
                 },
                 'latest_message': {
                     'message_text': conv['latest_message'].message_text if conv['latest_message'] else None,
-                    'created_at': conv['latest_message'].created_at.strftime('%B %d, %Y at %I:%M %p') if conv['latest_message'] and conv['latest_message'].created_at else None,
+                    'created_at': convert_to_manila_time(conv['latest_message'].created_at).strftime('%B %d, %Y at %I:%M %p') if conv['latest_message'] and conv['latest_message'].created_at else None,
                     'admin_response': conv['latest_message'].admin_response if conv['latest_message'] else None
                 } if conv['latest_message'] else None,
                 'has_unread': conv['has_unread'],
@@ -2292,7 +2292,7 @@ def get_students_by_hierarchy():
                             'id': student.id,
                             'full_name': student.full_name,
                             'email': student.email,
-                            'created_at': student.created_at.strftime('%B %d, %Y') if student.created_at else ''
+                            'created_at': convert_to_manila_time(student.created_at).strftime('%B %d, %Y') if student.created_at else ''
                         } for student in students]
                     })
                 else:
@@ -2377,7 +2377,7 @@ def get_recent_mood_logs():
                 'sleep': log.sleep,
                 'energy': log.energy,
                 'triggers': log.triggers,
-                'log_date': log.log_date.strftime('%B %d, %Y at %I:%M %p') if log.log_date else ''
+                'log_date': convert_to_manila_time(log.log_date).strftime('%B %d, %Y at %I:%M %p') if log.log_date else ''
             } for log in logs_paginated.items],
             'pagination': {
                 'page': logs_paginated.page,
@@ -2446,7 +2446,7 @@ def get_high_risk_students():
                 'depression_severity': dass_result.depression_severity if dass_result.depression_severity in ['Severe', 'Extremely Severe'] else None,
                 'anxiety_severity': dass_result.anxiety_severity if dass_result.anxiety_severity in ['Severe', 'Extremely Severe'] else None,
                 'stress_severity': dass_result.stress_severity if dass_result.stress_severity in ['Severe', 'Extremely Severe'] else None,
-                'assessment_date': dass_result.created_at.strftime('%B %d, %Y') if dass_result.created_at else ''
+                'assessment_date': convert_to_manila_time(dass_result.created_at).strftime('%B %d, %Y') if dass_result.created_at else ''
             } for dass_result in risk_paginated.items],
             'pagination': {
                 'page': risk_paginated.page,
