@@ -2310,7 +2310,15 @@ def get_students_by_hierarchy():
                 'type': 'grades',
                 'data': [g[0] for g in grades if g[0]]
             })
-        
+
+        elif not strand and grade and not section:
+            # Return sections for this grade across all strands from accessible students
+            sections = accessible_students_query.filter_by(grade_level=grade).filter(User.section.isnot(None)).with_entities(User.section).distinct().all()
+            return jsonify({
+                'type': 'sections',
+                'data': [s[0] for s in sections if s[0]]
+            })
+
         elif strand and grade and not section:
             # Return sections for this strand and grade from accessible students
             sections = accessible_students_query.filter_by(strand=strand, grade_level=grade).filter(User.section.isnot(None)).with_entities(User.section).distinct().all()

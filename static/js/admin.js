@@ -1730,19 +1730,37 @@ async function updateGradeDropdown(selectedStrand, preserveGrade = null) {
         const gradeSelect = document.getElementById('analyticsGradeFilter');
         const sectionSelect = document.getElementById('analyticsSectionFilter');
 
-        if (!selectedStrand) {
-            // Reset grade and section dropdowns
+        // Fetch grades - either for specific strand or all grades if no strand selected
+        let apiUrl = '/admin/api/students-by-hierarchy?';
+        if (selectedStrand) {
+            apiUrl += `strand=${encodeURIComponent(selectedStrand)}`;
+        } else {
+            // For "All Strands", we need to get all grades - use a special endpoint or modify logic
+            // Since the API doesn't have a direct endpoint for all grades, we'll populate with common grades
+            // and let the section filtering handle the actual data
             if (gradeSelect) {
+                const currentValue = preserveGrade || gradeSelect.value;
                 gradeSelect.innerHTML = '<option value="">All Grades</option>';
+                // Add common grade levels including 11 and 12
+                const commonGrades = ['7', '8', '9', '10', '11', '12'];
+                commonGrades.forEach(grade => {
+                    const option = document.createElement('option');
+                    option.value = grade;
+                    option.textContent = `Grade ${grade}`;
+                    if (currentValue === grade) {
+                        option.selected = true;
+                    }
+                    gradeSelect.appendChild(option);
+                });
             }
+            // Reset section dropdown
             if (sectionSelect) {
                 sectionSelect.innerHTML = '<option value="">All Sections</option>';
             }
             return;
         }
 
-        // Fetch grades for the selected strand
-        const response = await fetch(`/admin/api/students-by-hierarchy?strand=${encodeURIComponent(selectedStrand)}`);
+        const response = await fetch(apiUrl);
         if (!response.ok) return;
 
         const data = await response.json();
@@ -1777,16 +1795,21 @@ async function updateSectionDropdown(selectedStrand, selectedGrade, preserveSect
     try {
         const sectionSelect = document.getElementById('analyticsSectionFilter');
 
-        if (!selectedStrand || !selectedGrade) {
-            // Reset section dropdown
+        if (!selectedGrade) {
+            // Reset section dropdown if no grade selected
             if (sectionSelect) {
                 sectionSelect.innerHTML = '<option value="">All Sections</option>';
             }
             return;
         }
 
-        // Fetch sections for the selected strand and grade
-        const response = await fetch(`/admin/api/students-by-hierarchy?strand=${encodeURIComponent(selectedStrand)}&grade=${encodeURIComponent(selectedGrade)}`);
+        // Fetch sections for the selected grade (with or without strand)
+        let apiUrl = `/admin/api/students-by-hierarchy?grade=${encodeURIComponent(selectedGrade)}`;
+        if (selectedStrand) {
+            apiUrl += `&strand=${encodeURIComponent(selectedStrand)}`;
+        }
+
+        const response = await fetch(apiUrl);
         if (!response.ok) return;
 
         const data = await response.json();
@@ -1842,8 +1865,8 @@ window.updateAnalytics = async function() {
         }
     }
 
-    if (gradeChanged && !strandChanged) {
-        // Grade changed (but strand didn't) - update section dropdown
+    if (gradeChanged) {
+        // Grade changed - update section dropdown (works with or without strand)
         await updateSectionDropdown(strandFilter, gradeFilter);
     }
 
