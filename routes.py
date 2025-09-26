@@ -1504,84 +1504,96 @@ def get_suggested_responses(user_id):
 @login_required
 def faculty_profile():
     """Display faculty profile editing page"""
-    if not current_user.is_admin or not current_user.is_faculty_admin:
-        flash('Access denied. Faculty admin privileges required.', 'error')
-        return redirect(url_for('main.home'))
-    
-    form = FacultyProfileForm()
-    
-    # Pre-populate form with current user data
-    form.strand.data = current_user.strand
-    form.grade_level.data = current_user.grade_level
-    form.section.data = current_user.section
-    
-    return render_template('faculty_profile.html', form=form, user=current_user)
+    try:
+        if not current_user.is_admin or not current_user.is_faculty_admin:
+            flash('Access denied. Faculty admin privileges required.', 'error')
+            return redirect(url_for('main.home'))
+
+        form = FacultyProfileForm()
+
+        # Pre-populate form with current user data
+        form.strand.data = current_user.strand or ''
+        form.grade_level.data = current_user.grade_level or ''
+        form.section.data = current_user.section or ''
+
+        return render_template('faculty_profile.html', form=form, user=current_user)
+    except Exception as e:
+        print(f"Error in faculty_profile: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"Internal Server Error: {str(e)}", 500
 
 @admin_bp.route('/profile', methods=['POST'])
 @login_required
 def update_faculty_profile():
     """Update faculty profile information"""
-    if not current_user.is_admin or not current_user.is_faculty_admin:
-        return jsonify({'success': False, 'message': 'Access denied'})
-    
-    form = FacultyProfileForm()
-    
-    if form.validate_on_submit():
-        try:
-            # Check if the new section assignment already exists
-            existing_assignment = ClassAssignment.query.filter_by(
-                grade_level=form.grade_level.data,
-                section=form.section.data
-            ).filter(ClassAssignment.faculty_id != current_user.id).first()
-            
-            if existing_assignment:
+    try:
+        if not current_user.is_admin or not current_user.is_faculty_admin:
+            return jsonify({'success': False, 'message': 'Access denied'})
+
+        form = FacultyProfileForm()
+
+        if form.validate_on_submit():
+            try:
+                # Check if the new section assignment already exists
+                existing_assignment = ClassAssignment.query.filter_by(
+                    grade_level=form.grade_level.data,
+                    section=form.section.data
+                ).filter(ClassAssignment.faculty_id != current_user.id).first()
+
+                if existing_assignment:
+                    return jsonify({
+                        'success': False,
+                        'message': f'Section {form.section.data} for Grade {form.grade_level.data} is already assigned to another faculty member'
+                    })
+
+                # Update user information
+                current_user.strand = form.strand.data
+                current_user.grade_level = form.grade_level.data
+                current_user.section = form.section.data
+
+                # Update class assignment
+                assignment = ClassAssignment.query.filter_by(faculty_id=current_user.id).first()
+                if assignment:
+                    assignment.grade_level = form.grade_level.data
+                    assignment.section = form.section.data
+                else:
+                    # Create new assignment if it doesn't exist
+                    assignment = ClassAssignment()
+                    assignment.faculty_id = current_user.id
+                    assignment.grade_level = form.grade_level.data
+                    assignment.section = form.section.data
+                    db.session.add(assignment)
+
+                db.session.commit()
+
                 return jsonify({
-                    'success': False, 
-                    'message': f'Section {form.section.data} for Grade {form.grade_level.data} is already assigned to another faculty member'
+                    'success': True,
+                    'message': 'Profile updated successfully'
                 })
-            
-            # Update user information
-            current_user.strand = form.strand.data
-            current_user.grade_level = form.grade_level.data
-            current_user.section = form.section.data
-            
-            # Update class assignment
-            assignment = ClassAssignment.query.filter_by(faculty_id=current_user.id).first()
-            if assignment:
-                assignment.grade_level = form.grade_level.data
-                assignment.section = form.section.data
-            else:
-                # Create new assignment if it doesn't exist
-                assignment = ClassAssignment()
-                assignment.faculty_id = current_user.id
-                assignment.grade_level = form.grade_level.data
-                assignment.section = form.section.data
-                db.session.add(assignment)
-            
-            db.session.commit()
-            
-            return jsonify({
-                'success': True,
-                'message': 'Profile updated successfully'
-            })
-            
-        except Exception as e:
-            db.session.rollback()
+
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({
+                    'success': False,
+                    'message': f'Error updating profile: {str(e)}'
+                })
+        else:
+            # Return form validation errors
+            errors = []
+            for field, field_errors in form.errors.items():
+                for error in field_errors:
+                    errors.append(f'{field}: {error}')
+
             return jsonify({
                 'success': False,
-                'message': f'Error updating profile: {str(e)}'
+                'message': 'Validation failed: ' + '; '.join(errors)
             })
-    else:
-        # Return form validation errors
-        errors = []
-        for field, field_errors in form.errors.items():
-            for error in field_errors:
-                errors.append(f'{field}: {error}')
-        
-        return jsonify({
-            'success': False,
-            'message': 'Validation failed: ' + '; '.join(errors)
-        })
+    except Exception as e:
+        print(f"Error in update_faculty_profile: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': f'Internal Server Error: {str(e)}'}), 500
 
 
 @main_bp.route('/api/change-password', methods=['POST'])

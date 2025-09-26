@@ -35,7 +35,7 @@
                                 <p><strong>Email:</strong> {{ user.email }}</p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Current Assignment:</strong> {{ user.strand }} {{ user.grade_level }} - {{ user.section }}</p>
+                                <p><strong>Current Assignment:</strong> {{ user.strand or 'N/A' }} {{ user.grade_level or 'N/A' }} - {{ user.section or 'N/A' }}</p>
                                 <p><strong>Role:</strong> Faculty Admin</p>
                             </div>
                         </div>
@@ -98,7 +98,6 @@
                 </h5>
 
                 <form id="changePasswordForm">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label for="currentPassword" class="form-label">Current Password</label>
