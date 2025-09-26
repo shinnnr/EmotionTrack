@@ -1100,6 +1100,7 @@ def create_faculty():
         return jsonify({'success': False, 'message': f'Error creating faculty: {str(e)}'})
 
 @admin_bp.route('/delete-faculty', methods=['POST'])
+@csrf.exempt
 @login_required
 def delete_faculty():
     if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
