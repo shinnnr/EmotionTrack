@@ -55,7 +55,7 @@
                             <p><strong>Strand:</strong><br>{{ student.strand or 'N/A' }}</p>
                         </div>
                     </div>
-                    <p><strong>Joined:</strong><br>{{ student.created_at.strftime('%B %d, %Y') if student.created_at else 'N/A' }}</p>
+                    <p><strong>Joined:</strong><br>{{ (student.created_at | manila_time | strftime('%B %d, %Y')) if student.created_at else 'N/A' }}</p>
                 </div>
             </div>
         </div>
@@ -115,7 +115,7 @@
                             <tbody>
                                 {% for result in dass21_results %}
                                 <tr>
-                                    <td>{{ result.created_at.strftime('%b %d, %Y') if result.created_at else 'N/A' }}</td>
+                                    <td>{{ (result.created_at | manila_time | strftime('%b %d, %Y')) if result.created_at else 'N/A' }}</td>
                                     <td>
                                         <span class="badge {% if result.depression_severity in ['Severe', 'Extremely Severe'] %}bg-danger{% elif result.depression_severity == 'Moderate' %}bg-warning{% else %}bg-success{% endif %}">
                                             {{ result.depression_score }} ({{ result.depression_severity }})
@@ -163,7 +163,7 @@
                                 <p class="mb-1"><strong>{% if is_main_admin %}Guidance:{% else %}Adviser:{% endif %}</strong></p>
                                 <p class="text-primary mb-2">{{ message.admin_response }}</p>
                             {% endif %}
-                            <small class="text-muted">{{ message.created_at.strftime('%b %d, %Y') if message.created_at else 'N/A' }}</small>
+                            <small class="text-muted">{{ (message.created_at | manila_time | strftime('%b %d, %Y')) if message.created_at else 'N/A' }}</small>
                         </div>
                         {% endfor %}
                         <div class="text-center">
@@ -208,7 +208,7 @@
                             <tbody>
                                 {% for log in mood_logs %}
                                 <tr>
-                                    <td>{{ log.log_date.strftime('%b %d') if log.log_date else 'N/A' }}</td>
+                                    <td>{{ (log.log_date | manila_time | strftime('%b %d')) if log.log_date else 'N/A' }}</td>
                                     <td><span class="badge bg-primary">{{ log.emotion }}</span></td>
                                     <td>{{ log.energy }}/10</td>
                                     <td>{{ log.sleep }}h</td>

@@ -110,7 +110,7 @@
                                                 <span class="badge bg-secondary">{{ student.gender or 'N/A' }}</span>
                                             </td>
                                             <td>
-                                                <small class="text-muted">{{ student.created_at.strftime('%b %d, %Y') }}</small>
+                                                <small class="text-muted">{{ student.created_at | manila_time | strftime('%b %d, %Y') }}</small>
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">

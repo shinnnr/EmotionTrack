@@ -57,7 +57,7 @@
                                 
                                 <div class="info-item mb-3">
                                     <label class="fw-bold text-muted small">Member Since</label>
-                                    <p class="mb-0">{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                                    <p class="mb-0">{{ user.created_at | manila_time | strftime('%B %d, %Y') }}</p>
                                 </div>
                                 
                                 <div class="info-item">
@@ -91,7 +91,7 @@
                                         </div>
                                         {% if user.last_profile_update %}
                                             <small class="text-muted d-block mt-1">
-                                                Last updated: {{ user.last_profile_update.strftime('%B %d, %Y') }}
+                                                Last updated: {{ user.last_profile_update | manila_time | strftime('%B %d, %Y') }}
                                             </small>
                                         {% endif %}
                                     {% endif %}
@@ -248,7 +248,7 @@
                     You must wait {{ user.days_until_profile_update() }} more days before you can update your profile again.<br>
                     <small>Profile updates are allowed once every 100 days to prevent frequent changes.</small>
                     {% if user.last_profile_update %}
-                        <br><small class="text-muted">Last updated: {{ user.last_profile_update.strftime('%B %d, %Y') }}</small>
+                        <br><small class="text-muted">Last updated: {{ user.last_profile_update | manila_time | strftime('%B %d, %Y') }}</small>
                     {% endif %}
                 </div>
             {% endif %}
