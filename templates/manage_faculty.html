@@ -156,14 +156,12 @@ document.getElementById('createFacultyForm').addEventListener('submit', function
 // Function to delete faculty - simplified approach
 function deleteFaculty(facultyId, facultyName) {
     if (confirm(`Are you sure you want to delete ${facultyName}? This action cannot be undone and will remove all associated class assignments.`)) {
+        const formData = new FormData();
+        formData.append('faculty_id', facultyId);
+
         fetch('{{ url_for("admin.delete_faculty") }}', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                faculty_id: facultyId
-            })
+            body: formData
         })
         .then(response => {
             if (!response.ok) {

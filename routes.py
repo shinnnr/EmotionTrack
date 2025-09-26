@@ -1106,7 +1106,7 @@ def delete_faculty():
         return jsonify({'success': False, 'message': 'Access denied'})
 
     try:
-        faculty_id_str = request.json.get('faculty_id')
+        faculty_id_str = request.form.get('faculty_id')
         if not faculty_id_str:
             return jsonify({'success': False, 'message': 'Faculty ID is required'})
 
