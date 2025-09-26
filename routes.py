@@ -363,7 +363,7 @@ def dass21_quiz():
 
     if recent_assessment:
         days_remaining = 7 - (get_current_time() - convert_to_manila_time(recent_assessment.created_at)).days
-        flash(f'You can take the DASS-21 assessment again in {days_remaining} day(s). You completed your last assessment on {recent_assessment.created_at.strftime("%B %d, %Y")}.', 'info')
+        flash(f'You can take the DASS-21 assessment again in {days_remaining} day(s). You completed your last assessment on {convert_to_manila_time(recent_assessment.created_at).strftime("%B %d, %Y")}.', 'info')
         return redirect(url_for('main.home'))
     
     # DASS-21 questions with their subscales
@@ -1699,7 +1699,7 @@ def get_student_profile(user_id):
                 'strand': student.strand,
                 'grade_level': student.grade_level,
                 'section': student.section,
-                'created_at': student.created_at.strftime('%B %d, %Y') if student.created_at else ''
+                'created_at': convert_to_manila_time(student.created_at).strftime('%B %d, %Y') if student.created_at else ''
             },
             'dass21_results': [{
                 'depression_score': result.depression_score,
@@ -1860,9 +1860,9 @@ def export_data():
                 
                 for user in users:
                     writer.writerow([
-                        user.id, user.firstname, user.lastname, user.email, 
+                        user.id, user.firstname, user.lastname, user.email,
                         user.gender, user.strand, user.grade_level, user.section,
-                        user.created_at.strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
+                        convert_to_manila_time(user.created_at).strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
                     ])
             
             elif export_type == 'mood_logs':
@@ -1878,7 +1878,7 @@ def export_data():
                     writer.writerow([
                         log.log_id, user.email, user.full_name, log.emotion, log.sleep, log.energy,
                         log.triggers or '', log.coping or '', log.gratitude or '',
-                        log.log_date.strftime('%Y-%m-%d %H:%M:%S') if log.log_date else ''
+                        convert_to_manila_time(log.log_date).strftime('%Y-%m-%d %H:%M:%S') if log.log_date else ''
                     ])
             
             elif export_type == 'dass21':
@@ -1895,7 +1895,7 @@ def export_data():
                     writer.writerow([
                         result.id, user.email, user.full_name, result.depression_score, result.anxiety_score, result.stress_score,
                         result.depression_severity, result.anxiety_severity, result.stress_severity,
-                        result.created_at.strftime('%Y-%m-%d %H:%M:%S') if result.created_at else ''
+                        convert_to_manila_time(result.created_at).strftime('%Y-%m-%d %H:%M:%S') if result.created_at else ''
                     ])
             
             elif export_type == 'messages':
@@ -1910,9 +1910,9 @@ def export_data():
                 for message, user in messages:
                     writer.writerow([
                         message.id, user.email, user.full_name, message.message_text or '', message.admin_response or '',
-                        message.is_read, 
-                        message.created_at.strftime('%Y-%m-%d %H:%M:%S') if message.created_at else '',
-                        message.responded_at.strftime('%Y-%m-%d %H:%M:%S') if message.responded_at else ''
+                        message.is_read,
+                        convert_to_manila_time(message.created_at).strftime('%Y-%m-%d %H:%M:%S') if message.created_at else '',
+                        convert_to_manila_time(message.responded_at).strftime('%Y-%m-%d %H:%M:%S') if message.responded_at else ''
                     ])
             
             output.seek(0)
@@ -1942,9 +1942,9 @@ def export_data():
                         
                         for user in users:
                             writer.writerow([
-                                user.id, user.firstname, user.lastname, user.email, 
+                                user.id, user.firstname, user.lastname, user.email,
                                 user.gender, user.strand, user.grade_level, user.section,
-                                user.created_at.strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
+                                convert_to_manila_time(user.created_at).strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
                             ])
                     
                     elif export_type == 'mood_logs':
@@ -1960,7 +1960,7 @@ def export_data():
                             writer.writerow([
                                 log.log_id, user.email, user.full_name, log.emotion, log.sleep, log.energy,
                                 log.triggers or '', log.coping or '', log.gratitude or '',
-                                log.log_date.strftime('%Y-%m-%d %H:%M:%S') if log.log_date else ''
+                                convert_to_manila_time(log.log_date).strftime('%Y-%m-%d %H:%M:%S') if log.log_date else ''
                             ])
                     
                     elif export_type == 'dass21':
@@ -1977,7 +1977,7 @@ def export_data():
                             writer.writerow([
                                 result.id, user.email, user.full_name, result.depression_score, result.anxiety_score, result.stress_score,
                                 result.depression_severity, result.anxiety_severity, result.stress_severity,
-                                result.created_at.strftime('%Y-%m-%d %H:%M:%S') if result.created_at else ''
+                                convert_to_manila_time(result.created_at).strftime('%Y-%m-%d %H:%M:%S') if result.created_at else ''
                             ])
                     
                     elif export_type == 'messages':
@@ -1992,9 +1992,9 @@ def export_data():
                         for message, user in messages:
                             writer.writerow([
                                 message.id, user.email, user.full_name, message.message_text or '', message.admin_response or '',
-                                message.is_read, 
-                                message.created_at.strftime('%Y-%m-%d %H:%M:%S') if message.created_at else '',
-                                message.responded_at.strftime('%Y-%m-%d %H:%M:%S') if message.responded_at else ''
+                                message.is_read,
+                                convert_to_manila_time(message.created_at).strftime('%Y-%m-%d %H:%M:%S') if message.created_at else '',
+                                convert_to_manila_time(message.responded_at).strftime('%Y-%m-%d %H:%M:%S') if message.responded_at else ''
                             ])
                     
                     # Add CSV to ZIP
@@ -2328,7 +2328,7 @@ def get_students_by_hierarchy():
                     'id': student.id,
                     'full_name': student.full_name,
                     'email': student.email,
-                    'created_at': student.created_at.strftime('%B %d, %Y') if student.created_at else ''
+                    'created_at': convert_to_manila_time(student.created_at).strftime('%B %d, %Y') if student.created_at else ''
                 } for student in students]
             })
         

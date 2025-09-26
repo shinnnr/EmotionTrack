@@ -23,12 +23,12 @@
                     <div class="flex-grow-1">
                         <h6 class="alert-heading fw-bold mb-1">DASS-21 Assessment Status</h6>
                         <p class="mb-1">
-                            You completed your DASS-21 assessment on {{ dass21_status.last_taken_date.strftime('%B %d, %Y') }}.
+                            You completed your DASS-21 assessment on {{ dass21_status.last_taken_date | manila_time | strftime('%B %d, %Y') }}.
                             You can take your next assessment in <strong>{{ dass21_status.days_remaining }} day{% if dass21_status.days_remaining != 1 %}s{% endif %}</strong>.
                         </p>
                         <small class="text-muted">
                             <i class="fas fa-calendar-alt me-1"></i>
-                            Next available: {{ dass21_status.next_available_date.strftime('%B %d, %Y') }}
+                            Next available: {{ dass21_status.next_available_date | manila_time | strftime('%B %d, %Y') }}
                         </small>
                     </div>
                 </div>
