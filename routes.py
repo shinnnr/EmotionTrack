@@ -2066,7 +2066,7 @@ def get_analytics_data():
             return jsonify({
                 'mood_distribution': [],
                 'dass_severity': [],
-                'monthly_activity': [],
+                'weekly_activity': [],
                 'total_users': 0,
                 'average_energy': 0.0,
                 'concerning_students': 0,
@@ -2096,11 +2096,11 @@ def get_analytics_data():
             db.func.count(latest_dass_results_analytics.c.depression_severity).label('count')
         ).group_by(latest_dass_results_analytics.c.depression_severity).all()
         
-        # Monthly activity (filtered)
-        monthly_logs = db.session.query(
-            db.func.date_trunc('month', MoodLog.log_date).label('month'),
+        # Weekly activity (filtered)
+        weekly_logs = db.session.query(
+            db.func.date_trunc('week', MoodLog.log_date).label('week'),
             db.func.count(MoodLog.log_id).label('count')
-        ).filter(MoodLog.user_id.in_(accessible_student_ids)).group_by(db.func.date_trunc('month', MoodLog.log_date)).order_by('month').all()
+        ).filter(MoodLog.user_id.in_(accessible_student_ids)).group_by(db.func.date_trunc('week', MoodLog.log_date)).order_by('week').all()
         
         # Additional stats for analytics (filtered)
         total_users = len(accessible_student_ids)
@@ -2139,7 +2139,7 @@ def get_analytics_data():
         result = {
             'mood_distribution': [{'emotion': row.emotion, 'count': row.count} for row in mood_data],
             'dass_severity': [{'severity': row.depression_severity, 'count': row.count} for row in dass_data],
-            'monthly_activity': [{'month': row.month.strftime('%Y-%m'), 'count': row.count} for row in monthly_logs],
+            'weekly_activity': [{'week': row.week.strftime('%Y-%m-%d'), 'count': row.count} for row in weekly_logs],
             'total_users': total_users,
             'average_energy': float(average_energy) if average_energy else 0.0,
             'concerning_students': concerning_students

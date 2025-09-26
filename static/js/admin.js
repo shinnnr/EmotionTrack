@@ -1539,7 +1539,7 @@ function renderAnalyticsDashboard(analyticsData, isMainAdmin) {
             ${strandBreakdownChart}
             <div class="col-md-${strandBreakdownChart ? '6' : '12'}">
                 <div class="analytics-chart">
-                    <h6 class="fw-bold mb-3">Monthly Activity</h6>
+                    <h6 class="fw-bold mb-3">Weekly Activity</h6>
                     <canvas id="activityChart" width="400" height="200"></canvas>
                 </div>
             </div>
@@ -1621,18 +1621,18 @@ function initializeChartsWithData(analyticsData) {
         });
     }
     
-    // Monthly Activity Chart
+    // Weekly Activity Chart
     const activityCtx = document.getElementById('activityChart');
-    if (activityCtx && analyticsData.monthly_activity) {
-        const labels = analyticsData.monthly_activity.map(item => item.month);
-        const data = analyticsData.monthly_activity.map(item => item.count);
+    if (activityCtx && analyticsData.weekly_activity) {
+        const labels = analyticsData.weekly_activity.map(item => item.week);
+        const data = analyticsData.weekly_activity.map(item => item.count);
         
         new Chart(activityCtx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Monthly Mood Logs',
+                    label: 'Weekly Mood Logs',
                     data: data,
                     borderColor: '#007bff',
                     backgroundColor: 'rgba(0, 123, 255, 0.1)',
