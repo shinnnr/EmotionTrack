@@ -7,7 +7,7 @@ from flask_wtf.csrf import validate_csrf, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from app import db, csrf
-from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment
+from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, get_current_time
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm
 
 # Create blueprints
@@ -75,9 +75,9 @@ def home():
     }
     
     if latest_dass:
-        week_ago = datetime.utcnow() - timedelta(days=7)
+        week_ago = get_current_time() - timedelta(days=7)
         if latest_dass.created_at > week_ago:
-            days_passed = (datetime.utcnow() - latest_dass.created_at).days
+            days_passed = (get_current_time() - latest_dass.created_at).days
             dass21_status['can_take'] = False
             dass21_status['days_remaining'] = 7 - days_passed
             dass21_status['next_available_date'] = latest_dass.created_at + timedelta(days=7)
@@ -131,7 +131,7 @@ def update_student_profile():
             # Update profile fields
             current_user.grade_level = form.grade_level.data
             current_user.section = form.section.data.upper().strip() if form.section.data else ""
-            current_user.last_profile_update = datetime.utcnow()
+            current_user.last_profile_update = get_current_time()
             
             db.session.commit()
             flash('Profile updated successfully! You can update your profile again in 100 days.', 'success')
@@ -258,7 +258,7 @@ def emotion_log():
     }
     
     if latest_dass:
-        days_passed = (datetime.now() - latest_dass.created_at).days
+        days_passed = (get_current_time() - latest_dass.created_at).days
         if days_passed < 7:
             dass21_status['can_take'] = False
             dass21_status['days_remaining'] = 7 - days_passed
@@ -353,14 +353,14 @@ def dass21_quiz():
     from datetime import datetime, timedelta
     
     # Check for recent assessment (within last 7 days)
-    week_ago = datetime.utcnow() - timedelta(days=7)
+    week_ago = get_current_time() - timedelta(days=7)
     recent_assessment = DASS21Result.query.filter(
         DASS21Result.user_id == current_user.id,
         DASS21Result.created_at >= week_ago
     ).first()
-    
+
     if recent_assessment:
-        days_remaining = 7 - (datetime.utcnow() - recent_assessment.created_at).days
+        days_remaining = 7 - (get_current_time() - recent_assessment.created_at).days
         flash(f'You can take the DASS-21 assessment again in {days_remaining} day(s). You completed your last assessment on {recent_assessment.created_at.strftime("%B %d, %Y")}.', 'info')
         return redirect(url_for('main.home'))
     
@@ -453,14 +453,14 @@ def process_dass21():
         db.session.add(dass_result)
         db.session.commit()
         
-        return render_template('dass21_results.html', 
-                             depression_score=depression_final,
-                             anxiety_score=anxiety_final,
-                             stress_score=stress_final,
-                             depression_severity=depression_severity,
-                             anxiety_severity=anxiety_severity,
-                             stress_severity=stress_severity,
-                             moment=datetime.now)
+        return render_template('dass21_results.html',
+                              depression_score=depression_final,
+                              anxiety_score=anxiety_final,
+                              stress_score=stress_final,
+                              depression_severity=depression_severity,
+                              anxiety_severity=anxiety_severity,
+                              stress_severity=stress_severity,
+                              moment=get_current_time())
         
     except Exception as e:
         db.session.rollback()
@@ -699,7 +699,7 @@ def check_login_status():
 @login_required
 def weekly_insights():
     # Get last 7 mood logs
-    week_ago = datetime.utcnow() - timedelta(days=7)
+    week_ago = get_current_time() - timedelta(days=7)
     logs = MoodLog.query.filter(
         MoodLog.user_id == current_user.id,
         MoodLog.log_date >= week_ago
@@ -945,7 +945,7 @@ def respond_message(message_id):
         message.admin_response = response_text
         message.is_read = True
         message.responded_by_admin_id = current_user.id
-        message.responded_at = datetime.utcnow()
+        message.responded_at = get_current_time()
         db.session.commit()
         
         return jsonify({'success': True, 'message': 'Response sent successfully'})
@@ -1298,7 +1298,7 @@ def send_message(user_id):
     message.conversation_type = conversation_type
     message.responded_by_admin_id = current_user.id
     message.is_read = True
-    message.responded_at = datetime.utcnow()
+    message.responded_at = get_current_time()
     
     db.session.add(message)
     db.session.commit()
@@ -1379,12 +1379,12 @@ def get_suggested_responses(user_id):
     try:
         # Get recent DASS-21 results (within last 30 days)
         recent_dass = DASS21Result.query.filter_by(user_id=user_id).filter(
-            DASS21Result.created_at >= datetime.utcnow() - timedelta(days=30)
+            DASS21Result.created_at >= get_current_time() - timedelta(days=30)
         ).order_by(DASS21Result.created_at.desc()).first()
-        
+
         # Get recent mood logs (within last 7 days)
         recent_moods = MoodLog.query.filter_by(user_id=user_id).filter(
-            MoodLog.log_date >= datetime.utcnow() - timedelta(days=7)
+            MoodLog.log_date >= get_current_time() - timedelta(days=7)
         ).order_by(MoodLog.log_date.desc()).limit(10).all()
         
         # Generate suggestions based on DASS-21 results
@@ -1915,7 +1915,7 @@ def export_data():
             return Response(
                 output.getvalue(),
                 mimetype='text/csv',
-                headers={'Content-Disposition': f'attachment; filename=emotiontrack_{export_type}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'}
+                headers={'Content-Disposition': f'attachment; filename=emotiontrack_{export_type}_{get_current_time().strftime("%Y%m%d_%H%M%S")}.csv'}
             )
         
         # Multiple types selected - create ZIP file
@@ -1993,7 +1993,7 @@ def export_data():
                             ])
                     
                     # Add CSV to ZIP
-                    filename = f'emotiontrack_{export_type}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+                    filename = f'emotiontrack_{export_type}_{get_current_time().strftime("%Y%m%d_%H%M%S")}.csv'
                     zip_file.writestr(filename, output.getvalue())
             
             zip_buffer.seek(0)
@@ -2001,7 +2001,7 @@ def export_data():
             return Response(
                 zip_buffer.getvalue(),
                 mimetype='application/zip',
-                headers={'Content-Disposition': f'attachment; filename=emotiontrack_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip'}
+                headers={'Content-Disposition': f'attachment; filename=emotiontrack_export_{get_current_time().strftime("%Y%m%d_%H%M%S")}.zip'}
             )
         
     except Exception as e:

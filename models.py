@@ -4,6 +4,12 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from sqlalchemy import Enum
+import pytz
+
+manila_tz = pytz.timezone('Asia/Manila')
+
+def get_current_time():
+    return datetime.now(manila_tz)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -22,7 +28,7 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     role = db.Column(Enum('student', 'guidance_admin', 'faculty_admin', name='user_roles'), 
                      default='student', nullable=True)  # Make nullable during migration
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_current_time)
     last_profile_update = db.Column(db.DateTime, nullable=True)  # Track last time student updated profile info
     
     # Relationships
@@ -75,7 +81,7 @@ class User(UserMixin, db.Model):
             return True  # Never updated before, allow update
         
         from datetime import timedelta
-        days_since_update = (datetime.utcnow() - self.last_profile_update).days
+        days_since_update = (get_current_time() - self.last_profile_update).days
         return days_since_update >= 100
     
     def days_until_profile_update(self):
@@ -84,7 +90,7 @@ class User(UserMixin, db.Model):
             return 0  # Can update immediately
         
         from datetime import timedelta
-        days_since_update = (datetime.utcnow() - self.last_profile_update).days
+        days_since_update = (get_current_time() - self.last_profile_update).days
         days_remaining = 100 - days_since_update
         return max(0, days_remaining)
     
@@ -103,7 +109,7 @@ class MoodLog(db.Model):
     triggers = db.Column(db.String(50), nullable=False)
     coping = db.Column(db.String(50))
     gratitude = db.Column(db.Text)
-    log_date = db.Column(db.DateTime, default=datetime.utcnow)
+    log_date = db.Column(db.DateTime, default=get_current_time)
     
     def __repr__(self):
         return f'<MoodLog {self.emotion} by User {self.user_id}>'
@@ -119,7 +125,7 @@ class DASS21Result(db.Model):
     depression_severity = db.Column(db.String(50), nullable=False)
     anxiety_severity = db.Column(db.String(50), nullable=False)
     stress_severity = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_current_time)
     
     def __repr__(self):
         return f'<DASS21Result User {self.user_id}>'
@@ -135,7 +141,7 @@ class StudentMessage(db.Model):
     is_response_read_by_student = db.Column(db.Boolean, default=False)
     conversation_type = db.Column(db.String(20), nullable=False, default='guidance_office')  # 'guidance_office' or 'faculty_adviser'
     responded_by_admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Track which admin responded
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_current_time)
     responded_at = db.Column(db.DateTime)
     
     # Relationships
@@ -152,7 +158,7 @@ class ClassAssignment(db.Model):
     faculty_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     grade_level = db.Column(db.String(20), nullable=False)
     section = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_current_time)
     
     # Add unique constraint to ensure one faculty per section
     __table_args__ = (db.UniqueConstraint('grade_level', 'section', name='unique_grade_section'),)
