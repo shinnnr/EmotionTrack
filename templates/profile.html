@@ -1076,6 +1076,16 @@ async function viewDASSResults() {
 
 // Change Password functionality
 function showChangePasswordModal() {
+    // Check if password was recently changed
+    const passwordChangedRecently = localStorage.getItem('passwordChangedRecently');
+    if (passwordChangedRecently) {
+        // Show red warning
+        showAlert('You have recently changed your password. Please ensure you remember your new password before making another change.', 'warning');
+        // Clear the flag
+        localStorage.removeItem('passwordChangedRecently');
+        return;
+    }
+
     showModal('changePasswordModal');
     // Setup password validation after modal is shown
     setTimeout(setupPasswordValidation, 100);
@@ -1137,6 +1147,8 @@ async function handlePasswordChange(e) {
             showAlert('Password updated successfully!', 'success');
             closeModal('changePasswordModal');
             form.reset();
+            // Set flag to show warning on next button click
+            localStorage.setItem('passwordChangedRecently', 'true');
         } else {
             showAlert(result.message || 'Failed to update password', 'error');
         }

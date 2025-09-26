@@ -493,6 +493,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showChangePasswordModal() {
+    // Check if password was recently changed
+    const passwordChangedRecently = localStorage.getItem('passwordChangedRecently');
+    if (passwordChangedRecently) {
+        // Show red warning
+        showAlert('You have recently changed your password. Please ensure you remember your new password before making another change.', 'warning');
+        // Clear the flag
+        localStorage.removeItem('passwordChangedRecently');
+        return;
+    }
+
     const panel = document.getElementById('changePasswordPanel');
     if (panel.style.display === 'none' || panel.style.display === '') {
         panel.style.display = 'block';
@@ -535,6 +545,8 @@ async function handlePasswordChange(e) {
             showAlert('Password updated successfully!', 'success');
             hideChangePasswordPanel();
             form.reset();
+            // Set flag to show warning on next button click
+            localStorage.setItem('passwordChangedRecently', 'true');
         } else {
             showAlert(result.message || 'Failed to update password', 'error');
         }
