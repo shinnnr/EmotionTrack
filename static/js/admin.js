@@ -1736,14 +1736,14 @@ async function updateGradeDropdown(selectedStrand, preserveGrade = null) {
             apiUrl += `strand=${encodeURIComponent(selectedStrand)}`;
         } else {
             // For "All Strands", we need to get all grades - use a special endpoint or modify logic
-            // Since the API doesn't have a direct endpoint for all grades, we'll populate with common grades
+            // Since the API doesn't have a direct endpoint for all grades, we'll populate with senior high school grades only
             // and let the section filtering handle the actual data
             if (gradeSelect) {
                 const currentValue = preserveGrade || gradeSelect.value;
                 gradeSelect.innerHTML = '<option value="">All Grades</option>';
-                // Add common grade levels including 11 and 12
-                const commonGrades = ['7', '8', '9', '10', '11', '12'];
-                commonGrades.forEach(grade => {
+                // Add senior high school grade levels only (11 and 12)
+                const seniorHighGrades = ['11', '12'];
+                seniorHighGrades.forEach(grade => {
                     const option = document.createElement('option');
                     option.value = grade;
                     option.textContent = `Grade ${grade}`;
