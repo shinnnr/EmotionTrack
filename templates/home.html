@@ -3,6 +3,33 @@
 {% block title %}Dashboard - EmotionTrack{% endblock %}
 
 {% block content %}
+{% set emotion_emojis = {
+    'Happy': '😊',
+    'Joyful': '😂',
+    'Excited': '🤩',
+    'Grateful': '🙏',
+    'Proud': '🏆',
+    'Content': '😌',
+    'Loved': '❤️',
+    'Hopeful': '🌟',
+    'Calm': '😌',
+    'Peaceful': '🕊️',
+    'Tired': '😴',
+    'Confused': '🤔',
+    'Curious': '👀',
+    'Surprised': '😲',
+    'Sad': '😢',
+    'Anxious': '😰',
+    'Stressed': '😫',
+    'Angry': '😠',
+    'Frustrated': '😤',
+    'Overwhelmed': '😵',
+    'Lonely': '😔',
+    'Disappointed': '😞',
+    'Worried': '😟',
+    'Insecure': '😕',
+    'Guilty': '😳'
+} %}
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
@@ -185,7 +212,7 @@
                                         <div class="recent-log-item p-3 rounded bg-light h-100">
                                             <div class="d-flex align-items-center">
                                                 <div class="emotion-icon me-3">
-                                                    <i class="fas fa-heart text-clsu-gold"></i>
+                                                    {{ emotion_emojis.get(log.emotion, '🤔') }}
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <h6 class="mb-1 fw-bold">{{ log.emotion }}</h6>
@@ -420,6 +447,7 @@ document.addEventListener('keydown', function(event) {
 .quick-action-card {
     text-decoration: none;
     transition: transform 0.2s;
+    border-radius: var(--border-radius);
 }
 
 .quick-action-card:hover {
