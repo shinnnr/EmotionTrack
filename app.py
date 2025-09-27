@@ -138,29 +138,47 @@ with app.app_context():
     from models import convert_to_manila_time, get_current_time
     @app.template_filter('manila_time')
     def manila_time_filter(dt):
-        return convert_to_manila_time(dt)
+        manila_dt = convert_to_manila_time(dt)
+        return manila_dt
 
     @app.template_filter('strftime')
     def strftime_filter(dt, format_str):
         if dt is None:
             return ''
-        return dt.strftime(format_str)
+        try:
+            return dt.strftime(format_str)
+        except Exception as e:
+            logger.error(f"Error formatting datetime {dt} with format {format_str}: {e}")
+            return ''
 
     @app.template_filter('message_time')
     def message_time_filter(dt):
         if dt is None:
             return ''
-        # Convert to Manila time
-        manila_dt = convert_to_manila_time(dt)
-        now = get_current_time()
+        try:
+            # Convert to Manila time
+            manila_dt = convert_to_manila_time(dt)
+            if manila_dt is None:
+                return ''
+            now = get_current_time()
 
-        # Check if message is from today
-        if (manila_dt.date() == now.date()):
-            # Today: show time only
-            return manila_dt.strftime('%I:%M %p')
-        else:
-            # Previous day: show time and date
-            return manila_dt.strftime('%I:%M %p<br><small class="text-muted">%b %d, %Y</small>')
+            # Check if message is from today
+            if (manila_dt.date() == now.date()):
+                # Today: show time only
+                return manila_dt.strftime('%I:%M %p')
+            else:
+                # Previous day: show time and date
+                return manila_dt.strftime('%I:%M %p<br><small class="text-muted">%b %d, %Y</small>')
+        except Exception as e:
+            logger.error(f"Error in message_time_filter for dt {dt}: {e}")
+            return ''
+
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f'Internal Server Error: {error}')
+    import traceback
+    logger.error(traceback.format_exc())
+    return "Internal Server Error", 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -13,12 +13,17 @@ def get_current_time():
 
 def convert_to_manila_time(dt):
     """Convert a datetime to Manila time, handling both naive and aware datetimes"""
-    if dt is None:
+    try:
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            # Assume naive datetime is UTC
+            dt = dt.replace(tzinfo=pytz.UTC)
+        return dt.astimezone(manila_tz)
+    except Exception as e:
+        # If conversion fails, return None or a default value
+        print(f"Error converting datetime {dt}: {e}")
         return None
-    if dt.tzinfo is None:
-        # Assume naive datetime is UTC
-        dt = dt.replace(tzinfo=pytz.UTC)
-    return dt.astimezone(manila_tz)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
