@@ -806,7 +806,7 @@ def dashboard():
     # Get pagination parameters
     risk_page = request.args.get('risk_page', 1, type=int)
     activity_page = request.args.get('activity_page', 1, type=int)
-    risk_per_page = 3  # 3 high risk students per page
+    risk_per_page = 10  # 10 high risk students per page
     activity_per_page = 10  # 10 activity items per page
     
     # Get statistics for admin dashboard (filtered by faculty section if applicable)
@@ -1187,22 +1187,28 @@ def faculty_students(faculty_id):
     if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
         flash('Access denied. Only the main admin can view faculty students.', 'error')
         return redirect(url_for('main.home'))
-    
+
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # 10 students per page
+
     faculty = User.query.get_or_404(faculty_id)
     assignment = ClassAssignment.query.filter_by(faculty_id=faculty_id).first()
-    
-    students = []
+
+    students_pagination = None
     if assignment:
-        students = User.query.filter(
+        students_query = User.query.filter(
             User.grade_level == assignment.grade_level,
             User.section == assignment.section,
             User.is_admin == False
-        ).order_by(User.lastname, User.firstname).all()
-    
-    return render_template('faculty_students.html', 
-                         faculty=faculty, 
-                         assignment=assignment, 
-                         students=students)
+        ).order_by(User.lastname, User.firstname)
+
+        students_pagination = students_query.paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('faculty_students.html',
+                          faculty=faculty,
+                          assignment=assignment,
+                          students_pagination=students_pagination)
 
 @admin_bp.route('/my-students')
 @login_required
