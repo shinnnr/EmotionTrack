@@ -79,24 +79,6 @@
     </div>
 </div>
 
-<!-- Success/Error Modal -->
-<div class="modal fade" id="resultModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header" id="modalHeader">
-                <h5 class="modal-title" id="modalTitle"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="modalBody"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary d-none" id="reloadBtn" onclick="modal.hide(); location.reload()">
-                    <i class="fas fa-refresh me-2"></i>Reload Page
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
 
 <script>
@@ -104,7 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('profileForm');
     const saveBtn = document.getElementById('saveBtn');
     const saveSpinner = document.getElementById('saveSpinner');
-    const modal = new bootstrap.Modal(document.getElementById('resultModal'));
 
     // Track form changes
     let formChanged = false;
@@ -142,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Check if form has changed
         if (!hasFormChanged()) {
-            showModal('No Changes', 'No changes were made to your profile. Please update at least one field before saving.', 'warning');
+            alert('No changes were made to your profile. Please update at least one field before saving.');
             return;
         }
 
@@ -163,16 +144,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
 
             if (result.success) {
-                showModal('Success', result.message, 'success');
-                // Show reload button for successful updates
-                document.getElementById('reloadBtn').classList.remove('d-none');
-                // Auto-close modal after 3 seconds and reload
-                setTimeout(() => {
-                    modal.hide();
-                    location.reload();
-                }, 3000);
+                // Reload the page on successful update
+                location.reload();
             } else {
-                showModal('Error', result.message, 'error');
                 // Parse and display field-specific errors if available
                 if (result.message.includes('Validation failed:')) {
                     const errors = result.message.replace('Validation failed: ', '').split('; ');
@@ -182,6 +156,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             showFieldError(field, message);
                         }
                     });
+                } else {
+                    // Show general error alert
+                    alert('Error: ' + result.message);
                 }
             }
         } catch (error) {
@@ -192,26 +169,6 @@ document.addEventListener('DOMContentLoaded', function() {
             saveSpinner.classList.add('d-none');
         }
     });
-
-    function showModal(title, message, type) {
-        const modalHeader = document.getElementById('modalHeader');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalBody = document.getElementById('modalBody');
-
-        modalTitle.textContent = title;
-        modalBody.textContent = message;
-
-        // Update modal styling based on type
-        if (type === 'success') {
-            modalHeader.className = 'modal-header bg-success text-white';
-        } else if (type === 'error') {
-            modalHeader.className = 'modal-header bg-danger text-white';
-        } else if (type === 'warning') {
-            modalHeader.className = 'modal-header bg-warning text-dark';
-        }
-
-        modal.show();
-    }
 
     function showFieldError(fieldName, message) {
         const field = document.getElementById(fieldName);
@@ -227,7 +184,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove all error states
         document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
         document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
-        document.getElementById('reloadBtn').classList.add('d-none');
     }
 });
 
