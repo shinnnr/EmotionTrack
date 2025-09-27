@@ -666,8 +666,8 @@ def login():
         if '@' in identifier:
             user = User.query.filter_by(email=identifier).first()
         else:
-            # Check if it's 20 digits - could be LRN or Employee ID
-            if identifier.isdigit() and len(identifier) == 20:
+            # Check if it's up to 20 digits - could be LRN or Employee ID
+            if identifier.isdigit() and len(identifier) <= 20:
                 # Check LRN first (students)
                 user = User.query.filter_by(lrn=identifier).first()
                 if not user:
