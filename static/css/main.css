@@ -296,33 +296,6 @@ body {
     .btn.py-3 {
         padding: 1rem 0.75rem !important;
     }
-
-    /* Signup form adjustments for mobile */
-    .auth-form {
-        text-align: left !important;
-    }
-
-    .auth-form .form-label {
-        text-align: left !important;
-    }
-
-    .auth-form .form-control,
-    .auth-form .form-select {
-        width: 100% !important;
-    }
-
-    .landing-container .col-lg-6 {
-        justify-content: flex-start !important;
-        align-items: flex-start !important;
-    }
-
-    .password-toggle-btn {
-        display: none !important;
-    }
-
-    .password-input-group .form-control {
-        padding-right: 1rem !important;
-    }
 }
 
 @media (max-width: 576px) {
@@ -386,36 +359,9 @@ body {
     .btn.py-3 i {
         font-size: 1.25rem !important;
     }
-
+    
     .btn.py-3 .fw-bold {
         font-size: 0.8rem;
-    }
-
-    /* Signup form adjustments for small mobile */
-    .auth-form {
-        text-align: left !important;
-    }
-
-    .auth-form .form-label {
-        text-align: left !important;
-    }
-
-    .auth-form .form-control,
-    .auth-form .form-select {
-        width: 100% !important;
-    }
-
-    .landing-container .col-lg-6 {
-        justify-content: flex-start !important;
-        align-items: flex-start !important;
-    }
-
-    .password-toggle-btn {
-        display: none !important;
-    }
-
-    .password-input-group .form-control {
-        padding-right: 1rem !important;
     }
 }
 
