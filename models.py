@@ -194,7 +194,6 @@ class GuidanceAlert(db.Model):
     created_at = db.Column(db.DateTime, default=get_current_time)
 
     # Relationships
-    user = db.relationship('User', foreign_keys=[user_id], backref='alerts')
     resolver = db.relationship('User', foreign_keys=[resolved_by])
 
     def __repr__(self):
