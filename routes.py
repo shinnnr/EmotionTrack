@@ -1104,10 +1104,19 @@ def create_faculty():
         grade_parts = strand_grade.split()
         if len(grade_parts) < 2:
             return jsonify({'success': False, 'message': 'Invalid format. Use format: "STRAND GRADE - SECTION"'})
-        
+
         grade_level = grade_parts[-1]  # Get the last part as grade level
         strand = ' '.join(grade_parts[:-1])  # Everything except the last part as strand
-        
+
+        # Check if advisory class already exists
+        existing_assignment = ClassAssignment.query.filter_by(grade_level=grade_level, section=section).first()
+        if existing_assignment:
+            existing_faculty = User.query.get(existing_assignment.faculty_id)
+            return jsonify({
+                'success': False,
+                'message': f'Warning: This advisory class ({strand} {grade_level} - {section}) is already assigned to faculty member {existing_faculty.firstname} {existing_faculty.lastname} ({existing_faculty.email}). Each class can only have one faculty adviser.'
+            })
+
         # Create faculty user
         faculty = User()
         faculty.firstname = firstname
