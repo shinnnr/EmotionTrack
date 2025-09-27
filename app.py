@@ -98,41 +98,34 @@ with app.app_context():
     # Make sure to import the models here or their tables won't be created
     import models  # noqa: F401
 
-    try:
-        db.create_all()
-        logger.info("Database tables created successfully")
-
-        # Create admin user if it doesn't exist
-        from models import User
-        from werkzeug.security import generate_password_hash
-
-        admin_exists = db.session.execute(
-            db.text("SELECT id FROM users WHERE email = :email"),
-            {"email": "admin@emotiontrack.app"}
-        ).fetchone()
-
-        if not admin_exists:
-            admin = User()
-            admin.firstname = 'Admin'
-            admin.lastname = 'User'
-            admin.email = 'admin@emotiontrack.app'
-            admin.password_hash = generate_password_hash('admin123')
-            admin.gender = 'Other'
-            admin.strand = 'N/A'
-            admin.grade_level = '12'
-            admin.section = 'Admin'
-            admin.is_admin = True
-            admin.role = 'guidance_admin'
-            db.session.add(admin)
-            db.session.commit()
-            logger.info("Created admin user: admin@emotiontrack.app")
-        else:
-            logger.info("Admin user already exists")
-    except Exception as e:
-        logger.error(f"Database initialization failed: {e}")
-        logger.error("The application will continue without database initialization. Please check your database connection.")
-        # In production, you might want to raise the error instead of continuing
-        # raise e
+    db.create_all()
+    
+    # Create admin user if it doesn't exist
+    from models import User
+    from werkzeug.security import generate_password_hash
+    
+    admin_exists = db.session.execute(
+        db.text("SELECT id FROM users WHERE email = :email"), 
+        {"email": "admin@emotiontrack.app"}
+    ).fetchone()
+    
+    if not admin_exists:
+        admin = User()
+        admin.firstname = 'Admin'
+        admin.lastname = 'User'
+        admin.email = 'admin@emotiontrack.app'
+        admin.password_hash = generate_password_hash('admin123')
+        admin.gender = 'Other'
+        admin.strand = 'N/A'
+        admin.grade_level = '12'
+        admin.section = 'Admin'
+        admin.is_admin = True
+        admin.role = 'guidance_admin'
+        db.session.add(admin)
+        db.session.commit()
+        logger.info("Created admin user: admin@emotiontrack.app")
+    else:
+        logger.info("Admin user already exists")
     
     # Register blueprints after models are imported to avoid circular imports
     from routes import main_bp, auth_bp, api_bp, admin_bp

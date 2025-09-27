@@ -653,39 +653,35 @@ def mark_read():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
-
+    
     form = LoginForm()
-
+    
     if form.validate_on_submit():
-        try:
-            user = User.query.filter_by(email=form.email.data).first()
-
-            if user:
-                password_check = user.check_password(form.password.data)
-
-                if password_check:
-                    login_user(user)
-                    flash(f'Welcome back, {user.firstname}!', 'success')
-
-                    next_page = request.args.get('next')
-                    if next_page:
-                        # Validate redirect URL to prevent open redirect attacks
-                        parsed_url = urlparse(next_page)
-                        # Only allow internal relative URLs: must start with '/' but not '//'
-                        if (not parsed_url.netloc and
-                            next_page.startswith('/') and
-                            not next_page.startswith('//')):
-                            return redirect(next_page)
-
-                    if user.is_admin:
-                        return redirect(url_for('admin.dashboard'))
-                    return redirect(url_for('main.home'))
-
-            flash('Invalid email or password.', 'error')
-        except Exception as e:
-            # Handle database connection errors
-            flash('Unable to connect to the database. Please try again later.', 'error')
-
+        user = User.query.filter_by(email=form.email.data).first()
+        
+        if user:
+            password_check = user.check_password(form.password.data)
+            
+            if password_check:
+                login_user(user)
+                flash(f'Welcome back, {user.firstname}!', 'success')
+                
+                next_page = request.args.get('next')
+                if next_page:
+                    # Validate redirect URL to prevent open redirect attacks
+                    parsed_url = urlparse(next_page)
+                    # Only allow internal relative URLs: must start with '/' but not '//'
+                    if (not parsed_url.netloc and 
+                        next_page.startswith('/') and 
+                        not next_page.startswith('//')):
+                        return redirect(next_page)
+                
+                if user.is_admin:
+                    return redirect(url_for('admin.dashboard'))
+                return redirect(url_for('main.home'))
+        
+        flash('Invalid email or password.', 'error')
+    
     register_form = RegisterForm()
     return render_template('index.html', login_form=form, register_form=register_form)
 
@@ -693,45 +689,40 @@ def login():
 def register():
     form = RegisterForm()
     login_form = LoginForm()
-
+    
     if form.validate_on_submit():
-        try:
-            # Check if user already exists
-            existing_user = User.query.filter_by(email=form.email.data).first()
-            if existing_user:
-                flash('Email already registered. Please use a different email.', 'error')
-                # Render template with form data preserved instead of redirecting
-                return render_template('index.html', login_form=login_form, register_form=form)
-
-            # Create new user
-            user = User()
-            user.firstname = form.firstname.data
-            user.lastname = form.lastname.data
-            user.email = form.email.data
-            user.birthday = form.birthday.data
-            user.gender = form.gender.data
-            user.strand = form.strand.data
-            user.grade_level = form.grade_level.data
-            user.section = form.section.data.upper().strip() if form.section.data else ""  # Convert to uppercase
-            user.set_password(form.password.data)
-
-            db.session.add(user)
-            db.session.commit()
-
-            login_user(user)
-            flash('Registration successful! Welcome to EmotionTrack.', 'success')
-            return redirect(url_for('main.home'))
-        except Exception as e:
-            # Handle database connection errors
-            db.session.rollback()
-            flash('Unable to connect to the database. Please try again later.', 'error')
+        
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=form.email.data).first()
+        if existing_user:
+            flash('Email already registered. Please use a different email.', 'error')
+            # Render template with form data preserved instead of redirecting
             return render_template('index.html', login_form=login_form, register_form=form)
+        
+        # Create new user
+        user = User()
+        user.firstname = form.firstname.data
+        user.lastname = form.lastname.data
+        user.email = form.email.data
+        user.birthday = form.birthday.data
+        user.gender = form.gender.data
+        user.strand = form.strand.data
+        user.grade_level = form.grade_level.data
+        user.section = form.section.data.upper().strip() if form.section.data else ""  # Convert to uppercase
+        user.set_password(form.password.data)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        login_user(user)
+        flash('Registration successful! Welcome to EmotionTrack.', 'success')
+        return redirect(url_for('main.home'))
     else:
         # If form validation fails, flash errors and render template with form data preserved
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f'{field}: {error}', 'error')
-
+        
         # Render template with form data preserved instead of redirecting
         return render_template('index.html', login_form=login_form, register_form=form)
 
