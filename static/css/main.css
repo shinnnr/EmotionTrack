@@ -298,6 +298,10 @@ body {
     }
 
     /* Signup form adjustments for mobile */
+    .auth-form {
+        text-align: left !important;
+    }
+
     .auth-form .form-label {
         text-align: left !important;
     }
@@ -305,6 +309,11 @@ body {
     .auth-form .form-control,
     .auth-form .form-select {
         width: 100% !important;
+    }
+
+    .landing-container .col-lg-6 {
+        justify-content: flex-start !important;
+        align-items: flex-start !important;
     }
 }
 
@@ -369,9 +378,28 @@ body {
     .btn.py-3 i {
         font-size: 1.25rem !important;
     }
-    
+
     .btn.py-3 .fw-bold {
         font-size: 0.8rem;
+    }
+
+    /* Signup form adjustments for small mobile */
+    .auth-form {
+        text-align: left !important;
+    }
+
+    .auth-form .form-label {
+        text-align: left !important;
+    }
+
+    .auth-form .form-control,
+    .auth-form .form-select {
+        width: 100% !important;
+    }
+
+    .landing-container .col-lg-6 {
+        justify-content: flex-start !important;
+        align-items: flex-start !important;
     }
 }
 
