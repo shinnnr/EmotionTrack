@@ -657,34 +657,30 @@ def login():
     form = LoginForm()
     
     if form.validate_on_submit():
-        try:
-            user = User.query.filter_by(email=form.email.data).first()
+        user = User.query.filter_by(email=form.email.data).first()
 
-            if user:
-                password_check = user.check_password(form.password.data)
+        if user:
+            password_check = user.check_password(form.password.data)
 
-                if password_check:
-                    login_user(user)
-                    flash(f'Welcome back, {user.firstname}!', 'success')
+            if password_check:
+                login_user(user)
+                flash(f'Welcome back, {user.firstname}!', 'success')
 
-                    next_page = request.args.get('next')
-                    if next_page:
-                        # Validate redirect URL to prevent open redirect attacks
-                        parsed_url = urlparse(next_page)
-                        # Only allow internal relative URLs: must start with '/' but not '//'
-                        if (not parsed_url.netloc and
-                            next_page.startswith('/') and
-                            not next_page.startswith('//')):
-                            return redirect(next_page)
+                next_page = request.args.get('next')
+                if next_page:
+                    # Validate redirect URL to prevent open redirect attacks
+                    parsed_url = urlparse(next_page)
+                    # Only allow internal relative URLs: must start with '/' but not '//'
+                    if (not parsed_url.netloc and
+                        next_page.startswith('/') and
+                        not next_page.startswith('//')):
+                        return redirect(next_page)
 
-                    if user.is_admin:
-                        return redirect(url_for('admin.dashboard'))
-                    return redirect(url_for('main.home'))
+                if user.is_admin:
+                    return redirect(url_for('admin.dashboard'))
+                return redirect(url_for('main.home'))
 
-            flash('Invalid email or password.', 'error')
-        except Exception as e:
-            print(f"Database error during login: {str(e)}")
-            flash('Service temporarily unavailable. Please try again later.', 'error')
+        flash('Invalid email or password.', 'error')
     
     register_form = RegisterForm()
     return render_template('index.html', login_form=form, register_form=register_form)
