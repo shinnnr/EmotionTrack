@@ -44,12 +44,16 @@
                         <h3 class="text-center mb-4 text-clsu-green">Welcome Back</h3>
                         <form method="POST" action="{{ url_for('auth.login') }}">
                             {{ login_form.hidden_tag() }}
-                            
+
                             <div class="mb-3">
-                                <label for="{{ login_form.email.id }}" class="form-label">
-                                    <i class="fas fa-envelope me-2"></i>Email Address
+                                <label for="{{ login_form.login_id.id }}" class="form-label">
+                                    <i class="fas fa-id-card me-2"></i>Login ID
                                 </label>
-                                {{ login_form.email(class="form-control") }}
+                                {{ login_form.login_id(class="form-control") }}
+                                <div class="form-text text-muted small">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Students: Use LRN • Faculty: Use Employee ID • Admin: Use Email
+                                </div>
                             </div>
                             
                             <div class="mb-3">
@@ -108,11 +112,15 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Email Address</label>
-                                {{ register_form.email(class="form-control") }}
-                                {% if register_form.email.errors %}
+                                <label class="form-label">LRN (Learner Reference Number)</label>
+                                {{ register_form.lrn(class="form-control") }}
+                                <div class="form-text text-muted small">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Enter your 20-digit LRN (numbers only)
+                                </div>
+                                {% if register_form.lrn.errors %}
                                     <div class="text-danger small mt-1">
-                                        {% for error in register_form.email.errors %}
+                                        {% for error in register_form.lrn.errors %}
                                             {{ error }}
                                         {% endfor %}
                                     </div>
