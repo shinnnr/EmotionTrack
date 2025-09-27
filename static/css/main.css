@@ -315,6 +315,14 @@ body {
         justify-content: flex-start !important;
         align-items: flex-start !important;
     }
+
+    .password-toggle-btn {
+        display: none !important;
+    }
+
+    .password-input-group .form-control {
+        padding-right: 1rem !important;
+    }
 }
 
 @media (max-width: 576px) {
@@ -400,6 +408,14 @@ body {
     .landing-container .col-lg-6 {
         justify-content: flex-start !important;
         align-items: flex-start !important;
+    }
+
+    .password-toggle-btn {
+        display: none !important;
+    }
+
+    .password-input-group .form-control {
+        padding-right: 1rem !important;
     }
 }
 
