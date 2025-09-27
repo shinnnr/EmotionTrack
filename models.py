@@ -110,7 +110,8 @@ class User(UserMixin, db.Model):
         return max(0, days_remaining)
     
     def __repr__(self):
-        return f'<User {self.email}>'
+        identifier = self.email or self.lrn or self.employee_id or f'id:{self.id}'
+        return f'<User {identifier}>'
 
 class MoodLog(db.Model):
     __tablename__ = 'mood_logs'
