@@ -513,10 +513,14 @@ async function loadMessages(page = 1, showLoading = true) {
             
             // Update message count
             messageCount.textContent = `${data.pagination.total}`;
-            
-            // Generate pagination
-            generatePagination(data.pagination);
-            pagination.style.display = 'block';
+
+            // Generate pagination only if there are multiple pages
+            if (data.pagination.pages > 1) {
+                generatePagination(data.pagination);
+                pagination.style.display = 'block';
+            } else {
+                pagination.style.display = 'none';
+            }
             
         } else {
             container.innerHTML = `
