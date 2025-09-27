@@ -59,63 +59,56 @@ def index():
 @main_bp.route('/home')
 @login_required
 def home():
-    try:
-        if current_user.is_admin:
-            return redirect(url_for('admin.dashboard'))
-
-        # Get recent mood logs for user
-        recent_logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(desc(MoodLog.log_date)).limit(5).all()
-
-        # Get latest DASS-21 result
-        latest_dass = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).first()
-
-        # Check DASS-21 status (weekly assessment)
-        from datetime import datetime, timedelta
-        dass21_status = {
-            'can_take': True,
-            'days_remaining': 0,
-            'next_available_date': None,
-            'last_taken_date': None
-        }
-
-        if latest_dass:
-            week_ago = get_current_time() - timedelta(days=7)
-            latest_dass_time = convert_to_manila_time(latest_dass.created_at)
-            if latest_dass_time > week_ago:
-                days_passed = (get_current_time() - latest_dass_time).days
-                dass21_status['can_take'] = False
-                dass21_status['days_remaining'] = 7 - days_passed
-                dass21_status['next_available_date'] = latest_dass.created_at + timedelta(days=7)
-                dass21_status['last_taken_date'] = latest_dass.created_at
-
-        # Check for admin responses that the student hasn't read yet
-        unread_admin_responses = StudentMessage.query.filter(
-            StudentMessage.sender_user_id == current_user.id,
-            StudentMessage.admin_response.is_not(None),
-            StudentMessage.is_response_read_by_student == False
-        ).count()
-
-        # No longer needed - proper tracking implemented
-        unread_messages_count = 0
-
-        notifications = {
-            'dass21_available': dass21_status['can_take'],
-            'unread_messages': unread_messages_count,
-            'recent_responses': unread_admin_responses,
-            'has_notifications': dass21_status['can_take'] or unread_admin_responses > 0
-        }
-
-        return render_template('home.html',
-                             recent_logs=recent_logs,
-                             latest_dass=latest_dass,
-                             dass21_status=dass21_status,
-                             notifications=notifications)
-    except Exception as e:
-        logger.error(f"Error in home route: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
-        flash('An error occurred while loading the home page. Please try again.', 'error')
-        return redirect(url_for('main.index'))
+    if current_user.is_admin:
+        return redirect(url_for('admin.dashboard'))
+    
+    # Get recent mood logs for user
+    recent_logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(desc(MoodLog.log_date)).limit(5).all()
+    
+    # Get latest DASS-21 result
+    latest_dass = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).first()
+    
+    # Check DASS-21 status (weekly assessment)
+    from datetime import datetime, timedelta
+    dass21_status = {
+        'can_take': True,
+        'days_remaining': 0,
+        'next_available_date': None,
+        'last_taken_date': None
+    }
+    
+    if latest_dass:
+        week_ago = get_current_time() - timedelta(days=7)
+        latest_dass_time = convert_to_manila_time(latest_dass.created_at)
+        if latest_dass_time > week_ago:
+            days_passed = (get_current_time() - latest_dass_time).days
+            dass21_status['can_take'] = False
+            dass21_status['days_remaining'] = 7 - days_passed
+            dass21_status['next_available_date'] = latest_dass.created_at + timedelta(days=7)
+            dass21_status['last_taken_date'] = latest_dass.created_at
+    
+    # Check for admin responses that the student hasn't read yet
+    unread_admin_responses = StudentMessage.query.filter(
+        StudentMessage.sender_user_id == current_user.id,
+        StudentMessage.admin_response.is_not(None),
+        StudentMessage.is_response_read_by_student == False
+    ).count()
+    
+    # No longer needed - proper tracking implemented
+    unread_messages_count = 0
+    
+    notifications = {
+        'dass21_available': dass21_status['can_take'],
+        'unread_messages': unread_messages_count,
+        'recent_responses': unread_admin_responses,
+        'has_notifications': dass21_status['can_take'] or unread_admin_responses > 0
+    }
+    
+    return render_template('home.html', 
+                         recent_logs=recent_logs, 
+                         latest_dass=latest_dass, 
+                         dass21_status=dass21_status,
+                         notifications=notifications)
 
 @main_bp.route('/profile')
 @login_required
@@ -364,7 +357,7 @@ def emotion_log():
             try:
                 generate_guidance_alerts(current_user.id)
             except Exception as e:
-                logger.error(f"Error generating alerts for mood log: {e}")
+                print(f"Error generating alerts for mood log: {e}")
                 # Don't fail the mood log submission if alert generation fails
 
             flash('Mood log saved successfully!', 'success')
@@ -1794,13 +1787,14 @@ def respond_to_feedback(feedback_id):
 def get_suggested_responses(user_id):
     if not current_user.is_admin:
         return jsonify({'success': False, 'message': 'Access denied'})
-
+    
+    student = User.query.get_or_404(user_id)
+    if student.is_admin:
+        return jsonify({'success': False, 'message': 'Cannot get suggestions for admin users'})
+    
+    suggestions = []
+    
     try:
-        student = User.query.get_or_404(user_id)
-        if student.is_admin:
-            return jsonify({'success': False, 'message': 'Cannot get suggestions for admin users'})
-
-        suggestions = []
         # Get recent DASS-21 results (within last 30 days)
         # Convert Manila time threshold to UTC naive for database comparison
         thirty_days_ago_utc = (get_current_time() - timedelta(days=30)).astimezone(pytz.UTC).replace(tzinfo=None)
