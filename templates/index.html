@@ -37,7 +37,7 @@
             </div>
 
             <!-- Right side - Login/Register forms -->
-            <div class="col-lg-6 d-flex align-items-center justify-content-center bg-light">
+            <div class="col-lg-6 d-flex align-items-center bg-light">
                 <div class="auth-container p-5 w-100" style="max-width: 500px;">
                     <!-- Login Form -->
                     <div class="auth-form active" id="loginForm" {% if register_form and register_form.errors %}style="display: none;"{% endif %}>
@@ -371,10 +371,10 @@
     color: var(--clsu-green);
 }
 
-/* Mobile alignment fix for signup form */
-@media (max-width: 768px) {
+/* Desktop centering for signup form */
+@media (min-width: 992px) {
     .landing-container .col-lg-6.d-flex {
-        justify-content: flex-start !important;
+        justify-content: center;
     }
 }
 </style>
