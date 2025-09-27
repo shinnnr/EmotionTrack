@@ -27,8 +27,9 @@ class User(UserMixin, db.Model):
     firstname = db.Column(db.String(100), nullable=False)
     lastname = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)  # Nullable for students and faculty
-    lrn = db.Column(db.String(20), unique=True, nullable=True, deferred=db.deferred(db.Column.default))  # Learner's Reference Number for students
-    employee_id = db.Column(db.String(20), unique=True, nullable=True, deferred=db.deferred(db.Column.default))  # Employee ID for faculty
+    # Temporarily commented out until database migration completes
+    # lrn = db.Column(db.String(20), unique=True, nullable=True)  # Learner's Reference Number for students
+    # employee_id = db.Column(db.String(20), unique=True, nullable=True)  # Employee ID for faculty
     password_hash = db.Column(db.String(256), nullable=False)
     birthday = db.Column(db.Date)
     gender = db.Column(db.String(20))
