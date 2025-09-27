@@ -683,7 +683,7 @@ def login():
 
             flash('Invalid email or password.', 'error')
         except Exception as e:
-            logger.error(f"Database error during login: {str(e)}")
+            print(f"Database error during login: {str(e)}")
             flash('Service temporarily unavailable. Please try again later.', 'error')
     
     register_form = RegisterForm()
