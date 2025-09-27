@@ -107,7 +107,7 @@
                             
                             <div class="mb-3">
                                 <label class="form-label">LRN</label>
-                                {{ register_form.email(class="form-control") }}
+                                {{ register_form.email(class="form-control", pattern="^\d{12}$", title="LRN must be exactly 12 digits", inputmode="numeric") }}
                                 {% if register_form.email.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.email.errors %}
