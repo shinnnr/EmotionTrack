@@ -255,7 +255,7 @@ function displayStudentList(students) {
                     </div>
                 </div>
             </td>
-            <td>${escapeHtml(student.email)}</td>
+            <td>LRN: ${escapeHtml(student.email)}</td>
             <td>${escapeHtml(student.created_at)}</td>
             <td>
                 <button class="btn btn-sm btn-success me-2" onclick="goToStudentChat(${parseInt(student.id)})">
