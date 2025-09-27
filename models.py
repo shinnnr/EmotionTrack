@@ -216,7 +216,7 @@ class StudentFeedback(db.Model):
     created_at = db.Column(db.DateTime, default=get_current_time)
 
     # Relationships
-    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('feedback', cascade='all, delete-orphan'))
+    user = db.relationship('User', foreign_keys=[user_id], backref='feedback')
     responder = db.relationship('User', foreign_keys=[responded_by])
 
     def __repr__(self):

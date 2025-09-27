@@ -657,30 +657,30 @@ def login():
     form = LoginForm()
     
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.identifier.data).first()
-
+        user = User.query.filter_by(email=form.email.data).first()
+        
         if user:
             password_check = user.check_password(form.password.data)
-
+            
             if password_check:
                 login_user(user)
                 flash(f'Welcome back, {user.firstname}!', 'success')
-
+                
                 next_page = request.args.get('next')
                 if next_page:
                     # Validate redirect URL to prevent open redirect attacks
                     parsed_url = urlparse(next_page)
                     # Only allow internal relative URLs: must start with '/' but not '//'
-                    if (not parsed_url.netloc and
-                        next_page.startswith('/') and
+                    if (not parsed_url.netloc and 
+                        next_page.startswith('/') and 
                         not next_page.startswith('//')):
                         return redirect(next_page)
-
+                
                 if user.is_admin:
                     return redirect(url_for('admin.dashboard'))
                 return redirect(url_for('main.home'))
-
-        flash('Invalid LRN/Employee ID or password.', 'error')
+        
+        flash('Invalid email or password.', 'error')
     
     register_form = RegisterForm()
     return render_template('index.html', login_form=form, register_form=register_form)
@@ -691,19 +691,19 @@ def register():
     login_form = LoginForm()
     
     if form.validate_on_submit():
-
+        
         # Check if user already exists
-        existing_user = User.query.filter_by(email=form.lrn.data).first()
+        existing_user = User.query.filter_by(email=form.email.data).first()
         if existing_user:
-            flash('LRN already registered. Please use a different LRN.', 'error')
+            flash('Email already registered. Please use a different email.', 'error')
             # Render template with form data preserved instead of redirecting
             return render_template('index.html', login_form=login_form, register_form=form)
-
+        
         # Create new user
         user = User()
         user.firstname = form.firstname.data
         user.lastname = form.lastname.data
-        user.email = form.lrn.data  # Store LRN in email field
+        user.email = form.email.data
         user.birthday = form.birthday.data
         user.gender = form.gender.data
         user.strand = form.strand.data
@@ -1076,17 +1076,17 @@ def create_faculty():
     
     firstname = request.form.get('firstname')
     lastname = request.form.get('lastname')
-    employee_id = request.form.get('employee_id')
+    email = request.form.get('email')
     password = request.form.get('password')
     advisory_class = request.form.get('advisory_class')
-
-    if not all([firstname, lastname, employee_id, password, advisory_class]):
+    
+    if not all([firstname, lastname, email, password, advisory_class]):
         return jsonify({'success': False, 'message': 'All fields are required'})
-
-    # Check if employee ID already exists
-    existing_user = User.query.filter_by(email=employee_id).first()
+    
+    # Check if email already exists
+    existing_user = User.query.filter_by(email=email).first()
     if existing_user:
-        return jsonify({'success': False, 'message': 'Employee ID already exists'})
+        return jsonify({'success': False, 'message': 'Email already exists'})
     
     try:
         # Parse advisory class (e.g., "HUMSS 12 - MARX")
@@ -1112,7 +1112,7 @@ def create_faculty():
         faculty = User()
         faculty.firstname = firstname
         faculty.lastname = lastname
-        faculty.email = employee_id  # Store Employee ID in email field
+        faculty.email = email
         if password:
             faculty.password_hash = generate_password_hash(password)
         else:
