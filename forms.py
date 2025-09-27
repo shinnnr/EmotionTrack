@@ -19,16 +19,23 @@ def validate_birthday_not_future(form, field):
     if field.data and field.data.year > datetime.now().year:
         raise ValidationError('Please enter a valid birth year.')
 
+def validate_lrn(form, field):
+    """Custom validator for LRN (Learner's Reference Number) - up to 20 digits"""
+    if not field.data:
+        raise ValidationError('LRN is required.')
+    if not re.match(r'^\d{1,20}$', field.data):
+        raise ValidationError('LRN must be numeric and up to 20 digits only.')
+
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    email = StringField('LRN / Employee ID', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
-    
+
     # CSRF protection is handled globally
 
 class RegisterForm(FlaskForm):
     firstname = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
     lastname = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    email = StringField('LRN', validators=[DataRequired(), validate_lrn])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Confirm Password', 
                                    validators=[DataRequired(), EqualTo('password')])
