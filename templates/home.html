@@ -447,6 +447,7 @@ document.addEventListener('keydown', function(event) {
 .quick-action-card {
     text-decoration: none;
     transition: transform 0.2s;
+    border-radius: var(--border-radius);
 }
 
 .quick-action-card:hover {
@@ -604,5 +605,14 @@ document.addEventListener('keydown', function(event) {
 .severity-Moderate { background-color: #fd7e14; }
 .severity-Severe { background-color: #dc3545; }
 .severity-ExtremelySevere { background-color: #6f42c1; }
+
+/* Override emotion icon to remove yellow circle */
+.emotion-icon {
+    background: none !important;
+    border-radius: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    color: var(--clsu-gold) !important;
+}
 </style>
 {% endblock %}
