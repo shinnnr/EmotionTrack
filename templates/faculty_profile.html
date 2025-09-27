@@ -90,7 +90,7 @@
             <div class="modal-body" id="modalBody"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary d-none" id="reloadBtn" onclick="location.reload()">
+                <button type="button" class="btn btn-primary d-none" id="reloadBtn" onclick="modal.hide(); location.reload()">
                     <i class="fas fa-refresh me-2"></i>Reload Page
                 </button>
             </div>
@@ -106,8 +106,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveSpinner = document.getElementById('saveSpinner');
     const modal = new bootstrap.Modal(document.getElementById('resultModal'));
 
+    // Track form changes
+    let formChanged = false;
+    const initialValues = {};
+
+    // Store initial values
+    function storeInitialValues() {
+        const formData = new FormData(form);
+        for (let [key, value] of formData.entries()) {
+            initialValues[key] = value;
+        }
+    }
+
+    // Check if form has changed
+    function hasFormChanged() {
+        const currentData = new FormData(form);
+        for (let [key, value] of currentData.entries()) {
+            if (initialValues[key] !== value) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Initialize on load
+    storeInitialValues();
+
+    // Track changes on form inputs
+    form.addEventListener('input', function() {
+        formChanged = hasFormChanged();
+    });
+
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
+
+        // Check if form has changed
+        if (!hasFormChanged()) {
+            showModal('No Changes', 'No changes were made to your profile. Please update at least one field before saving.', 'warning');
+            return;
+        }
 
         // Clear previous error states
         clearErrors();
@@ -129,6 +166,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 showModal('Success', result.message, 'success');
                 // Show reload button for successful updates
                 document.getElementById('reloadBtn').classList.remove('d-none');
+                // Auto-close modal after 3 seconds and reload
+                setTimeout(() => {
+                    modal.hide();
+                    location.reload();
+                }, 3000);
             } else {
                 showModal('Error', result.message, 'error');
                 // Parse and display field-specific errors if available
@@ -160,7 +202,13 @@ document.addEventListener('DOMContentLoaded', function() {
         modalBody.textContent = message;
 
         // Update modal styling based on type
-        modalHeader.className = type === 'success' ? 'modal-header bg-success text-white' : 'modal-header bg-danger text-white';
+        if (type === 'success') {
+            modalHeader.className = 'modal-header bg-success text-white';
+        } else if (type === 'error') {
+            modalHeader.className = 'modal-header bg-danger text-white';
+        } else if (type === 'warning') {
+            modalHeader.className = 'modal-header bg-warning text-dark';
+        }
 
         modal.show();
     }
