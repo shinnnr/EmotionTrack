@@ -140,13 +140,13 @@
             const sidebarHeader = sidebar.querySelector('.sidebar-header-link') || sidebar.querySelector('.sidebar-header');
             if (sidebarHeader) {
                 sidebarHeader.addEventListener('click', function(e) {
-                    // Only close on mobile (when overlay is visible)
+                    // On mobile, allow navigation and close sidebar after navigation
                     if (sidebarOverlay && sidebarOverlay.classList.contains('show')) {
-                        e.preventDefault();
                         e.stopPropagation();
-                        closeSidebar();
+                        // Close sidebar after a short delay to allow navigation
+                        setTimeout(closeSidebar, 100);
                     }
-                    // If not mobile, allow the link to navigate
+                    // Allow the link to navigate
                 });
 
                 // Add cursor pointer to indicate it's clickable
