@@ -22,12 +22,11 @@ def convert_to_manila_time(dt):
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
-
+    
     id = db.Column(db.Integer, primary_key=True)
     firstname = db.Column(db.String(100), nullable=False)
     lastname = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=True)  # Make nullable for non-admin users
-    login_identifier = db.Column(db.String(20), unique=True, nullable=True)  # LRN for students, Employee ID for faculty
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     birthday = db.Column(db.Date)
     gender = db.Column(db.String(20))
@@ -36,7 +35,7 @@ class User(UserMixin, db.Model):
     section = db.Column(db.String(50))
     # Keep both old and new columns during migration
     is_admin = db.Column(db.Boolean, default=False)
-    role = db.Column(Enum('student', 'guidance_admin', 'faculty_admin', name='user_roles'),
+    role = db.Column(Enum('student', 'guidance_admin', 'faculty_admin', name='user_roles'), 
                      default='student', nullable=True)  # Make nullable during migration
     created_at = db.Column(db.DateTime, default=get_current_time)
     last_profile_update = db.Column(db.DateTime, nullable=True)  # Track last time student updated profile info
@@ -47,7 +46,6 @@ class User(UserMixin, db.Model):
     sent_messages = db.relationship('StudentMessage', foreign_keys='StudentMessage.sender_user_id', back_populates='sender', lazy=True, cascade='all, delete-orphan')
     responded_messages = db.relationship('StudentMessage', foreign_keys='StudentMessage.responded_by_admin_id', back_populates='responded_by', lazy=True)
     class_assignments = db.relationship('ClassAssignment', backref='faculty', lazy=True, cascade='all, delete-orphan')
-    alerts = db.relationship('GuidanceAlert', backref='user', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -196,6 +194,7 @@ class GuidanceAlert(db.Model):
     created_at = db.Column(db.DateTime, default=get_current_time)
 
     # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='alerts')
     resolver = db.relationship('User', foreign_keys=[resolved_by])
 
     def __repr__(self):

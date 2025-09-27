@@ -40,12 +40,8 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Employee ID</label>
-                                <input type="text" class="form-control" id="employee_id" name="employee_id" required maxlength="20" pattern="\d{20}" title="Employee ID must be exactly 20 digits">
-                                <div class="form-text text-muted small">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Enter 20-digit Employee ID (numbers only)
-                                </div>
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Password</label>
@@ -90,7 +86,7 @@
                                         <div class="d-flex flex-column h-100">
                                             <div class="flex-grow-1">
                                                 <h6 class="fw-bold mb-2">{{ data.faculty.firstname }} {{ data.faculty.lastname }}</h6>
-                                                    <p class="text-muted mb-2">ID: {{ data.faculty.login_identifier }}</p>
+                                                <p class="text-muted mb-2">{{ data.faculty.email }}</p>
                                                 {% if data.assignment %}
                                                     <div class="advisory-info mb-2">
                                                         <span class="badge bg-primary">{{ data.assignment.grade_level }}</span>

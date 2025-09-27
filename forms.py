@@ -19,43 +19,23 @@ def validate_birthday_not_future(form, field):
     if field.data and field.data.year > datetime.now().year:
         raise ValidationError('Please enter a valid birth year.')
 
-def validate_lrn_length(form, field):
-    """Custom validator to ensure LRN is exactly 20 digits"""
-    if field.data:
-        # Remove any spaces or dashes
-        cleaned = ''.join(c for c in field.data if c.isdigit())
-        if len(cleaned) != 20:
-            raise ValidationError('LRN must be exactly 20 digits.')
-        # Replace field data with cleaned version
-        field.data = cleaned
-
-def validate_employee_id_length(form, field):
-    """Custom validator to ensure Employee ID is exactly 20 digits"""
-    if field.data:
-        # Remove any spaces or dashes
-        cleaned = ''.join(c for c in field.data if c.isdigit())
-        if len(cleaned) != 20:
-            raise ValidationError('Employee ID must be exactly 20 digits.')
-        # Replace field data with cleaned version
-        field.data = cleaned
-
 class LoginForm(FlaskForm):
-    login_id = StringField('Login ID', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
-
+    
     # CSRF protection is handled globally
 
 class RegisterForm(FlaskForm):
     firstname = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
     lastname = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
-    lrn = StringField('LRN (Learner Reference Number)', validators=[DataRequired(), validate_lrn_length])
+    email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('Confirm Password',
+    confirm_password = PasswordField('Confirm Password', 
                                    validators=[DataRequired(), EqualTo('password')])
     birthday = DateField('Birthday', validators=[DataRequired(), validate_birthday_not_future])
     gender = SelectField('Gender', choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')])
     strand = SelectField('Strand', choices=[
-        ('STEM', 'STEM'), ('ABM', 'ABM'), ('HUMSS', 'HUMSS'),
+        ('STEM', 'STEM'), ('ABM', 'ABM'), ('HUMSS', 'HUMSS'), 
         ('GAS', 'GAS'), ('TVL', 'TVL'), ('Other', 'Other')
     ])
     grade_level = SelectField('Grade Level', choices=[('11', 'Grade 11'), ('12', 'Grade 12')])
