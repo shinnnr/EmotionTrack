@@ -205,6 +205,21 @@ async function sendResponse() {
 
 {% block extra_js %}
 <style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+}
+
+.avatar-title {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
 /* Desktop - ensure normal table behavior */
 @media (min-width: 769px) {
     .table tbody tr {
