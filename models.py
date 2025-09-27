@@ -194,7 +194,7 @@ class GuidanceAlert(db.Model):
     created_at = db.Column(db.DateTime, default=get_current_time)
 
     # Relationships
-    user = db.relationship('User', foreign_keys=[user_id], backref='alerts')
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('alerts', cascade='all, delete-orphan'))
     resolver = db.relationship('User', foreign_keys=[resolved_by])
 
     def __repr__(self):
@@ -216,7 +216,7 @@ class StudentFeedback(db.Model):
     created_at = db.Column(db.DateTime, default=get_current_time)
 
     # Relationships
-    user = db.relationship('User', foreign_keys=[user_id], backref='feedback')
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('feedback', cascade='all, delete-orphan'))
     responder = db.relationship('User', foreign_keys=[responded_by])
 
     def __repr__(self):
