@@ -51,8 +51,7 @@ class User(UserMixin, db.Model):
     sent_messages = db.relationship('StudentMessage', foreign_keys='StudentMessage.sender_user_id', back_populates='sender', lazy=True, cascade='all, delete-orphan')
     responded_messages = db.relationship('StudentMessage', foreign_keys='StudentMessage.responded_by_admin_id', back_populates='responded_by', lazy=True)
     class_assignments = db.relationship('ClassAssignment', backref='faculty', lazy=True, cascade='all, delete-orphan')
-    guidance_alerts = db.relationship('GuidanceAlert', backref='user', lazy=True, cascade='all, delete-orphan')
-    feedback = db.relationship('StudentFeedback', backref='user', lazy=True, cascade='all, delete-orphan')
+    guidance_alerts = db.relationship('GuidanceAlert', foreign_keys='GuidanceAlert.user_id', backref='user', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
