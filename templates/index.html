@@ -46,14 +46,10 @@
                             {{ login_form.hidden_tag() }}
                             
                             <div class="mb-3">
-                                <label for="{{ login_form.identifier.id }}" class="form-label">
-                                    <i class="fas fa-id-card me-2"></i>LRN / Employee ID / Email
+                                <label for="{{ login_form.email.id }}" class="form-label">
+                                    <i class="fas fa-envelope me-2"></i>Email Address
                                 </label>
-                                {{ login_form.identifier(class="form-control") }}
-                                <div class="form-text text-muted small">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Students: Use LRN • Faculty/Teachers: Use Employee ID • Admin: Use Email
-                                </div>
+                                {{ login_form.email(class="form-control") }}
                             </div>
                             
                             <div class="mb-3">
@@ -112,11 +108,11 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">LRN (Learner's Reference Number)</label>
-                                {{ register_form.lrn(class="form-control") }}
-                                {% if register_form.lrn.errors %}
+                                <label class="form-label">Email Address</label>
+                                {{ register_form.email(class="form-control") }}
+                                {% if register_form.email.errors %}
                                     <div class="text-danger small mt-1">
-                                        {% for error in register_form.lrn.errors %}
+                                        {% for error in register_form.email.errors %}
                                             {{ error }}
                                         {% endfor %}
                                     </div>

@@ -22,13 +22,11 @@ def convert_to_manila_time(dt):
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
-
+    
     id = db.Column(db.Integer, primary_key=True)
     firstname = db.Column(db.String(100), nullable=False)
     lastname = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=True)  # Nullable for students and faculty
-    lrn = db.Column(db.String(20), unique=True, nullable=True)  # Learner's Reference Number for students
-    employee_id = db.Column(db.String(20), unique=True, nullable=True)  # Employee ID for faculty
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     birthday = db.Column(db.Date)
     gender = db.Column(db.String(20))
@@ -37,8 +35,8 @@ class User(UserMixin, db.Model):
     section = db.Column(db.String(50))
     # Keep both old and new columns during migration
     is_admin = db.Column(db.Boolean, default=False)
-    role = db.Column(Enum('student', 'guidance_admin', 'faculty_admin', name='user_roles'),
-                      default='student', nullable=True)  # Make nullable during migration
+    role = db.Column(Enum('student', 'guidance_admin', 'faculty_admin', name='user_roles'), 
+                     default='student', nullable=True)  # Make nullable during migration
     created_at = db.Column(db.DateTime, default=get_current_time)
     last_profile_update = db.Column(db.DateTime, nullable=True)  # Track last time student updated profile info
     
@@ -110,8 +108,7 @@ class User(UserMixin, db.Model):
         return max(0, days_remaining)
     
     def __repr__(self):
-        identifier = self.email or self.lrn or self.employee_id or f'id:{self.id}'
-        return f'<User {identifier}>'
+        return f'<User {self.email}>'
 
 class MoodLog(db.Model):
     __tablename__ = 'mood_logs'

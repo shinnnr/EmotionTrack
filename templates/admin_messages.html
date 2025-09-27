@@ -470,7 +470,7 @@ async function loadMessages(page = 1, showLoading = true) {
                     <tr class="${hasUnread ? 'table-warning' : ''}" onclick="showMobileDetails(this)" 
                         data-user-id="${user.id}"
                         data-user-name="${user.full_name}"
-                        data-user-identifier="${user.lrn || user.employee_id || user.email || 'N/A'}"
+                        data-user-email="${user.email}" 
                         data-user-strand="${user.strand || 'N/A'}"
                         data-user-grade="${user.grade_level || 'N/A'}"
                         data-user-firstname="${user.firstname || ''}"
@@ -488,7 +488,7 @@ async function loadMessages(page = 1, showLoading = true) {
                                 </div>
                                 <div>
                                     <h6 class="mb-0">${user.full_name}</h6>
-                                    <small class="text-muted">${user.lrn || user.employee_id || user.email || 'N/A'}</small>
+                                    <small class="text-muted">${user.email}</small>
                                     <div class="small text-muted">
                                         ${user.strand || 'N/A'} - Grade ${user.grade_level || 'N/A'}
                                     </div>
@@ -612,7 +612,7 @@ function showMobileDetails(row) {
     // Get data from row attributes
     const userId = row.dataset.userId;
     const userName = row.dataset.userName;
-    const userIdentifier = row.dataset.userIdentifier;
+    const userEmail = row.dataset.userEmail;
     const userStrand = row.dataset.userStrand;
     const userGrade = row.dataset.userGrade;
     const userFirstname = row.dataset.userFirstname;
@@ -625,7 +625,7 @@ function showMobileDetails(row) {
     // Populate panel content
     document.getElementById('mobileStudentName').textContent = userName;
     document.getElementById('mobileStudentFullName').textContent = userName;
-    document.getElementById('mobileStudentEmail').textContent = userIdentifier;
+    document.getElementById('mobileStudentEmail').textContent = userEmail;
     document.getElementById('mobileStudentDetails').textContent = `${userStrand} - Grade ${userGrade}`;
     document.getElementById('mobileStudentInitials').textContent = `${userFirstname[0] || ''}${userLastname[0] || ''}`;
     

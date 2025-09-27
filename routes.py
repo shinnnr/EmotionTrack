@@ -653,55 +653,35 @@ def mark_read():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
-
+    
     form = LoginForm()
-
+    
     if form.validate_on_submit():
-        identifier = form.identifier.data.strip()
-
-        # Try to find user by different identifier types
-        user = None
-
-        # Check if it's an email (contains @) - for admin
-        if '@' in identifier:
-            user = User.query.filter_by(email=identifier).first()
-        else:
-            # Check if it's up to 20 digits - could be LRN or Employee ID
-            if identifier.isdigit() and len(identifier) <= 20:
-                # Check LRN first (students)
-                user = User.query.filter_by(lrn=identifier).first()
-                if not user:
-                    # Check Employee ID (faculty)
-                    user = User.query.filter_by(employee_id=identifier).first()
-            else:
-                # Try as LRN or Employee ID anyway
-                user = User.query.filter(
-                    (User.lrn == identifier) | (User.employee_id == identifier)
-                ).first()
-
+        user = User.query.filter_by(email=form.email.data).first()
+        
         if user:
             password_check = user.check_password(form.password.data)
-
+            
             if password_check:
                 login_user(user)
                 flash(f'Welcome back, {user.firstname}!', 'success')
-
+                
                 next_page = request.args.get('next')
                 if next_page:
                     # Validate redirect URL to prevent open redirect attacks
                     parsed_url = urlparse(next_page)
                     # Only allow internal relative URLs: must start with '/' but not '//'
-                    if (not parsed_url.netloc and
-                        next_page.startswith('/') and
+                    if (not parsed_url.netloc and 
+                        next_page.startswith('/') and 
                         not next_page.startswith('//')):
                         return redirect(next_page)
-
+                
                 if user.is_admin:
                     return redirect(url_for('admin.dashboard'))
                 return redirect(url_for('main.home'))
-
-        flash('Invalid LRN/Employee ID/Email or password.', 'error')
-
+        
+        flash('Invalid email or password.', 'error')
+    
     register_form = RegisterForm()
     return render_template('index.html', login_form=form, register_form=register_form)
 
@@ -709,48 +689,40 @@ def login():
 def register():
     form = RegisterForm()
     login_form = LoginForm()
-
+    
     if form.validate_on_submit():
-
-        # Check if LRN already exists
-        existing_user = User.query.filter_by(lrn=form.lrn.data).first()
+        
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=form.email.data).first()
         if existing_user:
-            flash('LRN already registered. Please use a different LRN.', 'error')
+            flash('Email already registered. Please use a different email.', 'error')
             # Render template with form data preserved instead of redirecting
             return render_template('index.html', login_form=login_form, register_form=form)
-
-        try:
-            # Create new user
-            user = User()
-            user.firstname = form.firstname.data
-            user.lastname = form.lastname.data
-            user.lrn = form.lrn.data
-            user.birthday = form.birthday.data
-            user.gender = form.gender.data
-            user.strand = form.strand.data
-            user.grade_level = form.grade_level.data
-            user.section = form.section.data.upper().strip() if form.section.data else ""  # Convert to uppercase
-            user.set_password(form.password.data)
-
-            db.session.add(user)
-            db.session.commit()
-
-            login_user(user)
-            flash('Registration successful! Welcome to EmotionTrack.', 'success')
-            return redirect(url_for('main.home'))
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error during registration: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            flash('An error occurred during registration. Please try again.', 'error')
-            return render_template('index.html', login_form=login_form, register_form=form)
+        
+        # Create new user
+        user = User()
+        user.firstname = form.firstname.data
+        user.lastname = form.lastname.data
+        user.email = form.email.data
+        user.birthday = form.birthday.data
+        user.gender = form.gender.data
+        user.strand = form.strand.data
+        user.grade_level = form.grade_level.data
+        user.section = form.section.data.upper().strip() if form.section.data else ""  # Convert to uppercase
+        user.set_password(form.password.data)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        login_user(user)
+        flash('Registration successful! Welcome to EmotionTrack.', 'success')
+        return redirect(url_for('main.home'))
     else:
         # If form validation fails, flash errors and render template with form data preserved
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f'{field}: {error}', 'error')
-
+        
         # Render template with form data preserved instead of redirecting
         return render_template('index.html', login_form=login_form, register_form=form)
 
@@ -1101,54 +1073,46 @@ def manage_faculty():
 def create_faculty():
     if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
         return jsonify({'success': False, 'message': 'Access denied'})
-
+    
     firstname = request.form.get('firstname')
     lastname = request.form.get('lastname')
-    employee_id = request.form.get('employee_id')
+    email = request.form.get('email')
     password = request.form.get('password')
     advisory_class = request.form.get('advisory_class')
-
-    if not all([firstname, lastname, employee_id, password, advisory_class]):
+    
+    if not all([firstname, lastname, email, password, advisory_class]):
         return jsonify({'success': False, 'message': 'All fields are required'})
-
-    # Check if employee_id already exists
-    existing_user = User.query.filter_by(employee_id=employee_id).first()
+    
+    # Check if email already exists
+    existing_user = User.query.filter_by(email=email).first()
     if existing_user:
-        return jsonify({'success': False, 'message': 'Employee ID already exists'})
-
+        return jsonify({'success': False, 'message': 'Email already exists'})
+    
     try:
         # Parse advisory class (e.g., "HUMSS 12 - MARX")
         if not advisory_class:
             return jsonify({'success': False, 'message': 'Advisory class is required'})
-
+            
         parts = advisory_class.split(' - ')
         if len(parts) != 2:
             return jsonify({'success': False, 'message': 'Invalid advisory class format. Use format: "STRAND GRADE - SECTION"'})
-
+        
         strand_grade = parts[0].strip()
         section = parts[1].strip()
-
+        
         # Extract grade level
         grade_parts = strand_grade.split()
         if len(grade_parts) < 2:
             return jsonify({'success': False, 'message': 'Invalid format. Use format: "STRAND GRADE - SECTION"'})
-
+        
         grade_level = grade_parts[-1]  # Get the last part as grade level
         strand = ' '.join(grade_parts[:-1])  # Everything except the last part as strand
-
-        # Check if class assignment already exists
-        existing_assignment = ClassAssignment.query.filter_by(
-            grade_level=grade_level,
-            section=section
-        ).first()
-        if existing_assignment:
-            return jsonify({'success': False, 'message': f'Section {section} for Grade {grade_level} is already assigned to another faculty member'})
-
+        
         # Create faculty user
         faculty = User()
         faculty.firstname = firstname
         faculty.lastname = lastname
-        faculty.employee_id = employee_id
+        faculty.email = email
         if password:
             faculty.password_hash = generate_password_hash(password)
         else:
@@ -1159,21 +1123,21 @@ def create_faculty():
         faculty.section = section
         faculty.is_admin = True
         faculty.role = 'faculty_admin'
-
+        
         db.session.add(faculty)
         db.session.flush()  # Get the faculty ID
-
+        
         # Create class assignment
         assignment = ClassAssignment()
         assignment.faculty_id = faculty.id
         assignment.grade_level = grade_level
         assignment.section = section
-
+        
         db.session.add(assignment)
         db.session.commit()
-
+        
         return jsonify({'success': True, 'message': 'Faculty created successfully'})
-
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error creating faculty: {str(e)}'})
