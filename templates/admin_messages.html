@@ -66,7 +66,7 @@
                                         </div>
                                         <div>
                                             <h6 class="mb-0" id="mobileStudentFullName"></h6>
-                                            <small class="text-muted" id="mobileStudentEmail"></small>
+                                            <small class="text-muted" id="mobileStudentEmail">LRN: </small>
                                             <div class="small text-muted" id="mobileStudentDetails"></div>
                                         </div>
                                     </div>
@@ -488,7 +488,7 @@ async function loadMessages(page = 1, showLoading = true) {
                                 </div>
                                 <div>
                                     <h6 class="mb-0">${user.full_name}</h6>
-                                    <small class="text-muted">${user.email}</small>
+                                    <small class="text-muted">LRN: ${user.email}</small>
                                     <div class="small text-muted">
                                         ${user.strand || 'N/A'} - Grade ${user.grade_level || 'N/A'}
                                     </div>
@@ -625,7 +625,7 @@ function showMobileDetails(row) {
     // Populate panel content
     document.getElementById('mobileStudentName').textContent = userName;
     document.getElementById('mobileStudentFullName').textContent = userName;
-    document.getElementById('mobileStudentEmail').textContent = userEmail;
+    document.getElementById('mobileStudentEmail').textContent = 'LRN: ' + userEmail;
     document.getElementById('mobileStudentDetails').textContent = `${userStrand} - Grade ${userGrade}`;
     document.getElementById('mobileStudentInitials').textContent = `${userFirstname[0] || ''}${userLastname[0] || ''}`;
     
