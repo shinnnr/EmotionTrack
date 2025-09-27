@@ -719,24 +719,32 @@ def register():
             # Render template with form data preserved instead of redirecting
             return render_template('index.html', login_form=login_form, register_form=form)
 
-        # Create new user
-        user = User()
-        user.firstname = form.firstname.data
-        user.lastname = form.lastname.data
-        user.lrn = form.lrn.data
-        user.birthday = form.birthday.data
-        user.gender = form.gender.data
-        user.strand = form.strand.data
-        user.grade_level = form.grade_level.data
-        user.section = form.section.data.upper().strip() if form.section.data else ""  # Convert to uppercase
-        user.set_password(form.password.data)
+        try:
+            # Create new user
+            user = User()
+            user.firstname = form.firstname.data
+            user.lastname = form.lastname.data
+            user.lrn = form.lrn.data
+            user.birthday = form.birthday.data
+            user.gender = form.gender.data
+            user.strand = form.strand.data
+            user.grade_level = form.grade_level.data
+            user.section = form.section.data.upper().strip() if form.section.data else ""  # Convert to uppercase
+            user.set_password(form.password.data)
 
-        db.session.add(user)
-        db.session.commit()
+            db.session.add(user)
+            db.session.commit()
 
-        login_user(user)
-        flash('Registration successful! Welcome to EmotionTrack.', 'success')
-        return redirect(url_for('main.home'))
+            login_user(user)
+            flash('Registration successful! Welcome to EmotionTrack.', 'success')
+            return redirect(url_for('main.home'))
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during registration: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            flash('An error occurred during registration. Please try again.', 'error')
+            return render_template('index.html', login_form=login_form, register_form=form)
     else:
         # If form validation fails, flash errors and render template with form data preserved
         for field, errors in form.errors.items():
@@ -1127,6 +1135,14 @@ def create_faculty():
 
         grade_level = grade_parts[-1]  # Get the last part as grade level
         strand = ' '.join(grade_parts[:-1])  # Everything except the last part as strand
+
+        # Check if class assignment already exists
+        existing_assignment = ClassAssignment.query.filter_by(
+            grade_level=grade_level,
+            section=section
+        ).first()
+        if existing_assignment:
+            return jsonify({'success': False, 'message': f'Section {section} for Grade {grade_level} is already assigned to another faculty member'})
 
         # Create faculty user
         faculty = User()
