@@ -82,29 +82,27 @@
                         <form method="POST" action="{{ url_for('auth.register') }}">
                             {{ register_form.hidden_tag() }}
                             
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">First Name</label>
-                                    {{ register_form.firstname(class="form-control") }}
-                                    {% if register_form.firstname.errors %}
-                                        <div class="text-danger small mt-1">
-                                            {% for error in register_form.firstname.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Last Name</label>
-                                    {{ register_form.lastname(class="form-control") }}
-                                    {% if register_form.lastname.errors %}
-                                        <div class="text-danger small mt-1">
-                                            {% for error in register_form.lastname.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">First Name</label>
+                                {{ register_form.firstname(class="form-control") }}
+                                {% if register_form.firstname.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in register_form.firstname.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Last Name</label>
+                                {{ register_form.lastname(class="form-control") }}
+                                {% if register_form.lastname.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in register_form.lastname.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                             
                             <div class="mb-3">
@@ -131,54 +129,50 @@
                                 {% endif %}
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Password</label>
-                                    <div class="password-input-group">
-                                        {{ register_form.password(class="form-control password-field", placeholder=" ") }}
-                                        <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.password.id }}', this)">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                    {% if register_form.password.errors %}
-                                        <div class="text-danger small mt-1">
-                                            {% for error in register_form.password.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <div class="password-input-group">
+                                    {{ register_form.password(class="form-control password-field", placeholder=" ") }}
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.password.id }}', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Confirm Password</label>
-                                    <div class="password-input-group">
-                                        {{ register_form.confirm_password(class="form-control password-field", placeholder=" ") }}
-                                        <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.confirm_password.id }}', this)">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                {% if register_form.password.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in register_form.password.errors %}
+                                            {{ error }}
+                                        {% endfor %}
                                     </div>
-                                    {% if register_form.confirm_password.errors %}
-                                        <div class="text-danger small mt-1">
-                                            {% for error in register_form.confirm_password.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Confirm Password</label>
+                                <div class="password-input-group">
+                                    {{ register_form.confirm_password(class="form-control password-field", placeholder=" ") }}
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.confirm_password.id }}', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
                                 </div>
+                                {% if register_form.confirm_password.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in register_form.confirm_password.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Gender</label>
-                                    {{ register_form.gender(class="form-select") }}
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Strand</label>
-                                    {{ register_form.strand(class="form-select") }}
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Grade</label>
-                                    {{ register_form.grade_level(class="form-select") }}
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Gender</label>
+                                {{ register_form.gender(class="form-select") }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Strand</label>
+                                {{ register_form.strand(class="form-select") }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Grade</label>
+                                {{ register_form.grade_level(class="form-select") }}
                             </div>
                             
                             <div class="mb-3">
