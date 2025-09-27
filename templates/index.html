@@ -371,19 +371,28 @@
     color: var(--clsu-green);
 }
 
-/* Desktop centering for signup form */
-@media (min-width: 992px) {
+/* Medium and larger centering for signup form */
+@media (min-width: 768px) {
     .landing-container .col-lg-6.d-flex {
         justify-content: center;
     }
 }
 
-/* Mobile form width for aligned fields */
-@media (max-width: 768px) {
+/* Mobile form width and field alignment */
+@media (max-width: 767px) {
     .auth-container {
         max-width: none;
         padding-left: 1rem;
         padding-right: 1rem;
+    }
+
+    /* Make password fields same size as others by hiding toggle button */
+    .password-toggle-btn {
+        display: none;
+    }
+
+    .password-input-group .password-field {
+        padding-right: 1rem !important;
     }
 }
 </style>
