@@ -296,6 +296,16 @@ body {
     .btn.py-3 {
         padding: 1rem 0.75rem !important;
     }
+
+    /* Signup form adjustments for mobile */
+    .auth-form .form-label {
+        text-align: left !important;
+    }
+
+    .auth-form .form-control,
+    .auth-form .form-select {
+        width: 100% !important;
+    }
 }
 
 @media (max-width: 576px) {
