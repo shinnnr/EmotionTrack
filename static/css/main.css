@@ -216,13 +216,43 @@ body {
     .main-content.with-sidebar {
         margin-left: 0;
     }
-    
+
     .sidebar {
         transform: translateX(-100%);
     }
-    
+
     .sidebar.show {
         transform: translateX(0);
+    }
+
+    /* Fix modal z-index issues on mobile - ensure modals appear above sidebar */
+    .modal {
+        z-index: 1100 !important;
+    }
+
+    .modal-backdrop {
+        z-index: 1090 !important;
+    }
+
+    .modal-content {
+        z-index: 1101 !important;
+    }
+
+    .modal-dialog {
+        z-index: 1102 !important;
+    }
+
+    .modal.show {
+        z-index: 1100 !important;
+    }
+
+    /* Ensure suggestions modal also appears above sidebar */
+    .suggestions-modal-overlay {
+        z-index: 1100 !important;
+    }
+
+    .suggestions-modal {
+        z-index: 1101 !important;
     }
 }
 
