@@ -28,29 +28,6 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3 messages-header">
-                        <p class="text-muted mb-0">
-                            <span id="messageCount">Loading...</span> student conversations
-                        </p>
-                        <div class="d-flex align-items-center gap-2 per-page-controls">
-                            <label for="perPageSelect" class="form-label small mb-0 text-nowrap">Per page:</label>
-                            <select id="perPageSelect" class="form-select form-select-sm" style="width: 80px; min-width: 80px;" onchange="changePerPage()">
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="table-responsive" id="messagesTableContainer">
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2 text-muted">Loading messages...</p>
-                        </div>
-                    </div>
-                    
                     <!-- Mobile Student Details Panel -->
                     <div id="mobileDetailsPanel" class="mobile-details-panel">
                         <div class="mobile-details-content">
@@ -71,22 +48,22 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mobile-detail-section">
                                     <div class="mobile-detail-label">Last Message:</div>
                                     <div class="mobile-detail-content" id="mobileLastMessage"></div>
                                 </div>
-                                
+
                                 <div class="mobile-detail-section">
                                     <div class="mobile-detail-label">Last Activity:</div>
                                     <div class="mobile-detail-content" id="mobileLastActivity"></div>
                                 </div>
-                                
+
                                 <div class="mobile-detail-section">
                                     <div class="mobile-detail-label">Status:</div>
                                     <div class="mobile-detail-content" id="mobileStatus"></div>
                                 </div>
-                                
+
                                 <div class="mobile-detail-section">
                                     <div class="mobile-detail-label">Actions:</div>
                                     <div class="mobile-detail-content" id="mobileActions"></div>
@@ -94,7 +71,74 @@
                             </div>
                         </div>
                     </div>
-                    
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 messages-header">
+                        <p class="text-muted mb-0">
+                            <span id="messageCount">Loading...</span> student conversations
+                        </p>
+                        <div class="d-flex align-items-center gap-2 per-page-controls">
+                            <label for="perPageSelect" class="form-label small mb-0 text-nowrap">Per page:</label>
+                            <select id="perPageSelect" class="form-select form-select-sm" style="width: 80px; min-width: 80px;" onchange="changePerPage()">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Student Details Panel -->
+                    <div id="mobileDetailsPanel" class="mobile-details-panel">
+                        <div class="mobile-details-content">
+                            <div class="mobile-details-header">
+                                <h5 id="mobileStudentName">Student Details</h5>
+                                <button type="button" class="btn-close" onclick="closeMobilePanel()"></button>
+                            </div>
+                            <div class="mobile-details-body">
+                                <div class="mobile-student-info mb-3">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="avatar-sm me-3" id="mobileStudentAvatar">
+                                            <div class="avatar-title rounded-circle bg-primary text-white" id="mobileStudentInitials"></div>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0" id="mobileStudentFullName"></h6>
+                                            <small class="text-muted" id="mobileStudentEmail">LRN: </small>
+                                            <div class="small text-muted" id="mobileStudentDetails"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mobile-detail-section">
+                                    <div class="mobile-detail-label">Last Message:</div>
+                                    <div class="mobile-detail-content" id="mobileLastMessage"></div>
+                                </div>
+
+                                <div class="mobile-detail-section">
+                                    <div class="mobile-detail-label">Last Activity:</div>
+                                    <div class="mobile-detail-content" id="mobileLastActivity"></div>
+                                </div>
+
+                                <div class="mobile-detail-section">
+                                    <div class="mobile-detail-label">Status:</div>
+                                    <div class="mobile-detail-content" id="mobileStatus"></div>
+                                </div>
+
+                                <div class="mobile-detail-section">
+                                    <div class="mobile-detail-label">Actions:</div>
+                                    <div class="mobile-detail-content" id="mobileActions"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive" id="messagesTableContainer">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading messages...</p>
+                        </div>
+                    </div>
+
                     <!-- Pagination -->
                     <nav aria-label="Messages pagination" id="messagesPagination" style="display: none;">
                         <ul class="pagination justify-content-center">
@@ -299,14 +343,12 @@ async function sendResponse() {
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         z-index: 10;
         display: none;
-        transition: opacity 0.3s ease;
         max-height: 80vh;
         overflow-y: auto;
     }
 
     .mobile-details-panel.show {
         display: block;
-        opacity: 1;
     }
 
     .mobile-details-content {
