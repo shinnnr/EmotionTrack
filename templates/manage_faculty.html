@@ -363,12 +363,20 @@ function initializeFacultyManagement() {
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase().trim();
         const facultyItems = document.querySelectorAll('.faculty-item');
+        const facultyContainer = document.querySelector('.row.g-3');
+        let visibleCount = 0;
 
         if (!searchTerm) {
             // Show all faculty items if search is empty
             facultyItems.forEach(item => {
                 item.style.display = '';
+                visibleCount++;
             });
+            // Hide no results message
+            const noResultsMessage = facultyContainer.querySelector('.no-faculty-found');
+            if (noResultsMessage) {
+                noResultsMessage.style.display = 'none';
+            }
             return;
         }
 
@@ -379,10 +387,31 @@ function initializeFacultyManagement() {
 
             if (facultyName.includes(searchTerm) || facultyEmail.includes(searchTerm)) {
                 item.style.display = '';
+                visibleCount++;
             } else {
                 item.style.display = 'none';
             }
         });
+
+        // Show/hide "No faculty found" message
+        let noResultsMessage = facultyContainer.querySelector('.no-faculty-found');
+        if (visibleCount === 0) {
+            if (!noResultsMessage) {
+                noResultsMessage = document.createElement('div');
+                noResultsMessage.className = 'no-faculty-found col-12 text-center py-5';
+                noResultsMessage.innerHTML = `
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Faculty Found</h5>
+                    <p class="text-muted">No faculty members match your search criteria.</p>
+                `;
+                facultyContainer.appendChild(noResultsMessage);
+            }
+            noResultsMessage.style.display = 'block';
+        } else {
+            if (noResultsMessage) {
+                noResultsMessage.style.display = 'none';
+            }
+        }
     });
 
     // Clear search button

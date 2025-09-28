@@ -294,12 +294,19 @@ function initializeStudentSearch() {
         const searchTerm = this.value.toLowerCase().trim();
         const tableBody = document.getElementById('studentTableBody');
         const rows = tableBody.querySelectorAll('tr');
+        let visibleCount = 0;
 
         if (!searchTerm) {
             // Show all rows if search is empty
             rows.forEach(row => {
                 row.style.display = '';
+                visibleCount++;
             });
+            // Hide no results message
+            const noResultsMessage = tableBody.querySelector('.no-students-found');
+            if (noResultsMessage) {
+                noResultsMessage.style.display = 'none';
+            }
             return;
         }
 
@@ -310,10 +317,33 @@ function initializeStudentSearch() {
 
             if (studentName.includes(searchTerm) || studentEmail.includes(searchTerm)) {
                 row.style.display = '';
+                visibleCount++;
             } else {
                 row.style.display = 'none';
             }
         });
+
+        // Show/hide "No students found" message
+        let noResultsMessage = tableBody.querySelector('.no-students-found');
+        if (visibleCount === 0) {
+            if (!noResultsMessage) {
+                noResultsMessage = document.createElement('tr');
+                noResultsMessage.className = 'no-students-found';
+                noResultsMessage.innerHTML = `
+                    <td colspan="4" class="text-center py-4">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Students Found</h5>
+                        <p class="text-muted">No students match your search criteria.</p>
+                    </td>
+                `;
+                tableBody.appendChild(noResultsMessage);
+            }
+            noResultsMessage.style.display = '';
+        } else {
+            if (noResultsMessage) {
+                noResultsMessage.style.display = 'none';
+            }
+        }
     });
 
     // Clear search button
@@ -337,12 +367,19 @@ function initializeFacultyStudentSearch() {
         const searchTerm = this.value.toLowerCase().trim();
         const tableBody = document.querySelector('.table tbody');
         const rows = tableBody.querySelectorAll('tr');
+        let visibleCount = 0;
 
         if (!searchTerm) {
             // Show all rows if search is empty
             rows.forEach(row => {
                 row.style.display = '';
+                visibleCount++;
             });
+            // Hide no results message
+            const noResultsMessage = tableBody.querySelector('.no-students-found');
+            if (noResultsMessage) {
+                noResultsMessage.style.display = 'none';
+            }
             return;
         }
 
@@ -353,10 +390,33 @@ function initializeFacultyStudentSearch() {
 
             if (studentName.includes(searchTerm) || studentEmail.includes(searchTerm)) {
                 row.style.display = '';
+                visibleCount++;
             } else {
                 row.style.display = 'none';
             }
         });
+
+        // Show/hide "No students found" message
+        let noResultsMessage = tableBody.querySelector('.no-students-found');
+        if (visibleCount === 0) {
+            if (!noResultsMessage) {
+                noResultsMessage = document.createElement('tr');
+                noResultsMessage.className = 'no-students-found';
+                noResultsMessage.innerHTML = `
+                    <td colspan="6" class="text-center py-4">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Students Found</h5>
+                        <p class="text-muted">No students match your search criteria.</p>
+                    </td>
+                `;
+                tableBody.appendChild(noResultsMessage);
+            }
+            noResultsMessage.style.display = '';
+        } else {
+            if (noResultsMessage) {
+                noResultsMessage.style.display = 'none';
+            }
+        }
     });
 
     // Clear search button
@@ -380,12 +440,19 @@ function initializeMyStudentSearch() {
         const searchTerm = this.value.toLowerCase().trim();
         const tableBody = document.querySelector('.table tbody');
         const rows = tableBody.querySelectorAll('tr');
+        let visibleCount = 0;
 
         if (!searchTerm) {
             // Show all rows if search is empty
             rows.forEach(row => {
                 row.style.display = '';
+                visibleCount++;
             });
+            // Hide no results message
+            const noResultsMessage = tableBody.querySelector('.no-students-found');
+            if (noResultsMessage) {
+                noResultsMessage.style.display = 'none';
+            }
             return;
         }
 
@@ -396,10 +463,33 @@ function initializeMyStudentSearch() {
 
             if (studentName.includes(searchTerm) || studentEmail.includes(searchTerm)) {
                 row.style.display = '';
+                visibleCount++;
             } else {
                 row.style.display = 'none';
             }
         });
+
+        // Show/hide "No students found" message
+        let noResultsMessage = tableBody.querySelector('.no-students-found');
+        if (visibleCount === 0) {
+            if (!noResultsMessage) {
+                noResultsMessage = document.createElement('tr');
+                noResultsMessage.className = 'no-students-found';
+                noResultsMessage.innerHTML = `
+                    <td colspan="6" class="text-center py-4">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Students Found</h5>
+                        <p class="text-muted">No students match your search criteria.</p>
+                    </td>
+                `;
+                tableBody.appendChild(noResultsMessage);
+            }
+            noResultsMessage.style.display = '';
+        } else {
+            if (noResultsMessage) {
+                noResultsMessage.style.display = 'none';
+            }
+        }
     });
 
     // Clear search button
