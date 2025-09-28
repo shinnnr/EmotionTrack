@@ -86,50 +86,6 @@
                         </div>
                     </div>
 
-                    <!-- Mobile Student Details Panel -->
-                    <div id="mobileDetailsPanel" class="mobile-details-panel">
-                        <div class="mobile-details-content">
-                            <div class="mobile-details-header">
-                                <h5 id="mobileStudentName">Student Details</h5>
-                                <button type="button" class="btn-close" onclick="closeMobilePanel()"></button>
-                            </div>
-                            <div class="mobile-details-body">
-                                <div class="mobile-student-info mb-3">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <div class="avatar-sm me-3" id="mobileStudentAvatar">
-                                            <div class="avatar-title rounded-circle bg-primary text-white" id="mobileStudentInitials"></div>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0" id="mobileStudentFullName"></h6>
-                                            <small class="text-muted" id="mobileStudentEmail">LRN: </small>
-                                            <div class="small text-muted" id="mobileStudentDetails"></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mobile-detail-section">
-                                    <div class="mobile-detail-label">Last Message:</div>
-                                    <div class="mobile-detail-content" id="mobileLastMessage"></div>
-                                </div>
-
-                                <div class="mobile-detail-section">
-                                    <div class="mobile-detail-label">Last Activity:</div>
-                                    <div class="mobile-detail-content" id="mobileLastActivity"></div>
-                                </div>
-
-                                <div class="mobile-detail-section">
-                                    <div class="mobile-detail-label">Status:</div>
-                                    <div class="mobile-detail-content" id="mobileStatus"></div>
-                                </div>
-
-                                <div class="mobile-detail-section">
-                                    <div class="mobile-detail-label">Actions:</div>
-                                    <div class="mobile-detail-content" id="mobileActions"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="table-responsive" id="messagesTableContainer">
                         <div class="text-center py-4">
                             <div class="spinner-border text-primary" role="status">
@@ -279,6 +235,85 @@ async function sendResponse() {
     }
 }
 
+/* Mobile Details Panel - apply to all widths for testing */
+.mobile-details-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    display: none;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.mobile-details-panel.show {
+    display: block;
+}
+
+.mobile-details-content {
+    padding: 1.5rem;
+}
+
+.mobile-details-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mobile-details-header h5 {
+    margin: 0;
+    flex-grow: 1;
+    color: #495057;
+    font-weight: 600;
+}
+
+.mobile-details-header .btn-close {
+    margin-left: auto;
+}
+
+.mobile-details-body {
+    padding: 1.5rem;
+}
+
+.mobile-detail-section {
+    margin-bottom: 1.5rem;
+}
+
+.mobile-detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.mobile-detail-label {
+    font-weight: 600;
+    color: var(--clsu-green, #2c5530);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mobile-detail-content {
+    color: #495057;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.mobile-detail-content .badge {
+    font-size: 0.8rem;
+}
+
+.mobile-detail-content .btn {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
 /* Mobile responsive styles for admin messages */
 @media (max-width: 768px) {
     .messages-header {
@@ -286,39 +321,39 @@ async function sendResponse() {
         align-items: flex-start !important;
         gap: 1rem !important;
     }
-    
+
     .per-page-controls {
         width: 100%;
         justify-content: flex-start !important;
     }
-    
+
     /* Hide table headers except Student on mobile */
     .table thead th:not(:first-child) {
         display: none !important;
     }
-    
+
     /* Hide all table cells except Student on mobile */
     .table tbody td:not(:first-child) {
         display: none !important;
     }
-    
+
     /* Make student rows clickable and touch-friendly on mobile only */
     .table tbody tr {
         cursor: pointer !important;
         transition: background-color 0.2s ease !important;
     }
-    
+
     .table tbody tr:hover {
         background-color: var(--clsu-gold-light, #f8f9fa) !important;
     }
-    
+
     /* Student column takes full width on mobile */
     .table td:first-child {
         width: 100% !important;
         padding: 1rem !important;
         position: relative !important;
     }
-    
+
     /* Add tap indicator for mobile */
     .table tbody tr td:first-child::after {
         content: '\f105'; /* Font Awesome chevron-right */
@@ -331,97 +366,18 @@ async function sendResponse() {
         color: var(--clsu-gold, #b8860b);
         font-size: 1.2rem;
     }
-    
-    /* Mobile Details Panel */
-    .mobile-details-panel {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        z-index: 10;
-        display: none;
-        max-height: 80vh;
-        overflow-y: auto;
-    }
 
-    .mobile-details-panel.show {
-        display: block;
-    }
-
-    .mobile-details-content {
-        padding: 1.5rem;
-    }
-    
-    .mobile-details-header {
-        padding: 1.5rem;
-        border-bottom: 1px solid #dee2e6;
-        background: #f8f9fa;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .mobile-details-header h5 {
-        margin: 0;
-        flex-grow: 1;
-        color: #495057;
-        font-weight: 600;
-    }
-
-    .mobile-details-header .btn-close {
-        margin-left: auto;
-    }
-    
-    .mobile-details-body {
-        padding: 1.5rem;
-    }
-    
-    .mobile-detail-section {
-        margin-bottom: 1.5rem;
-    }
-    
-    .mobile-detail-section:last-child {
-        margin-bottom: 0;
-    }
-    
-    .mobile-detail-label {
-        font-weight: 600;
-        color: var(--clsu-green, #2c5530);
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .mobile-detail-content {
-        color: #495057;
-        font-size: 0.95rem;
-        line-height: 1.5;
-    }
-    
-    .mobile-detail-content .badge {
-        font-size: 0.8rem;
-    }
-    
-    .mobile-detail-content .btn {
-        width: 100%;
-        margin-top: 0.5rem;
-    }
-    
     /* Make the entire table card more mobile friendly */
     .card-body {
         padding: 1rem !important;
         position: relative;
     }
-    
+
     .container-fluid {
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
     }
-    
+
     /* Remove table responsiveness on mobile since we're handling it differently */
     .table-responsive {
         overflow-x: visible !important;
@@ -646,7 +602,7 @@ function changePerPage() {
 
 function showMobileDetails(row) {
     // Only handle clicks on mobile (768px and below)
-    if (window.innerWidth > 768) return;
+    // if (window.innerWidth > 768) return;
     
     const panel = document.getElementById('mobileDetailsPanel');
     
