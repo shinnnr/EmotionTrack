@@ -311,9 +311,9 @@ async function sendResponse() {
 
     /* Mobile modal adjustments */
     #studentDetailsModal .modal-dialog {
-        margin: 1rem;
-        width: calc(100% - 2rem);
-        max-width: none;
+        margin: 1rem auto;
+        width: 90%;
+        max-width: 500px;
     }
 }
 </style>
@@ -637,7 +637,11 @@ function showMobileDetails(row) {
     `;
 
     // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('studentDetailsModal'));
+    const modal = new bootstrap.Modal(document.getElementById('studentDetailsModal'), {
+        backdrop: true,
+        keyboard: true,
+        focus: true
+    });
     modal.show();
 }
 
