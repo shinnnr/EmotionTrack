@@ -97,7 +97,7 @@
                             <tbody>
                                 {% if students_pagination %}
                                     {% for student in students_pagination.items %}
-                                        <tr data-student-id="{{ student.id }}" onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;" data-student-name="{{ student.full_name|lower }}" data-student-email="{{ student.email|lower }}">
+                                        <tr data-student-id="{{ student.id }}" onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;" data-student-name="{{ student.full_name|lower }}" data-student-email="{{ student.username|lower }}">
                                             <td onclick="event.stopPropagation();" class="d-table-cell">
                                                 <div class="form-check">
                                                     <input class="form-check-input student-checkbox"

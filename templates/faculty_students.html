@@ -95,7 +95,7 @@
                             </thead>
                             <tbody>
                                 {% for student in students_pagination.items %}
-                                    <tr onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;" data-student-name="{{ (student.firstname + ' ' + student.lastname)|lower }}" data-student-email="{{ student.email|lower }}">
+                                    <tr onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;" data-student-name="{{ (student.firstname + ' ' + student.lastname)|lower }}" data-student-email="{{ student.username|lower }}">
                                         <td class="fw-bold">{{ student.firstname }} {{ student.lastname }}</td>
                                         <td>{{ student.username }}</td>
                                         <td class="d-none d-md-table-cell">

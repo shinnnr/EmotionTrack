@@ -118,7 +118,7 @@
                     {% if faculty_data %}
                         <div class="row g-3">
                             {% for data in faculty_data %}
-                                <div class="col-md-6 col-lg-4 faculty-item" data-faculty-name="{{ (data.faculty.firstname ~ ' ' ~ data.faculty.lastname)|lower }}" data-faculty-email="{{ data.faculty.email|lower }}">
+                                <div class="col-md-6 col-lg-4 faculty-item" data-faculty-name="{{ (data.faculty.firstname ~ ' ' ~ data.faculty.lastname)|lower }}" data-faculty-email="{{ data.faculty.username|lower }}">
                                     <div class="faculty-card p-3 border rounded h-100">
                                         <div class="d-flex flex-column h-100">
                                             <div class="faculty-select mb-2">
@@ -131,7 +131,7 @@
                                             </div>
                                             <div class="flex-grow-1">
                                                 <h6 class="fw-bold mb-2">{{ data.faculty.firstname }} {{ data.faculty.lastname }}</h6>
-                                                <p class="text-muted mb-2">{{ data.faculty.email }}</p>
+                                                <p class="text-muted mb-2">{{ data.faculty.username }}</p>
                                                 {% if data.assignment %}
                                                     <div class="advisory-info mb-2">
                                                         <span class="badge bg-primary">{{ data.assignment.grade_level }}</span>

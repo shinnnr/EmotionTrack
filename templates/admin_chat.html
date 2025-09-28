@@ -336,7 +336,7 @@ function addMessageToChat(messageText, messageType, timestamp, messageId = null)
 
         const messageSender = document.createElement('div');
         messageSender.className = 'message-sender';
-        messageSender.textContent = 'You ({{ "Guidance Counselor" if current_user.email == "admin@emotiontrack.app" else "Faculty Adviser" }})';
+        messageSender.textContent = 'You ({{ "Guidance Counselor" if current_user.username == "admin@emotiontrack.app" else "Faculty Adviser" }})';
 
         const messageTextElement = document.createElement('div');
         messageTextElement.className = 'message-text';

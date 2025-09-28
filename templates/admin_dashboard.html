@@ -479,9 +479,9 @@
 <script>
 // User configuration for admin functionality
 window.adminConfig = {
-    isMainAdmin: {{ (current_user.email == 'admin@emotiontrack.app') | tojson }},
+    isMainAdmin: {{ (current_user.username == 'admin@emotiontrack.app') | tojson }},
     userRole: {{ current_user.role | tojson }},
-    userEmail: {{ current_user.email | tojson }}
+    userEmail: {{ current_user.username | tojson }}
 };
 </script>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
