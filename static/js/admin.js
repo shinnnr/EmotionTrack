@@ -259,6 +259,14 @@ function displayStudentList(students) {
             </td>
             <td>${escapeHtml(student.email)}</td>
             <td>${escapeHtml(student.created_at)}</td>
+            <td class="d-none d-lg-table-cell">
+                <button class="btn btn-sm btn-success me-2" onclick="event.stopPropagation(); goToStudentChat(${parseInt(student.id)})">
+                    <i class="fas fa-comments"></i> Chat
+                </button>
+                <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); viewStudentProfile(${parseInt(student.id)})">
+                    <i class="fas fa-user"></i> Profile
+                </button>
+            </td>
         `;
         tableBody.appendChild(row);
     });

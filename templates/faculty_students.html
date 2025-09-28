@@ -79,6 +79,7 @@
                                     <th>Grade & Section</th>
                                     <th>Strand</th>
                                     <th>Joined Date</th>
+                                    <th class="d-none d-lg-table-cell">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -94,6 +95,11 @@
                                             <span class="badge bg-info">{{ student.strand }}</span>
                                         </td>
                                         <td>{{ (student.created_at | manila_time | strftime('%B %d, %Y')) if student.created_at else 'N/A' }}</td>
+                                        <td class="d-none d-lg-table-cell">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); viewStudentProfile({{ student.id }})">
+                                                <i class="fas fa-eye me-1"></i>View Profile
+                                            </button>
+                                        </td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
