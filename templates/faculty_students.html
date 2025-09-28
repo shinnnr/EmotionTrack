@@ -20,7 +20,7 @@
                             <p class="lead mb-0">No class assignment</p>
                         {% endif %}
                     </div>
-                    <div class="d-flex justify-content-start">
+                    <div class="mt-2">
                         <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-outline-light">
                             <i class="fas fa-arrow-left me-2"></i>Back to Faculty List
                         </a>
@@ -218,16 +218,6 @@ document.addEventListener('DOMContentLoaded', function() {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
-    }
-
-    .admin-header .d-flex > div:last-child {
-        width: fit-content;
-    }
-
-    .admin-header .btn {
-        text-align: left;
-        margin-right: auto;
-        margin-left: 0;
     }
 }
 
