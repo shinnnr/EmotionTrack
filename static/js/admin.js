@@ -963,19 +963,6 @@ function initializeDataExport() {
     // Set up data export functionality
     window.exportData = async function() {
         try {
-            // Close sidebar on mobile before showing modal
-            if (window.innerWidth <= 991) {
-                const sidebar = document.getElementById('adminSidebar') || document.getElementById('sidebar');
-                const sidebarOverlay = document.getElementById('adminSidebarOverlay') || document.getElementById('sidebarOverlay');
-                if (sidebar) {
-                    sidebar.classList.remove('show');
-                }
-                if (sidebarOverlay) {
-                    sidebarOverlay.classList.remove('show');
-                }
-                document.body.classList.remove('sidebar-open');
-            }
-
             // Remove any existing export modals first
             const existingModals = document.querySelectorAll('.modal');
             existingModals.forEach(modal => {
@@ -1198,19 +1185,6 @@ async function performDataExport(options) {
 
 function initializeAnalytics() {
     window.generateReport = async function() {
-        // Close sidebar on mobile before showing modal
-        if (window.innerWidth <= 991) {
-            const sidebar = document.getElementById('adminSidebar') || document.getElementById('sidebar');
-            const sidebarOverlay = document.getElementById('adminSidebarOverlay') || document.getElementById('sidebarOverlay');
-            if (sidebar) {
-                sidebar.classList.remove('show');
-            }
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.remove('show');
-            }
-            document.body.classList.remove('sidebar-open');
-        }
-
         const reportBtn = document.querySelector('.btn-outline-info');
         let hideLoading = null;
 
@@ -1231,19 +1205,6 @@ function initializeAnalytics() {
     };
     
     window.viewAnalytics = async function() {
-        // Close sidebar on mobile before showing modal
-        if (window.innerWidth <= 991) {
-            const sidebar = document.getElementById('adminSidebar') || document.getElementById('sidebar');
-            const sidebarOverlay = document.getElementById('adminSidebarOverlay') || document.getElementById('sidebarOverlay');
-            if (sidebar) {
-                sidebar.classList.remove('show');
-            }
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.remove('show');
-            }
-            document.body.classList.remove('sidebar-open');
-        }
-
         const analyticsBtn = document.querySelector('.btn-outline-warning');
         let hideLoading = null;
 
