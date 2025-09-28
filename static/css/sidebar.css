@@ -381,10 +381,11 @@
     background: rgba(255, 255, 255, 0.5);
 }
 
-/* Make sidebar menu scrollable only on mobile landscape */
+/* Make sidebar scrollable only on mobile landscape */
 @media (max-width: 768px) and (orientation: landscape) {
-    .sidebar-menu {
+    .sidebar {
         overflow-y: auto;
+        max-height: 100vh;
     }
 }
 
