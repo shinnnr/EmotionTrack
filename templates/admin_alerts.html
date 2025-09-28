@@ -1,0 +1,324 @@
+{% extends "admin_sidebar.html" %}
+
+{% block title %}Guidance Alerts - EmotionTrack{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>Guidance Alerts
+            </h2>
+            <p class="text-muted mb-0">Monitor and manage student alerts requiring attention</p>
+        </div>
+        <div class="d-flex gap-2">
+            <select id="statusFilter" class="form-select" style="width: auto;">
+                <option value="all" {{ 'selected' if status_filter == 'all' else '' }}>All Alerts</option>
+                <option value="active" {{ 'selected' if status_filter == 'active' else '' }}>Active Only</option>
+                <option value="resolved" {{ 'selected' if status_filter == 'resolved' else '' }}>Resolved Only</option>
+            </select>
+            <button class="btn btn-primary" onclick="generateAlerts()">
+                <i class="fas fa-sync-alt me-1"></i>Generate Alerts
+            </button>
+        </div>
+    </div>
+
+    {% if alerts %}
+        <div class="row">
+            {% for alert in alerts %}
+            <div class="col-12 mb-4">
+                <div class="card border-0 shadow-sm {{ 'border-start border-4 border-warning' if alert.severity == 'high' else 'border-start border-4 border-danger' if alert.severity == 'critical' else 'border-start border-4 border-info' }}">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h5 class="card-title mb-1 d-flex align-items-center">
+                                    {% if alert.severity == 'critical' %}
+                                        <span class="badge bg-danger me-2">
+                                            <i class="fas fa-exclamation-circle me-1"></i>CRITICAL
+                                        </span>
+                                    {% elif alert.severity == 'high' %}
+                                        <span class="badge bg-warning text-dark me-2">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>HIGH
+                                        </span>
+                                    {% elif alert.severity == 'medium' %}
+                                        <span class="badge bg-orange me-2">
+                                            <i class="fas fa-info-circle me-1"></i>MEDIUM
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-info me-2">
+                                            <i class="fas fa-info me-1"></i>LOW
+                                        </span>
+                                    {% endif %}
+                                    {{ alert.title }}
+                                </h5>
+                                <div class="text-muted small">
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ alert.user.full_name }} ({{ alert.user.username }})
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-tag me-1"></i>
+                                    {{ alert.alert_type.replace('_', ' ').title() }}
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ alert.created_at | manila_time | strftime('%B %d, %Y at %I:%M %p') }}
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if alert.is_resolved %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Resolved
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-clock me-1"></i>Active
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 class="text-muted mb-2">Alert Details:</h6>
+                                <p class="mb-3">{{ alert.message }}</p>
+
+                                {% if alert.is_resolved %}
+                                    <div class="border-start border-success border-4 ps-3 mt-4">
+                                        <h6 class="text-success mb-2">
+                                            <i class="fas fa-check-circle me-1"></i>Resolution:
+                                        </h6>
+                                        <p class="mb-1">This alert has been resolved.</p>
+                                        {% if alert.resolved_at %}
+                                            <small class="text-muted">
+                                                Resolved on {{ alert.resolved_at | manila_time | strftime('%B %d, %Y at %I:%M %p') }}
+                                                {% if alert.resolver %}
+                                                    by {{ alert.resolver.full_name }}
+                                                {% endif %}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid gap-2">
+                                    {% if not alert.is_resolved %}
+                                        <button class="btn btn-success btn-sm" onclick="resolveAlert({{ alert.id }})">
+                                            <i class="fas fa-check me-1"></i>Mark as Resolved
+                                        </button>
+                                    {% endif %}
+                                    <button class="btn btn-primary btn-sm" onclick="viewStudentProfile({{ alert.user.id }})">
+                                        <i class="fas fa-user me-1"></i>View Student Profile
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="startConversation({{ alert.user.id }})">
+                                        <i class="fas fa-comments me-1"></i>Contact Student
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="viewAlertDetails({{ alert.id }})">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination %}
+        <nav aria-label="Alerts pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.view_alerts', page=pagination.prev_num, status=status_filter) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                    </li>
+                {% endif %}
+
+                {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num == pagination.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.view_alerts', page=page_num, status=status_filter) }}">{{ page_num }}</a>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.view_alerts', page=pagination.next_num, status=status_filter) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+            <h4 class="text-muted">No Alerts Found</h4>
+            <p class="text-muted">
+                {% if status_filter == 'active' %}
+                    No active alerts at this time. All students are doing well!
+                {% elif status_filter == 'resolved' %}
+                    No resolved alerts found.
+                {% else %}
+                    No alerts have been generated yet. Click "Generate Alerts" to check for new alerts.
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Alert Details Modal -->
+<div class="modal fade" id="alertDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Alert Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="alertDetailsContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('statusFilter').addEventListener('change', function() {
+    const status = this.value;
+    window.location.href = `{{ url_for('admin.view_alerts') }}?status=${status}`;
+});
+
+function generateAlerts() {
+    if (!confirm('This will scan all student data and generate new alerts. Continue?')) {
+        return;
+    }
+
+    const button = event.target.closest('button');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+    button.disabled = true;
+
+    fetch('/api/generate-alerts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(`Successfully generated ${data.alerts_created} alerts`, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error generating alerts:', error);
+        showAlert('Error generating alerts', 'error');
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+function resolveAlert(alertId) {
+    if (!confirm('Are you sure you want to mark this alert as resolved?')) {
+        return;
+    }
+
+    fetch(`/admin/alert/${alertId}/resolve`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Alert marked as resolved', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error resolving alert:', error);
+        showAlert('Error resolving alert', 'error');
+    });
+}
+
+function viewStudentProfile(userId) {
+    window.location.href = `/admin/student-profile/${userId}`;
+}
+
+function startConversation(userId) {
+    window.location.href = `/admin/student-chat/${userId}`;
+}
+
+function viewAlertDetails(alertId) {
+    // For now, just show a simple details view
+    // In a real implementation, you might fetch detailed alert info
+    showAlert('Detailed alert view not yet implemented', 'info');
+}
+
+function showAlert(message, type = 'info') {
+    const alertColors = {
+        success: 'var(--clsu-green)',
+        error: '#dc3545',
+        warning: '#ffc107',
+        info: '#0dcaf0'
+    };
+
+    const alert = document.createElement('div');
+    alert.className = 'position-fixed top-0 end-0 m-3';
+    alert.style.zIndex = '9999999';
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    alertDiv.setAttribute('role', 'alert');
+
+    const icon = document.createElement('i');
+    icon.className = `fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2`;
+    alertDiv.appendChild(icon);
+
+    const messageText = document.createTextNode(message);
+    alertDiv.appendChild(messageText);
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'alert');
+    alertDiv.appendChild(closeButton);
+
+    alert.appendChild(alertDiv);
+    document.body.appendChild(alert);
+
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

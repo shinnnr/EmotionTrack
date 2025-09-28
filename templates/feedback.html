@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Feedback - EmotionTrack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-comments me-2"></i>Share Your Feedback
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info border-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your feedback helps us improve the EmotionTrack system. All feedback is valuable and appreciated.
+                    </div>
+
+                    <form method="POST" id="feedbackForm">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Feedback Type -->
+                        <div class="mb-4">
+                            <label for="feedback_type" class="form-label fw-bold">
+                                <i class="fas fa-tag me-1"></i>Feedback Type
+                            </label>
+                            {{ form.feedback_type(class="form-select", id="feedback_type") }}
+                            {% if form.feedback_type.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.feedback_type.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Rating (only for satisfaction surveys) -->
+                        <div class="mb-4" id="ratingSection" style="display: none;">
+                            <label for="rating" class="form-label fw-bold">
+                                <i class="fas fa-star me-1"></i>Overall Satisfaction
+                            </label>
+                            {{ form.rating(class="form-select", id="rating") }}
+                            {% if form.rating.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.rating.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Subject -->
+                        <div class="mb-4">
+                            <label for="subject" class="form-label fw-bold">
+                                <i class="fas fa-heading me-1"></i>Subject
+                            </label>
+                            {{ form.subject(class="form-control", placeholder="Brief summary of your feedback") }}
+                            {% if form.subject.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.subject.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Message -->
+                        <div class="mb-4">
+                            <label for="message" class="form-label fw-bold">
+                                <i class="fas fa-comment-alt me-1"></i>Your Feedback
+                            </label>
+                            {{ form.message(class="form-control", rows="5", placeholder="Please share your thoughts, suggestions, or concerns in detail...") }}
+                            {% if form.message.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.message.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Anonymous Option -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_anonymous(class="form-check-input") }}
+                                <label class="form-check-label fw-bold" for="is_anonymous">
+                                    <i class="fas fa-user-secret me-1"></i>Submit anonymously
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">
+                                If checked, your name will not be associated with this feedback.
+                            </small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Feedback
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Privacy Notice -->
+            <div class="card mt-4 border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="fw-bold text-muted mb-2">
+                        <i class="fas fa-shield-alt me-1"></i>Privacy & Confidentiality
+                    </h6>
+                    <p class="text-muted small mb-0">
+                        Your feedback is confidential and will only be reviewed by authorized guidance office staff.
+                        Anonymous feedback helps us maintain complete confidentiality while still allowing you to share your thoughts.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide rating section based on feedback type
+document.getElementById('feedback_type').addEventListener('change', function() {
+    const ratingSection = document.getElementById('ratingSection');
+    if (this.value === 'satisfaction') {
+        ratingSection.style.display = 'block';
+    } else {
+        ratingSection.style.display = 'none';
+    }
+});
+
+// Trigger change event on page load in case of form errors
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('feedback_type').dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}

@@ -1801,6 +1801,38 @@ def manage_feedback():
                           pagination=feedback_pagination,
                           type_filter=type_filter)
 
+@admin_bp.route('/feedback/<int:feedback_id>')
+@login_required
+def get_feedback_details(feedback_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    feedback = StudentFeedback.query.get_or_404(feedback_id)
+
+    # Check if admin can access this feedback (section-based access control)
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+    if feedback.user_id not in accessible_student_ids:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    return jsonify({
+        'success': True,
+        'feedback': {
+            'id': feedback.id,
+            'subject': feedback.subject,
+            'message': feedback.message,
+            'feedback_type': feedback.feedback_type,
+            'rating': feedback.rating,
+            'is_anonymous': feedback.is_anonymous,
+            'user': {
+                'full_name': feedback.user.full_name if not feedback.is_anonymous else 'Anonymous',
+                'username': feedback.user.username if not feedback.is_anonymous else None
+            },
+            'created_at': convert_to_manila_time(feedback.created_at).isoformat() if feedback.created_at else None,
+            'admin_response': feedback.admin_response,
+            'responded_at': convert_to_manila_time(feedback.responded_at).isoformat() if feedback.responded_at else None
+        }
+    })
+
 @admin_bp.route('/feedback/<int:feedback_id>/respond', methods=['POST'])
 @login_required
 def respond_to_feedback(feedback_id):
