@@ -7,7 +7,7 @@
     <div class="container-fluid min-vh-100">
         <div class="row min-vh-100">
             <!-- Left side - Welcome content -->
-            <div class="col-lg-6 d-flex align-items-center justify-content-center bg-clsu-green">
+            <div id="welcomeContainer" class="col-lg-6 d-flex align-items-center justify-content-center bg-clsu-green">
                 <div class="welcome-content text-white text-center p-5">
                     <div class="logo-container mb-4">
                         <img src="{{ url_for('static', filename='images/sjc-logo.png') }}" alt="SJC Logo" class="sjc-logo-main" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
@@ -370,11 +370,15 @@
 function showRegisterForm() {
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('welcomeContainer').classList.remove('align-items-center');
+    document.getElementById('welcomeContainer').classList.add('align-items-start');
 }
 
 function showLoginForm() {
     document.getElementById('registerForm').style.display = 'none';
     document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('welcomeContainer').classList.remove('align-items-start');
+    document.getElementById('welcomeContainer').classList.add('align-items-center');
 }
 
 function togglePassword(fieldId, button) {
@@ -460,6 +464,13 @@ document.addEventListener('DOMContentLoaded', function() {
         originalShowRegisterForm();
         setTimeout(setupPasswordValidation, 100);
     };
+
+    // Adjust welcome container alignment based on initial form visibility
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm && registerForm.style.display === 'block') {
+        document.getElementById('welcomeContainer').classList.remove('align-items-center');
+        document.getElementById('welcomeContainer').classList.add('align-items-start');
+    }
 
     // Setup section uppercase conversion
     setupSectionUppercase();
