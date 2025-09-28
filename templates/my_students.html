@@ -78,8 +78,8 @@
                                     </th>
                                     <th>Student Name</th>
                                     <th>LRN</th>
-                                    <th>Gender</th>
-                                    <th>Joined</th>
+                                    <th class="d-none d-md-table-cell">Gender</th>
+                                    <th class="d-none d-md-table-cell">Joined</th>
                                     <th class="d-none d-lg-table-cell">Actions</th>
                                 </tr>
                             </thead>
@@ -108,10 +108,10 @@
                                                 </div>
                                             </td>
                                             <td>{{ student.email }}</td>
-                                            <td>
+                                            <td class="d-none d-md-table-cell">
                                                 <span class="badge bg-secondary">{{ student.gender or 'N/A' }}</span>
                                             </td>
-                                            <td>
+                                            <td class="d-none d-md-table-cell">
                                                 <small class="text-muted">{{ student.created_at | manila_time | strftime('%b %d, %Y') }}</small>
                                             </td>
                                             <td class="d-none d-lg-table-cell">
