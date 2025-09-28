@@ -175,3 +175,35 @@
 }
 </style>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('dass21Form').addEventListener('submit', function(e) {
+    // Check if all 21 questions are answered
+    let allAnswered = true;
+    for (let i = 1; i <= 21; i++) {
+        const questionName = 'q' + i;
+        const radios = document.getElementsByName(questionName);
+        let answered = false;
+        for (let radio of radios) {
+            if (radio.checked) {
+                answered = true;
+                break;
+            }
+        }
+        if (!answered) {
+            allAnswered = false;
+            break;
+        }
+    }
+
+    if (!allAnswered) {
+        e.preventDefault();
+        alert('Please answer all 21 questions before submitting the assessment.');
+        return false;
+    }
+
+    return true;
+});
+</script>
+{% endblock %}
