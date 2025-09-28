@@ -33,7 +33,7 @@
 
     {% if assignment and students_pagination %}
         <!-- Selection Controls -->
-        <div class="row mb-4">
+        <div class="row mb-4 d-none d-md-block">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-3">
@@ -71,7 +71,7 @@
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th width="50">
+                                    <th width="50" class="d-none d-md-table-cell">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="headerSelectAll">
                                         </div>
@@ -87,7 +87,7 @@
                                 {% if students_pagination %}
                                     {% for student in students_pagination.items %}
                                         <tr data-student-id="{{ student.id }}" onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;">
-                                            <td onclick="event.stopPropagation();">
+                                            <td onclick="event.stopPropagation();" class="d-none d-md-table-cell">
                                                 <div class="form-check">
                                                     <input class="form-check-input student-checkbox"
                                                            type="checkbox"

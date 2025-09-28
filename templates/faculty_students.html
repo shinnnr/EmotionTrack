@@ -76,9 +76,9 @@
                                 <tr>
                                     <th>Student Name</th>
                                     <th>LRN</th>
-                                    <th>Grade & Section</th>
-                                    <th>Strand</th>
-                                    <th>Joined Date</th>
+                                    <th class="d-none d-md-table-cell">Grade & Section</th>
+                                    <th class="d-none d-md-table-cell">Strand</th>
+                                    <th class="d-none d-md-table-cell">Joined Date</th>
                                     <th class="d-none d-lg-table-cell">Actions</th>
                                 </tr>
                             </thead>
@@ -87,14 +87,14 @@
                                     <tr onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;">
                                         <td class="fw-bold">{{ student.firstname }} {{ student.lastname }}</td>
                                         <td>{{ student.email }}</td>
-                                        <td>
+                                        <td class="d-none d-md-table-cell">
                                             <span class="badge bg-primary">Grade {{ student.grade_level }}</span>
                                             <span class="badge bg-success">{{ student.section }}</span>
                                         </td>
-                                        <td>
+                                        <td class="d-none d-md-table-cell">
                                             <span class="badge bg-info">{{ student.strand }}</span>
                                         </td>
-                                        <td>{{ (student.created_at | manila_time | strftime('%B %d, %Y')) if student.created_at else 'N/A' }}</td>
+                                        <td class="d-none d-md-table-cell">{{ (student.created_at | manila_time | strftime('%B %d, %Y')) if student.created_at else 'N/A' }}</td>
                                         <td class="d-none d-lg-table-cell">
                                             <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); viewStudentProfile({{ student.id }})">
                                                 <i class="fas fa-eye me-1"></i>View Profile
@@ -163,6 +163,13 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Mobile Back Button -->
+    <div class="d-block d-md-none text-center mt-4">
+        <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left me-2"></i>Back to Faculty List
+        </a>
     </div>
 </div>
 
@@ -237,6 +244,13 @@
     overflow: hidden;
 }
 
+@media (max-width: 768px) {
+    .custom-modal {
+        max-width: calc(100vw - 40px);
+        max-height: 95vh;
+    }
+}
+
 .custom-modal-header {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid #dee2e6;
@@ -275,6 +289,19 @@
 @media (max-width: 768px) {
     .custom-modal-overlay {
         padding-left: 20px;
+    }
+
+    .custom-modal-body {
+        padding: 1rem;
+    }
+
+    .student-profile .card-body {
+        padding: 1rem;
+    }
+
+    .student-profile .nav-tabs .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
     }
 }
 </style>
