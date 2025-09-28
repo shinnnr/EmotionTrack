@@ -237,11 +237,13 @@ function displayNavigationGrid(items, type) {
 function displayStudentList(students) {
     const studentList = document.getElementById('studentList');
     const tableBody = document.getElementById('studentTableBody');
-    
+
     tableBody.innerHTML = '';
-    
+
     students.forEach(student => {
         const row = document.createElement('tr');
+        row.style.cursor = 'pointer';
+        row.onclick = () => viewStudentProfile(parseInt(student.id));
         row.innerHTML = `
             <td>
                 <div class="d-flex align-items-center">
@@ -257,18 +259,10 @@ function displayStudentList(students) {
             </td>
             <td>${escapeHtml(student.email)}</td>
             <td>${escapeHtml(student.created_at)}</td>
-            <td>
-                <button class="btn btn-sm btn-success me-2" onclick="goToStudentChat(${parseInt(student.id)})">
-                    <i class="fas fa-comments"></i> Chat
-                </button>
-                <button class="btn btn-sm btn-outline-primary" onclick="viewStudentProfile(${parseInt(student.id)})">
-                    <i class="fas fa-user"></i> Profile
-                </button>
-            </td>
         `;
         tableBody.appendChild(row);
     });
-    
+
     studentList.style.display = 'block';
 }
 

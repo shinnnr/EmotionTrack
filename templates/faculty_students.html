@@ -71,41 +71,33 @@
                     </h5>
                     
                     {% if students_pagination and students_pagination.items %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Student Name</th>
-                                        <th>LRN</th>
-                                        <th>Grade & Section</th>
-                                        <th>Strand</th>
-                                        <th>Joined Date</th>
-                                        <th>Actions</th>
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>LRN</th>
+                                    <th>Grade & Section</th>
+                                    <th>Strand</th>
+                                    <th>Joined Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students_pagination.items %}
+                                    <tr onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;">
+                                        <td class="fw-bold">{{ student.firstname }} {{ student.lastname }}</td>
+                                        <td>{{ student.email }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">Grade {{ student.grade_level }}</span>
+                                            <span class="badge bg-success">{{ student.section }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ student.strand }}</span>
+                                        </td>
+                                        <td>{{ (student.created_at | manila_time | strftime('%B %d, %Y')) if student.created_at else 'N/A' }}</td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {% for student in students_pagination.items %}
-                                        <tr>
-                                            <td class="fw-bold">{{ student.firstname }} {{ student.lastname }}</td>
-                                            <td>{{ student.email }}</td>
-                                            <td>
-                                                <span class="badge bg-primary">Grade {{ student.grade_level }}</span>
-                                                <span class="badge bg-success">{{ student.section }}</span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-info">{{ student.strand }}</span>
-                                            </td>
-                                            <td>{{ (student.created_at | manila_time | strftime('%B %d, %Y')) if student.created_at else 'N/A' }}</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewStudentProfile({{ student.id }})">
-                                                    <i class="fas fa-eye me-1"></i>View Profile
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
 
                         <!-- Pagination Controls -->
                         {% if students_pagination and students_pagination.pages > 1 %}
