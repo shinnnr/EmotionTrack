@@ -298,16 +298,15 @@ async function sendResponse() {
         border-radius: 10px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         z-index: 10;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s ease, visibility 0.3s ease;
+        display: none;
+        transition: opacity 0.3s ease;
         max-height: 80vh;
         overflow-y: auto;
     }
 
     .mobile-details-panel.show {
+        display: block;
         opacity: 1;
-        visibility: visible;
     }
 
     .mobile-details-content {
