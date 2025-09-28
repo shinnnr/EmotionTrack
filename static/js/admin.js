@@ -1497,7 +1497,7 @@ function showReportGenerationModal() {
                                 </div>
                                 <div class="col-md-6">
                                     <div class="report-type-card" data-type="trends">
-                                        <i class="fas fa-trending-up fa-3x text-info mb-3"></i>
+                                        <i class="fas fa-chart-bar fa-3x text-info mb-3"></i>
                                         <h6 class="fw-bold">Trend Analysis</h6>
                                         <p class="small text-muted">Long-term patterns and insights</p>
                                     </div>
