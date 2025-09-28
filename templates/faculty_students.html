@@ -20,7 +20,7 @@
                             <p class="lead mb-0">No class assignment</p>
                         {% endif %}
                     </div>
-                    <div>
+                    <div class="text-start">
                         <a href="{{ url_for('admin.manage_faculty') }}" class="btn btn-outline-light">
                             <i class="fas fa-arrow-left me-2"></i>Back to Faculty List
                         </a>
@@ -204,7 +204,7 @@
         gap: 1rem;
     }
 
-    .admin-header .d-flex > div:last-child {
+    .admin-header .btn {
         text-align: left;
     }
 }
