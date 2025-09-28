@@ -27,7 +27,7 @@ def validate_lrn(form, field):
         raise ValidationError('LRN must be exactly 12 digits.')
 
 class LoginForm(FlaskForm):
-    email = StringField('LRN / Employee ID', validators=[DataRequired()])
+    username = StringField('LRN / Employee ID', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
 
     # CSRF protection is handled globally
@@ -35,7 +35,7 @@ class LoginForm(FlaskForm):
 class RegisterForm(FlaskForm):
     firstname = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
     lastname = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
-    email = StringField('LRN', validators=[DataRequired(), validate_lrn])
+    username = StringField('LRN', validators=[DataRequired(), validate_lrn])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Confirm Password', 
                                    validators=[DataRequired(), EqualTo('password')])

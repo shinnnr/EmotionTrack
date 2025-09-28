@@ -43,7 +43,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <p><strong>Name:</strong> {{ faculty.firstname }} {{ faculty.lastname }}</p>
-                            <p><strong>Email:</strong> {{ faculty.email }}</p>
+                            <p><strong>Email:</strong> {{ faculty.username }}</p>
                             <p><strong>Role:</strong> {{ faculty.role|title }}</p>
                         </div>
                         <div class="col-md-6">
@@ -97,7 +97,7 @@
                                 {% for student in students_pagination.items %}
                                     <tr onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;" data-student-name="{{ (student.firstname + ' ' + student.lastname)|lower }}" data-student-email="{{ student.email|lower }}">
                                         <td class="fw-bold">{{ student.firstname }} {{ student.lastname }}</td>
-                                        <td>{{ student.email }}</td>
+                                        <td>{{ student.username }}</td>
                                         <td class="d-none d-md-table-cell">
                                             <span class="badge bg-primary">Grade {{ student.grade_level }}</span>
                                             <span class="badge bg-success">{{ student.section }}</span>
@@ -340,3 +340,6 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 {% endblock %}
+
+
+

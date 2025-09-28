@@ -551,7 +551,7 @@ async function loadMessages(page = 1, showLoading = true) {
                     <tr class="${hasUnread ? 'table-warning' : ''}" onclick="showMobileDetails(this)" 
                         data-user-id="${user.id}"
                         data-user-name="${user.full_name}"
-                        data-user-email="${user.email}" 
+                        data-user-email="${user.username}" 
                         data-user-strand="${user.strand || 'N/A'}"
                         data-user-grade="${user.grade_level || 'N/A'}"
                         data-user-firstname="${user.firstname || ''}"
@@ -569,7 +569,7 @@ async function loadMessages(page = 1, showLoading = true) {
                                 </div>
                                 <div>
                                     <h6 class="mb-0">${user.full_name}</h6>
-                                    <small class="text-muted">LRN: ${user.email}</small>
+                                    <small class="text-muted">LRN: ${user.username}</small>
                                     <div class="small text-muted">
                                         ${user.strand || 'N/A'} - Grade ${user.grade_level || 'N/A'}
                                     </div>
@@ -742,3 +742,6 @@ document.addEventListener('click', function(e) {
 
 </script>
 {% endblock %}
+
+
+

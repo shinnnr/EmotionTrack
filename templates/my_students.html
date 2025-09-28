@@ -118,7 +118,7 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ student.email }}</td>
+                                            <td>{{ student.username }}</td>
                                             <td class="d-none d-md-table-cell">
                                                 <span class="badge bg-secondary">{{ student.gender or 'N/A' }}</span>
                                             </td>
@@ -584,3 +584,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %}
+
+
+

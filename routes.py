@@ -29,7 +29,7 @@ def get_faculty_assignment(user):
 def get_students_for_faculty(user):
     """Get students that a faculty admin can access based on their assignment"""
     # Main admin can see all students
-    if user.email == 'admin@emotiontrack.app':
+    if user.username == 'admin@emotiontrack.app':
         return User.query.filter_by(is_admin=False)
     
     # Faculty admin can only see students in their assigned section
@@ -657,7 +657,7 @@ def login():
     form = LoginForm()
     
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        user = User.query.filter_by(username=form.username.data).first()
 
         if user:
             password_check = user.check_password(form.password.data)
@@ -693,7 +693,7 @@ def register():
     if form.validate_on_submit():
         
         # Check if user already exists
-        existing_user = User.query.filter_by(email=form.email.data).first()
+        existing_user = User.query.filter_by(username=form.username.data).first()
         if existing_user:
             flash('LRN already registered. Please use a different LRN.', 'error')
             # Render template with form data preserved instead of redirecting
@@ -703,7 +703,7 @@ def register():
         user = User()
         user.firstname = form.firstname.data
         user.lastname = form.lastname.data
-        user.email = form.email.data
+        user.username = form.username.data
         user.birthday = form.birthday.data
         user.gender = form.gender.data
         user.strand = form.strand.data
@@ -817,7 +817,7 @@ def dashboard():
     accessible_student_ids = [user.id for user in accessible_students_query.all()]
     
     # Determine conversation type based on admin role
-    is_main_admin = current_user.email == 'admin@emotiontrack.app'
+    is_main_admin = current_user.username == 'admin@emotiontrack.app'
     conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
     
     # Filter mood logs and messages based on accessible students
@@ -912,7 +912,7 @@ def messages():
         return redirect(url_for('main.home'))
     
     # Determine conversation type based on admin role
-    is_main_admin = current_user.email == 'admin@emotiontrack.app'
+    is_main_admin = current_user.username == 'admin@emotiontrack.app'
     conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
     
     # Get students accessible to this faculty admin (filtered by section)
@@ -972,7 +972,7 @@ def respond_message(message_id):
     response_text = request.form.get('response_text')
     
     # Check if admin can respond to this conversation type
-    is_main_admin = current_user.email == 'admin@emotiontrack.app'
+    is_main_admin = current_user.username == 'admin@emotiontrack.app'
     allowed_conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
     
     if message.conversation_type != allowed_conversation_type:
@@ -1014,7 +1014,7 @@ def student_chat(user_id):
         return redirect(url_for('admin.messages'))
     
     # Determine conversation type based on admin role
-    is_main_admin = current_user.email == 'admin@emotiontrack.app'
+    is_main_admin = current_user.username == 'admin@emotiontrack.app'
     conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
     
     # Get messages for this student in the appropriate conversation type
@@ -1038,7 +1038,7 @@ def student_chat(user_id):
 @admin_bp.route('/manage-faculty')
 @login_required
 def manage_faculty():
-    if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
         flash('Access denied. Only the main admin can manage faculty.', 'error')
         return redirect(url_for('main.home'))
     
@@ -1071,7 +1071,7 @@ def manage_faculty():
 @admin_bp.route('/create-faculty', methods=['POST'])
 @login_required
 def create_faculty():
-    if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
         return jsonify({'success': False, 'message': 'Access denied'})
     
     firstname = request.form.get('firstname')
@@ -1084,7 +1084,7 @@ def create_faculty():
         return jsonify({'success': False, 'message': 'All fields are required'})
 
     # Check if employee ID already exists
-    existing_user = User.query.filter_by(email=employee_id).first()
+    existing_user = User.query.filter_by(username=employee_id).first()
     if existing_user:
         return jsonify({'success': False, 'message': 'Employee ID already exists'})
     
@@ -1155,7 +1155,7 @@ def create_faculty():
 @csrf.exempt
 @login_required
 def delete_faculty():
-    if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
         return jsonify({'success': False, 'message': 'Access denied'})
 
     try:
@@ -1222,7 +1222,7 @@ def delete_faculty():
 @admin_bp.route('/faculty-students/<int:faculty_id>')
 @login_required
 def faculty_students(faculty_id):
-    if not current_user.is_admin or current_user.email != 'admin@emotiontrack.app':
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
         flash('Access denied. Only the main admin can view faculty students.', 'error')
         return redirect(url_for('main.home'))
 
@@ -1307,7 +1307,7 @@ def delete_students():
             return jsonify({'success': False, 'message': 'Invalid student IDs provided.'})
         
         # Check access permissions based on admin type
-        if current_user.email == 'admin@emotiontrack.app':
+        if current_user.username == 'admin@emotiontrack.app':
             # Main admin can delete any non-admin user
             accessible_students = User.query.filter(
                 User.id.in_(student_ids),
@@ -1373,7 +1373,7 @@ def send_message(user_id):
         return jsonify({'success': False, 'message': 'Manual confirmation required to prevent automatic sending'})
     
     # Determine conversation type based on admin role
-    is_main_admin = current_user.email == 'admin@emotiontrack.app'
+    is_main_admin = current_user.username == 'admin@emotiontrack.app'
     conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
     
     # Check if faculty admin can access this student
@@ -1411,7 +1411,7 @@ def poll_student_messages(user_id):
             return jsonify({'error': 'Cannot poll admin users'}), 400
         
         # Check if faculty admin can access this student
-        is_main_admin = current_user.email == 'admin@emotiontrack.app'
+        is_main_admin = current_user.username == 'admin@emotiontrack.app'
         if not is_main_admin:
             accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
             if student.id not in accessible_student_ids:
@@ -2152,7 +2152,7 @@ def get_student_profile(user_id):
         mood_logs = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.desc()).limit(10).all()
         
         # Get recent messages - filter by conversation type based on admin role
-        is_main_admin = current_user.email == 'admin@emotiontrack.app'
+        is_main_admin = current_user.username == 'admin@emotiontrack.app'
         conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
         messages = StudentMessage.query.filter_by(
             sender_user_id=user_id,
@@ -2164,7 +2164,7 @@ def get_student_profile(user_id):
             'student': {
                 'id': student.id,
                 'full_name': student.full_name,
-                'email': student.email,
+                'username': student.email,
                 'gender': student.gender,
                 'strand': student.strand,
                 'grade_level': student.grade_level,
@@ -2230,7 +2230,7 @@ def view_student_profile(user_id):
         mood_logs = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.log_date.desc()).limit(10).all()
         
         # Get recent messages - filter by conversation type based on admin role
-        is_main_admin = current_user.email == 'admin@emotiontrack.app'
+        is_main_admin = current_user.username == 'admin@emotiontrack.app'
         conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
         messages = StudentMessage.query.filter_by(
             sender_user_id=user_id,
@@ -2298,7 +2298,7 @@ def export_data():
         section_filter = data.get('section') if data else request.args.get('section')
         
         # Get students accessible to this admin (with optional filtering for main admin)
-        if current_user.email == 'admin@emotiontrack.app':
+        if current_user.username == 'admin@emotiontrack.app':
             # Main admin - apply optional filters
             base_query = User.query.filter_by(is_admin=False)
             if strand_filter:
@@ -2330,7 +2330,7 @@ def export_data():
                 
                 for user in users:
                     writer.writerow([
-                        user.id, user.firstname, user.lastname, user.email,
+                        user.id, user.firstname, user.lastname, user.username,
                         user.gender, user.strand, user.grade_level, user.section,
                         convert_to_manila_time(user.created_at).strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
                     ])
@@ -2346,7 +2346,7 @@ def export_data():
                 
                 for log, user in logs:
                     writer.writerow([
-                        log.log_id, user.email, user.full_name, log.emotion, log.sleep, log.energy,
+                        log.log_id, user.username, user.full_name, log.emotion, log.sleep, log.energy,
                         log.triggers or '', log.coping or '', log.gratitude or '',
                         convert_to_manila_time(log.log_date).strftime('%Y-%m-%d %H:%M:%S') if log.log_date else ''
                     ])
@@ -2363,7 +2363,7 @@ def export_data():
                 
                 for result, user in results:
                     writer.writerow([
-                        result.id, user.email, user.full_name, result.depression_score, result.anxiety_score, result.stress_score,
+                        result.id, user.username, user.full_name, result.depression_score, result.anxiety_score, result.stress_score,
                         result.depression_severity, result.anxiety_severity, result.stress_severity,
                         convert_to_manila_time(result.created_at).strftime('%Y-%m-%d %H:%M:%S') if result.created_at else ''
                     ])
@@ -2379,7 +2379,7 @@ def export_data():
                 
                 for message, user in messages:
                     writer.writerow([
-                        message.id, user.email, user.full_name, message.message_text or '', message.admin_response or '',
+                        message.id, user.username, user.full_name, message.message_text or '', message.admin_response or '',
                         message.is_read,
                         convert_to_manila_time(message.created_at).strftime('%Y-%m-%d %H:%M:%S') if message.created_at else '',
                         convert_to_manila_time(message.responded_at).strftime('%Y-%m-%d %H:%M:%S') if message.responded_at else ''
@@ -2412,7 +2412,7 @@ def export_data():
                         
                         for user in users:
                             writer.writerow([
-                                user.id, user.firstname, user.lastname, user.email,
+                                user.id, user.firstname, user.lastname, user.username,
                                 user.gender, user.strand, user.grade_level, user.section,
                                 convert_to_manila_time(user.created_at).strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
                             ])
@@ -2428,7 +2428,7 @@ def export_data():
                         
                         for log, user in logs:
                             writer.writerow([
-                                log.log_id, user.email, user.full_name, log.emotion, log.sleep, log.energy,
+                                log.log_id, user.username, user.full_name, log.emotion, log.sleep, log.energy,
                                 log.triggers or '', log.coping or '', log.gratitude or '',
                                 convert_to_manila_time(log.log_date).strftime('%Y-%m-%d %H:%M:%S') if log.log_date else ''
                             ])
@@ -2445,7 +2445,7 @@ def export_data():
                         
                         for result, user in results:
                             writer.writerow([
-                                result.id, user.email, user.full_name, result.depression_score, result.anxiety_score, result.stress_score,
+                                result.id, user.username, user.full_name, result.depression_score, result.anxiety_score, result.stress_score,
                                 result.depression_severity, result.anxiety_severity, result.stress_severity,
                                 convert_to_manila_time(result.created_at).strftime('%Y-%m-%d %H:%M:%S') if result.created_at else ''
                             ])
@@ -2461,7 +2461,7 @@ def export_data():
                         
                         for message, user in messages:
                             writer.writerow([
-                                message.id, user.email, user.full_name, message.message_text or '', message.admin_response or '',
+                                message.id, user.username, user.full_name, message.message_text or '', message.admin_response or '',
                                 message.is_read,
                                 convert_to_manila_time(message.created_at).strftime('%Y-%m-%d %H:%M:%S') if message.created_at else '',
                                 convert_to_manila_time(message.responded_at).strftime('%Y-%m-%d %H:%M:%S') if message.responded_at else ''
@@ -2495,7 +2495,7 @@ def get_analytics_data():
         section_filter = request.args.get('section')
         
         # Get students accessible to this admin (with optional filtering for main admin)
-        if current_user.email == 'admin@emotiontrack.app':
+        if current_user.username == 'admin@emotiontrack.app':
             # Main admin - apply optional filters
             base_query = User.query.filter_by(is_admin=False)
             if strand_filter:
@@ -2520,7 +2520,7 @@ def get_analytics_data():
                 'total_users': 0,
                 'average_energy': 0.0,
                 'concerning_students': 0,
-                'strand_breakdown': [] if current_user.email == 'admin@emotiontrack.app' else None
+                'strand_breakdown': [] if current_user.username == 'admin@emotiontrack.app' else None
             })
         
         # Mood distribution (filtered by accessible students)
@@ -2579,7 +2579,7 @@ def get_analytics_data():
         
         # For main admin, add strand breakdown when not filtering by specific criteria
         strand_breakdown = None
-        if current_user.email == 'admin@emotiontrack.app' and not strand_filter:
+        if current_user.username == 'admin@emotiontrack.app' and not strand_filter:
             strand_breakdown = db.session.query(
                 User.strand,
                 db.func.count(User.id).label('student_count')
@@ -2616,7 +2616,7 @@ def get_admin_messages():
         per_page = request.args.get('per_page', 10, type=int)
         
         # Determine conversation type based on admin role
-        is_main_admin = current_user.email == 'admin@emotiontrack.app'
+        is_main_admin = current_user.username == 'admin@emotiontrack.app'
         conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
         
         # Get students accessible to this faculty admin (filtered by section)
@@ -2672,7 +2672,7 @@ def get_admin_messages():
                 'user': {
                     'id': conv['user'].id,
                     'full_name': conv['user'].full_name,
-                    'email': conv['user'].email,
+                    'username': conv['user'].email,
                     'strand': conv['user'].strand,
                     'grade_level': conv['user'].grade_level,
                     'firstname': conv['user'].firstname,
@@ -2733,7 +2733,7 @@ def get_students_by_hierarchy():
         
         if not strand and not grade and not section:
             # Check if this is main admin or faculty admin
-            if current_user.email == 'admin@emotiontrack.app':
+            if current_user.username == 'admin@emotiontrack.app':
                 # Main admin - return strands for hierarchical browsing
                 strands = accessible_students_query.filter(User.strand.isnot(None)).with_entities(User.strand).distinct().all()
                 return jsonify({
@@ -2761,7 +2761,7 @@ def get_students_by_hierarchy():
                         'data': [{
                             'id': student.id,
                             'full_name': student.full_name,
-                            'email': student.email,
+                            'username': student.email,
                             'created_at': convert_to_manila_time(student.created_at).strftime('%B %d, %Y') if student.created_at else ''
                         } for student in students]
                     })
@@ -2805,7 +2805,7 @@ def get_students_by_hierarchy():
                 'data': [{
                     'id': student.id,
                     'full_name': student.full_name,
-                    'email': student.email,
+                    'username': student.email,
                     'created_at': convert_to_manila_time(student.created_at).strftime('%B %d, %Y') if student.created_at else ''
                 } for student in students]
             })

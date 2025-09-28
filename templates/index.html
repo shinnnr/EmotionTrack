@@ -46,10 +46,10 @@
                             {{ login_form.hidden_tag() }}
                             
                             <div class="mb-3">
-                                <label for="{{ login_form.email.id }}" class="form-label">
+                                <label for="{{ login_form.username.id }}" class="form-label">
                                     <i class="fas fa-id-card me-2"></i>LRN / Employee ID
                                 </label>
-                                {{ login_form.email(class="form-control", placeholder="") }}
+                                {{ login_form.username(class="form-control", placeholder="") }}
                             </div>
                             
                             <div class="mb-3">
@@ -107,10 +107,10 @@
                             
                             <div class="mb-3">
                                 <label class="form-label">LRN</label>
-                                {{ register_form.email(class="form-control", pattern="^\d{12}$", title="LRN must be exactly 12 digits", inputmode="numeric") }}
-                                {% if register_form.email.errors %}
+                                {{ register_form.username(class="form-control", pattern="^\d{12}$", title="LRN must be exactly 12 digits", inputmode="numeric") }}
+                                {% if register_form.username.errors %}
                                     <div class="text-danger small mt-1">
-                                        {% for error in register_form.email.errors %}
+                                        {% for error in register_form.username.errors %}
                                             {{ error }}
                                         {% endfor %}
                                     </div>
@@ -508,3 +508,7 @@ function setupSectionUppercase() {
 }
 </script>
 {% endblock %}
+
+
+
+

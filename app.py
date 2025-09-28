@@ -107,15 +107,15 @@ with app.app_context():
         from werkzeug.security import generate_password_hash
 
         admin_exists = db.session.execute(
-            db.text("SELECT id FROM users WHERE email = :email"),
-            {"email": "admin@emotiontrack.app"}
+            db.text("SELECT id FROM users WHERE username = :username"),
+            {"username": "admin@emotiontrack.app"}
         ).fetchone()
 
         if not admin_exists:
             admin = User()
             admin.firstname = 'Admin'
             admin.lastname = 'User'
-            admin.email = 'admin@emotiontrack.app'
+            admin.username = 'admin@emotiontrack.app'
             admin.password_hash = generate_password_hash('admin123')
             admin.gender = 'Other'
             admin.strand = 'N/A'

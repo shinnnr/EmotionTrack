@@ -248,7 +248,7 @@ function displayStudentList(students) {
         row.style.cursor = 'pointer';
         row.onclick = () => viewStudentProfile(parseInt(student.id));
         row.setAttribute('data-student-name', escapeHtml(student.full_name).toLowerCase());
-        row.setAttribute('data-student-email', escapeHtml(student.email).toLowerCase());
+        row.setAttribute('data-student-email', escapeHtml(student.username).toLowerCase());
         row.innerHTML = `
             <td>
                 <div class="d-flex align-items-center">
@@ -262,7 +262,7 @@ function displayStudentList(students) {
                     </div>
                 </div>
             </td>
-            <td>${escapeHtml(student.email)}</td>
+            <td>${escapeHtml(student.username)}</td>
             <td>${escapeHtml(student.created_at)}</td>
             <td class="d-none d-lg-table-cell">
                 <button class="btn btn-sm btn-success me-2" onclick="event.stopPropagation(); goToStudentChat(${parseInt(student.id)})">
@@ -606,7 +606,7 @@ function generateProfileHTML(data) {
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <p class="mb-1"><strong>Email:</strong> ${escapeHtml(student.email)}</p>
+                                    <p class="mb-1"><strong>Email:</strong> ${escapeHtml(student.username)}</p>
                                     <p class="mb-1"><strong>Gender:</strong> ${escapeHtml(student.gender) || 'Not specified'}</p>
                                     <p class="mb-1"><strong>Strand:</strong> ${escapeHtml(student.strand) || 'Not specified'}</p>
                                 </div>

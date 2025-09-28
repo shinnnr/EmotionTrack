@@ -26,7 +26,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     firstname = db.Column(db.String(100), nullable=False)
     lastname = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    username = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     birthday = db.Column(db.Date)
     gender = db.Column(db.String(20))
@@ -108,7 +108,7 @@ class User(UserMixin, db.Model):
         return max(0, days_remaining)
     
     def __repr__(self):
-        return f'<User {self.email}>'
+        return f'<User {self.username}>'
 
 class MoodLog(db.Model):
     __tablename__ = 'mood_logs'
