@@ -25,6 +25,9 @@
                         <a href="{{ url_for('admin.my_students') }}" class="btn btn-outline-light me-2">
                             <i class="fas fa-arrow-left me-2"></i>Back to Students
                         </a>
+                        <a href="{{ url_for('admin.student_chat', user_id=student.id) }}" class="btn btn-warning">
+                            <i class="fas fa-comments me-2"></i>Send Message
+                        </a>
                     </div>
                 </div>
             </div>
