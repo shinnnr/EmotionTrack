@@ -315,6 +315,15 @@ async function sendResponse() {
         width: 90%;
         max-width: 500px;
     }
+
+    /* Ensure modal is above backdrop */
+    #studentDetailsModal {
+        z-index: 1060;
+    }
+
+    .modal-backdrop {
+        z-index: 1050;
+    }
 }
 </style>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
