@@ -1045,7 +1045,7 @@ def manage_faculty():
     # Get all faculty members (users with role 'faculty_admin' or 'guidance_admin' but not main admin)
     faculties = User.query.filter(
         User.role.in_(['faculty_admin', 'guidance_admin']),
-        User.email != 'admin@emotiontrack.app'
+        User.username != 'admin@emotiontrack.app'
     ).all()
     
     # Get class assignments for each faculty
@@ -1114,14 +1114,14 @@ def create_faculty():
             existing_faculty = User.query.get(existing_assignment.faculty_id)
             return jsonify({
                 'success': False,
-                'message': f'Warning: This advisory class ({strand} {grade_level} - {section}) is already assigned to faculty member {existing_faculty.firstname} {existing_faculty.lastname} ({existing_faculty.email}). Each class can only have one faculty adviser.'
+                'message': f'Warning: This advisory class ({strand} {grade_level} - {section}) is already assigned to faculty member {existing_faculty.firstname} {existing_faculty.lastname} ({existing_faculty.username}). Each class can only have one faculty adviser.'
             })
 
         # Create faculty user
         faculty = User()
         faculty.firstname = firstname
         faculty.lastname = lastname
-        faculty.email = employee_id
+        faculty.username = employee_id
         if password:
             faculty.password_hash = generate_password_hash(password)
         else:
@@ -1177,7 +1177,7 @@ def delete_faculty():
             for faculty_id in faculty_ids:
                 # Find the faculty member
                 faculty = User.query.filter_by(id=faculty_id, is_admin=True).filter(User.role.in_(['faculty_admin', 'guidance_admin'])).first()
-                if faculty and faculty.email != 'admin@emotiontrack.app':
+                if faculty and faculty.username != 'admin@emotiontrack.app':
                     # Delete associated class assignments
                     ClassAssignment.query.filter_by(faculty_id=faculty_id).delete()
                     # Delete the faculty user
@@ -1200,7 +1200,7 @@ def delete_faculty():
                 return jsonify({'success': False, 'message': 'Faculty member not found'})
 
             # Prevent deletion of main admin
-            if faculty.email == 'admin@emotiontrack.app':
+            if faculty.username == 'admin@emotiontrack.app':
                 return jsonify({'success': False, 'message': 'Cannot delete main admin account'})
 
             # Delete associated class assignments
@@ -2164,7 +2164,7 @@ def get_student_profile(user_id):
             'student': {
                 'id': student.id,
                 'full_name': student.full_name,
-                'username': student.email,
+                'username': student.username,
                 'gender': student.gender,
                 'strand': student.strand,
                 'grade_level': student.grade_level,
@@ -2672,7 +2672,7 @@ def get_admin_messages():
                 'user': {
                     'id': conv['user'].id,
                     'full_name': conv['user'].full_name,
-                    'username': conv['user'].email,
+                    'username': conv['user'].username,
                     'strand': conv['user'].strand,
                     'grade_level': conv['user'].grade_level,
                     'firstname': conv['user'].firstname,
@@ -2761,7 +2761,7 @@ def get_students_by_hierarchy():
                         'data': [{
                             'id': student.id,
                             'full_name': student.full_name,
-                            'username': student.email,
+                            'username': student.username,
                             'created_at': convert_to_manila_time(student.created_at).strftime('%B %d, %Y') if student.created_at else ''
                         } for student in students]
                     })
@@ -2805,7 +2805,7 @@ def get_students_by_hierarchy():
                 'data': [{
                     'id': student.id,
                     'full_name': student.full_name,
-                    'username': student.email,
+                    'username': student.username,
                     'created_at': convert_to_manila_time(student.created_at).strftime('%B %d, %Y') if student.created_at else ''
                 } for student in students]
             })
