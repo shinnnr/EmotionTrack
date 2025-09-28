@@ -68,6 +68,32 @@
         </div>
     </div>
 
+    <!-- Delete Selected Panel -->
+    <div class="row mb-4 d-block">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="selection-controls">
+                            <div class="form-check d-inline-block me-3">
+                                <input class="form-check-input" type="checkbox" id="selectAllFaculty">
+                                <label class="form-check-label fw-bold" for="selectAllFaculty">
+                                    Select All Faculty
+                                </label>
+                            </div>
+                            <span class="text-muted" id="facultySelectionCount">0 faculty selected</span>
+                        </div>
+                        <div class="action-controls">
+                            <button class="btn btn-danger" id="deleteSelectedFacultyBtn" disabled>
+                                <i class="fas fa-trash me-2"></i>Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Faculty List -->
     <div class="row">
         <div class="col-12">
@@ -77,13 +103,32 @@
                         <i class="fas fa-chalkboard-teacher text-primary me-2"></i>
                         Faculty List
                     </h5>
-                    
+
+                    <!-- Search Input -->
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" id="facultySearchInput" placeholder="Search faculty by name or email...">
+                            <button class="btn btn-outline-secondary" type="button" id="facultyClearSearchBtn" title="Clear search">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     {% if faculty_data %}
                         <div class="row g-3">
                             {% for data in faculty_data %}
-                                <div class="col-md-6 col-lg-4">
+                                <div class="col-md-6 col-lg-4 faculty-item" data-faculty-name="{{ (data.faculty.firstname ~ ' ' ~ data.faculty.lastname)|lower }}" data-faculty-email="{{ data.faculty.email|lower }}">
                                     <div class="faculty-card p-3 border rounded h-100">
                                         <div class="d-flex flex-column h-100">
+                                            <div class="faculty-select mb-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input faculty-checkbox"
+                                                           type="checkbox"
+                                                           value="{{ data.faculty.id }}"
+                                                           id="faculty_{{ data.faculty.id }}">
+                                                </div>
+                                            </div>
                                             <div class="flex-grow-1">
                                                 <h6 class="fw-bold mb-2">{{ data.faculty.firstname }} {{ data.faculty.lastname }}</h6>
                                                 <p class="text-muted mb-2">{{ data.faculty.email }}</p>
@@ -191,6 +236,9 @@ function deleteFaculty(facultyId, facultyName) {
 
 // Add event listeners to delete buttons
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize faculty management functionality
+    initializeFacultyManagement();
+
     document.querySelectorAll('.delete-faculty-btn').forEach(button => {
         button.addEventListener('click', function() {
             const facultyId = this.dataset.facultyId;
@@ -199,6 +247,154 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+function initializeFacultyManagement() {
+    const selectAllCheckbox = document.getElementById('selectAllFaculty');
+    const facultyCheckboxes = document.querySelectorAll('.faculty-checkbox');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedFacultyBtn');
+    const selectionCount = document.getElementById('facultySelectionCount');
+    const searchInput = document.getElementById('facultySearchInput');
+    const clearSearchBtn = document.getElementById('facultyClearSearchBtn');
+
+    // Update selection count and button state
+    function updateSelectionState() {
+        const checkedBoxes = document.querySelectorAll('.faculty-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        selectionCount.textContent = count === 1 ? '1 faculty selected' : `${count} faculty selected`;
+        deleteSelectedBtn.disabled = count === 0;
+
+        // Update select all checkbox states
+        const allChecked = count === facultyCheckboxes.length && count > 0;
+        const someChecked = count > 0;
+
+        selectAllCheckbox.checked = allChecked;
+        selectAllCheckbox.indeterminate = someChecked && !allChecked;
+    }
+
+    // Handle select all functionality
+    function toggleSelectAll(checked) {
+        facultyCheckboxes.forEach(checkbox => {
+            checkbox.checked = checked;
+        });
+        updateSelectionState();
+    }
+
+    // Event listeners
+    selectAllCheckbox.addEventListener('change', function() {
+        toggleSelectAll(this.checked);
+    });
+
+    facultyCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectionState);
+    });
+
+    // Delete selected faculty
+    deleteSelectedBtn.addEventListener('click', function() {
+        const checkedBoxes = document.querySelectorAll('.faculty-checkbox:checked');
+        if (checkedBoxes.length === 0) return;
+
+        // Build confirmation message with faculty names
+        let confirmMessage = 'Are you sure you want to delete the following faculty member(s)?\n\n';
+        const facultyNames = [];
+
+        checkedBoxes.forEach(checkbox => {
+            const facultyItem = checkbox.closest('.faculty-item');
+            const facultyName = facultyItem.querySelector('h6').textContent;
+            facultyNames.push(facultyName);
+            confirmMessage += '• ' + facultyName + '\n';
+        });
+
+        confirmMessage += '\nThis action cannot be undone. All associated class assignments and data will be permanently deleted.';
+
+        // Use native confirm dialog
+        if (confirm(confirmMessage)) {
+            performGroupDeleteFaculty(checkedBoxes);
+        }
+    });
+
+    // Function to perform group delete
+    function performGroupDeleteFaculty(checkedBoxes) {
+        const facultyIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+        // Get CSRF token
+        const csrfToken = '{{ csrf_token() }}';
+
+        // Show loading state on the delete button
+        const originalText = deleteSelectedBtn.innerHTML;
+        deleteSelectedBtn.disabled = true;
+        deleteSelectedBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+
+        // Send delete request
+        const formData = new FormData();
+        formData.append('faculty_ids', facultyIds.join(','));
+
+        fetch('{{ url_for("admin.delete_faculty") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove deleted faculty cards from the page
+                checkedBoxes.forEach(checkbox => {
+                    const facultyItem = checkbox.closest('.faculty-item');
+                    facultyItem.remove();
+                });
+
+                alert('Faculty members deleted successfully!');
+                updateSelectionState();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting faculty members.');
+        })
+        .finally(() => {
+            // Reset button state
+            deleteSelectedBtn.disabled = false;
+            deleteSelectedBtn.innerHTML = originalText;
+        });
+    }
+
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const facultyItems = document.querySelectorAll('.faculty-item');
+
+        if (!searchTerm) {
+            // Show all faculty items if search is empty
+            facultyItems.forEach(item => {
+                item.style.display = '';
+            });
+            return;
+        }
+
+        // Filter faculty items based on search term
+        facultyItems.forEach(item => {
+            const facultyName = item.getAttribute('data-faculty-name') || '';
+            const facultyEmail = item.getAttribute('data-faculty-email') || '';
+
+            if (facultyName.includes(searchTerm) || facultyEmail.includes(searchTerm)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    // Clear search button
+    clearSearchBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+        searchInput.focus();
+    });
+
+    // Initial state update
+    updateSelectionState();
+}
 </script>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 <script>
@@ -297,6 +493,31 @@ function togglePassword(fieldId, button) {
 .password-toggle-btn:focus {
     outline: none;
     color: var(--clsu-green);
+}
+
+.selection-controls {
+    display: flex;
+    align-items: center;
+}
+
+.action-controls .btn {
+    transition: all 0.3s ease;
+}
+
+.action-controls .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.faculty-select {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.faculty-card {
+    position: relative;
 }
 </style>
 {% endblock %}

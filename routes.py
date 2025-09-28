@@ -1159,32 +1159,61 @@ def delete_faculty():
         return jsonify({'success': False, 'message': 'Access denied'})
 
     try:
+        # Check if it's a single faculty deletion or multiple
+        faculty_ids = request.form.get('faculty_ids')
         faculty_id_str = request.form.get('faculty_id')
-        if not faculty_id_str:
-            return jsonify({'success': False, 'message': 'Faculty ID is required'})
 
-        try:
-            faculty_id = int(faculty_id_str)
-        except (ValueError, TypeError):
-            return jsonify({'success': False, 'message': 'Invalid faculty ID format'})
+        if faculty_ids:
+            # Multiple faculty deletion
+            try:
+                faculty_ids = [int(id.strip()) for id in faculty_ids.split(',') if id.strip()]
+            except (ValueError, TypeError):
+                return jsonify({'success': False, 'message': 'Invalid faculty IDs format'})
 
-        # Find the faculty member
-        faculty = User.query.filter_by(id=faculty_id, is_admin=True).filter(User.role.in_(['faculty_admin', 'guidance_admin'])).first()
-        if not faculty:
-            return jsonify({'success': False, 'message': 'Faculty member not found'})
+            if not faculty_ids:
+                return jsonify({'success': False, 'message': 'No faculty IDs provided'})
 
-        # Prevent deletion of main admin
-        if faculty.email == 'admin@emotiontrack.app':
-            return jsonify({'success': False, 'message': 'Cannot delete main admin account'})
+            deleted_count = 0
+            for faculty_id in faculty_ids:
+                # Find the faculty member
+                faculty = User.query.filter_by(id=faculty_id, is_admin=True).filter(User.role.in_(['faculty_admin', 'guidance_admin'])).first()
+                if faculty and faculty.email != 'admin@emotiontrack.app':
+                    # Delete associated class assignments
+                    ClassAssignment.query.filter_by(faculty_id=faculty_id).delete()
+                    # Delete the faculty user
+                    db.session.delete(faculty)
+                    deleted_count += 1
 
-        # Delete associated class assignments
-        ClassAssignment.query.filter_by(faculty_id=faculty_id).delete()
+            db.session.commit()
+            return jsonify({'success': True, 'message': f'Successfully deleted {deleted_count} faculty member(s)'})
 
-        # Delete the faculty user
-        db.session.delete(faculty)
-        db.session.commit()
+        elif faculty_id_str:
+            # Single faculty deletion (backward compatibility)
+            try:
+                faculty_id = int(faculty_id_str)
+            except (ValueError, TypeError):
+                return jsonify({'success': False, 'message': 'Invalid faculty ID format'})
 
-        return jsonify({'success': True, 'message': 'Faculty member deleted successfully'})
+            # Find the faculty member
+            faculty = User.query.filter_by(id=faculty_id, is_admin=True).filter(User.role.in_(['faculty_admin', 'guidance_admin'])).first()
+            if not faculty:
+                return jsonify({'success': False, 'message': 'Faculty member not found'})
+
+            # Prevent deletion of main admin
+            if faculty.email == 'admin@emotiontrack.app':
+                return jsonify({'success': False, 'message': 'Cannot delete main admin account'})
+
+            # Delete associated class assignments
+            ClassAssignment.query.filter_by(faculty_id=faculty_id).delete()
+
+            # Delete the faculty user
+            db.session.delete(faculty)
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Faculty member deleted successfully'})
+
+        else:
+            return jsonify({'success': False, 'message': 'Faculty ID(s) required'})
 
     except Exception as e:
         db.session.rollback()
