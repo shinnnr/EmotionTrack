@@ -962,13 +962,22 @@ function hideChangePasswordPanel() {
     .custom-modal-overlay {
         padding-left: 20px;
     }
-    
+
     .custom-modal {
         max-width: calc(100vw - 40px);
     }
-    
+
     .suggestions-modal-overlay {
         padding-left: 20px;
+    }
+}
+
+/* Mobile layout for admin header */
+@media (max-width: 768px) {
+    .admin-header .d-flex {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
     }
 }
 </style>

@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center messages-header">
                 <div>
                     <h1 class="display-6 fw-bold">
                         <i class="fas fa-envelope me-3"></i>
@@ -391,6 +391,13 @@ async function sendResponse() {
     /* Remove table responsiveness on mobile since we're handling it differently */
     .table-responsive {
         overflow-x: visible !important;
+    }
+
+    /* Mobile layout for messages header */
+    .messages-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
     }
 }
 </style>
