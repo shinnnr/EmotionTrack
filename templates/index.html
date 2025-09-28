@@ -5,44 +5,34 @@
 {% block content %}
 <div class="landing-container">
     <div class="container-fluid min-vh-100">
-        <!-- Header Section - Always at the top -->
-        <div class="row">
-            <div class="col-12 bg-clsu-green text-white text-center py-5">
-                <div class="header-content">
+        <div class="row min-vh-100">
+            <!-- Left side - Welcome content -->
+            <div class="col-lg-6 d-flex align-items-center justify-content-center bg-clsu-green">
+                <div class="welcome-content text-white text-center p-5">
                     <div class="logo-container mb-4">
                         <img src="{{ url_for('static', filename='images/sjc-logo.png') }}" alt="SJC Logo" class="sjc-logo-main" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
                     </div>
                     <h1 class="display-4 fw-bold mb-4">EmotionTrack</h1>
                     <h2 class="h3 mb-4">Mental Wellness Platform</h2>
                     <p class="lead mb-4">Your journey to better mental health starts here. Track your emotions, access professional guidance, and build resilience with our comprehensive wellness tools.</p>
-                    <div class="features-list d-flex justify-content-center flex-wrap">
-                        <div class="feature-item mx-3 mb-3">
-                            <i class="fas fa-heart text-clsu-gold me-2"></i>
+                    <div class="features-list text-start">
+                        <div class="feature-item mb-3">
+                            <i class="fas fa-heart text-clsu-gold me-3"></i>
                             <span>Daily Emotion Tracking</span>
                         </div>
-                        <div class="feature-item mx-3 mb-3">
-                            <i class="fas fa-chart-line text-clsu-gold me-2"></i>
+                        <div class="feature-item mb-3">
+                            <i class="fas fa-chart-line text-clsu-gold me-3"></i>
                             <span>Personal Wellness Insights</span>
                         </div>
-                        <div class="feature-item mx-3 mb-3">
-                            <i class="fas fa-user-md text-clsu-gold me-2"></i>
+                        <div class="feature-item mb-3">
+                            <i class="fas fa-user-md text-clsu-gold me-3"></i>
                             <span>Professional Consultation</span>
                         </div>
-                        <div class="feature-item mx-3 mb-3">
-                            <i class="fas fa-shield-alt text-clsu-gold me-2"></i>
+                        <div class="feature-item mb-3">
+                            <i class="fas fa-shield-alt text-clsu-gold me-3"></i>
                             <span>Confidential & Secure</span>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row min-vh-100">
-            <!-- Left side - Welcome content -->
-            <div class="col-lg-6 d-flex align-items-center justify-content-center bg-light">
-                <div class="welcome-content text-center p-5">
-                    <h3 class="text-clsu-green mb-4">Welcome to EmotionTrack</h3>
-                    <p class="text-muted">Please sign in to access your wellness dashboard or create a new account to get started.</p>
                 </div>
             </div>
 
