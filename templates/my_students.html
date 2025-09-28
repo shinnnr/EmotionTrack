@@ -67,7 +67,18 @@
                             <i class="fas fa-list text-primary me-2"></i>
                             Student List
                         </h5>
-                        
+
+                        <!-- Search Input -->
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="myStudentSearchInput" placeholder="Search students by name or LRN...">
+                                <button class="btn btn-outline-secondary" type="button" id="myStudentClearSearchBtn" title="Clear search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -86,7 +97,7 @@
                             <tbody>
                                 {% if students_pagination %}
                                     {% for student in students_pagination.items %}
-                                        <tr data-student-id="{{ student.id }}" onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;">
+                                        <tr data-student-id="{{ student.id }}" onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;" data-student-name="{{ student.full_name|lower }}" data-student-email="{{ student.email|lower }}">
                                             <td onclick="event.stopPropagation();" class="d-table-cell">
                                                 <div class="form-check">
                                                     <input class="form-check-input student-checkbox"
@@ -341,7 +352,10 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing student management...'); // Debug log
-    
+
+    // Initialize search functionality
+    initializeMyStudentSearch();
+
     const selectAllCheckbox = document.getElementById('selectAll');
     const headerSelectAllCheckbox = document.getElementById('headerSelectAll');
     const studentCheckboxes = document.querySelectorAll('.student-checkbox');
@@ -349,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectionCount = document.getElementById('selectionCount');
     const deleteModalElement = document.getElementById('deleteConfirmModal');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    
+
     console.log('Elements found:', {
         selectAllCheckbox: !!selectAllCheckbox,
         deleteSelectedBtn: !!deleteSelectedBtn,

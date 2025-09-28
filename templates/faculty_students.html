@@ -71,6 +71,17 @@
                     </h5>
                     
                     {% if students_pagination and students_pagination.items %}
+                        <!-- Search Input -->
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="facultyStudentSearchInput" placeholder="Search students by name or LRN...">
+                                <button class="btn btn-outline-secondary" type="button" id="facultyClearSearchBtn" title="Clear search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
                         <table class="table table-hover">
                             <thead>
                                 <tr>
@@ -84,7 +95,7 @@
                             </thead>
                             <tbody>
                                 {% for student in students_pagination.items %}
-                                    <tr onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;">
+                                    <tr onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;" data-student-name="{{ (student.firstname + ' ' + student.lastname)|lower }}" data-student-email="{{ student.email|lower }}">
                                         <td class="fw-bold">{{ student.firstname }} {{ student.lastname }}</td>
                                         <td>{{ student.email }}</td>
                                         <td class="d-none d-md-table-cell">
@@ -189,6 +200,11 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFacultyStudentSearch();
+});
+</script>
 {% endblock %}
 
 {% block extra_css %}

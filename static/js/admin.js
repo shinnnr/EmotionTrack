@@ -238,12 +238,17 @@ function displayStudentList(students) {
     const studentList = document.getElementById('studentList');
     const tableBody = document.getElementById('studentTableBody');
 
+    // Store original students data for search functionality
+    studentList._originalStudents = students;
+
     tableBody.innerHTML = '';
 
     students.forEach(student => {
         const row = document.createElement('tr');
         row.style.cursor = 'pointer';
         row.onclick = () => viewStudentProfile(parseInt(student.id));
+        row.setAttribute('data-student-name', escapeHtml(student.full_name).toLowerCase());
+        row.setAttribute('data-student-email', escapeHtml(student.email).toLowerCase());
         row.innerHTML = `
             <td>
                 <div class="d-flex align-items-center">
@@ -272,6 +277,139 @@ function displayStudentList(students) {
     });
 
     studentList.style.display = 'block';
+
+    // Initialize search functionality
+    initializeStudentSearch();
+}
+
+function initializeStudentSearch() {
+    const searchInput = document.getElementById('studentSearchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    const studentList = document.getElementById('studentList');
+
+    if (!searchInput || !studentList) return;
+
+    // Search input event listener
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const tableBody = document.getElementById('studentTableBody');
+        const rows = tableBody.querySelectorAll('tr');
+
+        if (!searchTerm) {
+            // Show all rows if search is empty
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+            return;
+        }
+
+        // Filter rows based on search term
+        rows.forEach(row => {
+            const studentName = row.getAttribute('data-student-name') || '';
+            const studentEmail = row.getAttribute('data-student-email') || '';
+
+            if (studentName.includes(searchTerm) || studentEmail.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Clear search button
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        });
+    }
+}
+
+function initializeFacultyStudentSearch() {
+    const searchInput = document.getElementById('facultyStudentSearchInput');
+    const clearBtn = document.getElementById('facultyClearSearchBtn');
+
+    if (!searchInput) return;
+
+    // Search input event listener
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const tableBody = document.querySelector('.table tbody');
+        const rows = tableBody.querySelectorAll('tr');
+
+        if (!searchTerm) {
+            // Show all rows if search is empty
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+            return;
+        }
+
+        // Filter rows based on search term
+        rows.forEach(row => {
+            const studentName = row.getAttribute('data-student-name') || '';
+            const studentEmail = row.getAttribute('data-student-email') || '';
+
+            if (studentName.includes(searchTerm) || studentEmail.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Clear search button
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        });
+    }
+}
+
+function initializeMyStudentSearch() {
+    const searchInput = document.getElementById('myStudentSearchInput');
+    const clearBtn = document.getElementById('myStudentClearSearchBtn');
+
+    if (!searchInput) return;
+
+    // Search input event listener
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const tableBody = document.querySelector('.table tbody');
+        const rows = tableBody.querySelectorAll('tr');
+
+        if (!searchTerm) {
+            // Show all rows if search is empty
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+            return;
+        }
+
+        // Filter rows based on search term
+        rows.forEach(row => {
+            const studentName = row.getAttribute('data-student-name') || '';
+            const studentEmail = row.getAttribute('data-student-email') || '';
+
+            if (studentName.includes(searchTerm) || studentEmail.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Clear search button
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        });
+    }
 }
 
 function handleNavigationClick(type, value) {
@@ -716,6 +854,8 @@ function showAlert(message, type = 'info') {
 window.viewStudentProfile = viewStudentProfile;
 window.getSuggestedResponses = getSuggestedResponses;
 window.showAlert = showAlert;
+window.initializeFacultyStudentSearch = initializeFacultyStudentSearch;
+window.initializeMyStudentSearch = initializeMyStudentSearch;
 
 function initializeAdminDashboard() {
     setupStatCards();
