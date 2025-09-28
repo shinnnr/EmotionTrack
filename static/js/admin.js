@@ -2089,8 +2089,34 @@ const adminStyles = `
     </style>
 `;
 
+// Add mobile-specific modal z-index fixes
+const mobileModalFixes = `
+    @media (max-width: 991px) {
+        .modal {
+            z-index: 1070 !important;
+        }
+
+        .modal-backdrop {
+            z-index: 1065 !important;
+        }
+
+        .modal-content {
+            z-index: 1071 !important;
+        }
+
+        /* Ensure suggestions modal also appears above sidebar */
+        .suggestions-modal-overlay {
+            z-index: 1070 !important;
+        }
+
+        .suggestions-modal {
+            z-index: 1071 !important;
+        }
+    }
+`;
+
 // Add admin-specific styles to the document
-document.head.insertAdjacentHTML('beforeend', adminStyles);
+document.head.insertAdjacentHTML('beforeend', adminStyles + mobileModalFixes);
 
 // CSV generation utility functions
 function downloadCSV(csvData, filename) {
