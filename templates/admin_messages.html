@@ -24,6 +24,19 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
+                    <!-- Search Bar -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="messageSearchInput" placeholder="Search students by Name or LRN">
+                                <button class="btn btn-outline-secondary" type="button" id="messageClearSearchBtn" title="Clear search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-between align-items-center mb-3 messages-header">
                         <p class="text-muted mb-0">
                             <span id="messageCount">Loading...</span> student conversations
@@ -405,7 +418,57 @@ let perPage = 10;
 document.addEventListener('DOMContentLoaded', function() {
     loadMessages();
     startRealTimePolling();
+    initializeMessageSearch();
 });
+
+function initializeMessageSearch() {
+    const searchInput = document.getElementById('messageSearchInput');
+    const clearSearchBtn = document.getElementById('messageClearSearchBtn');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            filterMessages(this.value.trim());
+        });
+    }
+
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            filterMessages('');
+        });
+    }
+}
+
+function filterMessages(searchTerm) {
+    const rows = document.querySelectorAll('#messagesTableContainer table tbody tr');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const studentName = row.dataset.userName || '';
+        const studentEmail = row.dataset.userEmail || '';
+        const searchText = (studentName + ' ' + studentEmail).toLowerCase();
+
+        if (searchTerm === '' || searchText.includes(searchTerm.toLowerCase())) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Update message count display
+    const messageCount = document.getElementById('messageCount');
+    if (messageCount) {
+        const originalText = messageCount.textContent.replace(/^\d+/, visibleCount.toString());
+        messageCount.textContent = originalText;
+    }
+
+    // Hide pagination if filtering is active
+    const pagination = document.getElementById('messagesPagination');
+    if (pagination) {
+        pagination.style.display = searchTerm ? 'none' : (rows.length > perPage ? 'block' : 'none');
+    }
+}
 
 // Real-time polling for status updates
 let pollingInterval;
