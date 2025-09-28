@@ -52,49 +52,6 @@
                         </div>
                     </div>
                     
-                    <!-- Mobile Student Details Panel -->
-                    <div id="mobileDetailsPanel" class="mobile-details-panel">
-                        <div class="mobile-details-content">
-                            <div class="mobile-details-header">
-                                <h5 id="mobileStudentName">Student Details</h5>
-                                <button type="button" class="btn-close" onclick="closeMobilePanel()"></button>
-                            </div>
-                            <div class="mobile-details-body">
-                                <div class="mobile-student-info mb-3">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <div class="avatar-sm me-3" id="mobileStudentAvatar">
-                                            <div class="avatar-title rounded-circle bg-primary text-white" id="mobileStudentInitials"></div>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0" id="mobileStudentFullName"></h6>
-                                            <small class="text-muted" id="mobileStudentEmail">LRN: </small>
-                                            <div class="small text-muted" id="mobileStudentDetails"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="mobile-detail-section">
-                                    <div class="mobile-detail-label">Last Message:</div>
-                                    <div class="mobile-detail-content" id="mobileLastMessage"></div>
-                                </div>
-                                
-                                <div class="mobile-detail-section">
-                                    <div class="mobile-detail-label">Last Activity:</div>
-                                    <div class="mobile-detail-content" id="mobileLastActivity"></div>
-                                </div>
-                                
-                                <div class="mobile-detail-section">
-                                    <div class="mobile-detail-label">Status:</div>
-                                    <div class="mobile-detail-content" id="mobileStatus"></div>
-                                </div>
-                                
-                                <div class="mobile-detail-section">
-                                    <div class="mobile-detail-label">Actions:</div>
-                                    <div class="mobile-detail-content" id="mobileActions"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     
                     <!-- Pagination -->
                     <nav aria-label="Messages pagination" id="messagesPagination" style="display: none;">
@@ -124,7 +81,7 @@
                     <label class="form-label fw-bold">Student Message:</label>
                     <div class="p-3 bg-light rounded" id="messageText"></div>
                 </div>
-                
+
                 <div class="mb-3" id="responseSection">
                     <label class="form-label fw-bold">Your Response:</label>
                     <div id="existingResponse" class="p-3 bg-success bg-opacity-10 rounded mb-3" style="display: none;">
@@ -140,6 +97,55 @@
                     <i class="fas fa-reply me-2"></i>
                     Send Response
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student Details Modal -->
+<div class="modal fade" id="studentDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user me-2"></i>
+                    Student Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mobile-student-info mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-sm me-3" id="modalStudentAvatar">
+                            <div class="avatar-title rounded-circle bg-primary text-white" id="modalStudentInitials"></div>
+                        </div>
+                        <div>
+                            <h6 class="mb-0" id="modalStudentFullName"></h6>
+                            <small class="text-muted" id="modalStudentEmail">LRN: </small>
+                            <div class="small text-muted" id="modalStudentDetails"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mobile-detail-section">
+                    <div class="mobile-detail-label">Last Message:</div>
+                    <div class="mobile-detail-content" id="modalLastMessage"></div>
+                </div>
+
+                <div class="mobile-detail-section">
+                    <div class="mobile-detail-label">Last Activity:</div>
+                    <div class="mobile-detail-content" id="modalLastActivity"></div>
+                </div>
+
+                <div class="mobile-detail-section">
+                    <div class="mobile-detail-label">Status:</div>
+                    <div class="mobile-detail-content" id="modalStatus"></div>
+                </div>
+
+                <div class="mobile-detail-section">
+                    <div class="mobile-detail-label">Actions:</div>
+                    <div class="mobile-detail-content" id="modalActions"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -277,95 +283,6 @@ async function sendResponse() {
     }
     
     
-    /* Mobile Details Panel */
-    .mobile-details-panel {
-        position: fixed;
-        top: 0;
-        right: -100%;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1060;
-        transition: right 0.3s ease;
-    }
-    
-    .mobile-details-panel.show {
-        right: 0;
-    }
-    
-    .mobile-details-content {
-        position: absolute;
-        right: 0;
-        top: 0;
-        width: 100%;
-        max-width: 400px;
-        height: 100%;
-        background: white;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-        overflow-y: auto;
-    }
-    
-    .mobile-details-panel.show .mobile-details-content {
-        transform: translateX(0);
-    }
-    
-    .mobile-details-header {
-        padding: 1.5rem;
-        border-bottom: 1px solid #dee2e6;
-        background: var(--clsu-green, #2c5530);
-        color: white;
-        display: flex;
-        justify-content: between;
-        align-items: center;
-    }
-    
-    .mobile-details-header h5 {
-        margin: 0;
-        flex-grow: 1;
-        color: white;
-    }
-    
-    .mobile-details-header .btn-close {
-        filter: invert(1);
-        margin-left: auto;
-    }
-    
-    .mobile-details-body {
-        padding: 1.5rem;
-    }
-    
-    .mobile-detail-section {
-        margin-bottom: 1.5rem;
-    }
-    
-    .mobile-detail-section:last-child {
-        margin-bottom: 0;
-    }
-    
-    .mobile-detail-label {
-        font-weight: 600;
-        color: var(--clsu-green, #2c5530);
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .mobile-detail-content {
-        color: #495057;
-        font-size: 0.95rem;
-        line-height: 1.5;
-    }
-    
-    .mobile-detail-content .badge {
-        font-size: 0.8rem;
-    }
-    
-    .mobile-detail-content .btn {
-        width: 100%;
-        margin-top: 0.5rem;
-    }
     
     /* Make the entire table card more mobile friendly */
     .card-body {
@@ -668,9 +585,7 @@ function generatePagination(pagination) {
 function showMobileDetails(row) {
     // Only handle clicks on mobile (768px and below)
     if (window.innerWidth > 768) return;
-    
-    const panel = document.getElementById('mobileDetailsPanel');
-    
+
     // Get data from row attributes
     const userId = row.dataset.userId;
     const userName = row.dataset.userName;
@@ -683,52 +598,38 @@ function showMobileDetails(row) {
     const lastActivity = row.dataset.lastActivity;
     const hasUnread = row.dataset.hasUnread === 'true';
     const adminResponse = row.dataset.adminResponse === 'true';
-    
-    // Populate panel content
-    document.getElementById('mobileStudentName').textContent = userName;
-    document.getElementById('mobileStudentFullName').textContent = userName;
-    document.getElementById('mobileStudentEmail').textContent = 'LRN: ' + userEmail;
-    document.getElementById('mobileStudentDetails').textContent = `${userStrand} - Grade ${userGrade}`;
-    document.getElementById('mobileStudentInitials').textContent = `${userFirstname[0] || ''}${userLastname[0] || ''}`;
-    
+
+    // Populate modal content
+    document.getElementById('modalStudentFullName').textContent = userName;
+    document.getElementById('modalStudentEmail').textContent = 'LRN: ' + userEmail;
+    document.getElementById('modalStudentDetails').textContent = `${userStrand} - Grade ${userGrade}`;
+    document.getElementById('modalStudentInitials').textContent = `${userFirstname[0] || ''}${userLastname[0] || ''}`;
+
     // Last message
-    document.getElementById('mobileLastMessage').innerHTML = lastMessage ? 
-        (lastMessage.length > 100 ? lastMessage.substring(0, 100) + '...' : lastMessage) : 
+    document.getElementById('modalLastMessage').innerHTML = lastMessage ?
+        (lastMessage.length > 100 ? lastMessage.substring(0, 100) + '...' : lastMessage) :
         '<em class="text-muted">No messages yet</em>';
-    
+
     // Last activity
-    document.getElementById('mobileLastActivity').innerHTML = lastActivity ? 
+    document.getElementById('modalLastActivity').innerHTML = lastActivity ?
         lastActivity : '<em class="text-muted">Never</em>';
-    
+
     // Status - get status from the current row's badge
     const statusBadge = row.querySelector('.badge');
     const statusHTML = statusBadge ? statusBadge.outerHTML : '<span class="badge bg-light text-dark">No Activity</span>';
-    document.getElementById('mobileStatus').innerHTML = statusHTML;
-    
+    document.getElementById('modalStatus').innerHTML = statusHTML;
+
     // Actions
-    document.getElementById('mobileActions').innerHTML = `
+    document.getElementById('modalActions').innerHTML = `
         <a href="/admin/student-chat/${userId}" class="btn btn-success">
             <i class="fas fa-comments me-2"></i> Start Chat
         </a>
     `;
-    
-    // Show panel
-    panel.classList.add('show');
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('studentDetailsModal'));
+    modal.show();
 }
 
-function closeMobilePanel() {
-    const panel = document.getElementById('mobileDetailsPanel');
-    panel.classList.remove('show');
-}
-
-// Close panel when clicking outside on mobile
-document.addEventListener('click', function(e) {
-    if (window.innerWidth <= 768) {
-        const panel = document.getElementById('mobileDetailsPanel');
-        if (e.target === panel) {
-            closeMobilePanel();
-        }
-    }
-});
 </script>
 {% endblock %}
