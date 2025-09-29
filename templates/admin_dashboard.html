@@ -986,6 +986,14 @@ function hideChangePasswordPanel() {
     }
 }
 
+@media (max-width: 768px) {
+    .suggestions-modal-overlay {
+        top: 120px; /* Leave space for navigation on mobile */
+        height: calc(100% - 120px);
+        padding-top: 20px;
+    }
+}
+
 /* Mobile layout for admin header */
 @media (max-width: 768px) {
     .admin-header .d-flex {
