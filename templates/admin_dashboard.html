@@ -769,6 +769,8 @@ function hideChangePasswordPanel() {
 
 .admin-header {
     border-left: 5px solid var(--clsu-gold);
+    position: relative;
+    z-index: 1200; /* Higher than modal overlays */
 }
 
 /* Password Input Group Styles */
@@ -937,10 +939,9 @@ function hideChangePasswordPanel() {
     background: rgba(0, 0, 0, 0.5);
     z-index: 1100;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 20px;
-    padding-left: 300px; /* Account for sidebar width */
+    padding: 60px 20px 20px 300px; /* Account for sidebar width and top navigation */
 }
 
 .suggestions-modal {
