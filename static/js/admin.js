@@ -737,11 +737,11 @@ function generateProfileHTML(data) {
             </div>
             
             <!-- Action Buttons -->
-            <div class="mt-4 text-end">
-                <button class="btn btn-primary me-2" onclick="openChat(${parseInt(student.id)})">
+            <div class="mt-4 d-flex flex-column flex-sm-row justify-content-sm-end gap-2">
+                <button class="btn btn-primary order-2 order-sm-1" onclick="openChat(${parseInt(student.id)})">
                     <i class="fas fa-comments me-1"></i>Send Message
                 </button>
-                <button class="btn btn-outline-success" onclick="getSuggestedResponses(${parseInt(student.id)})">
+                <button class="btn btn-outline-success order-1 order-sm-2" onclick="getSuggestedResponses(${parseInt(student.id)})">
                     <i class="fas fa-lightbulb me-1"></i>Get Suggestions
                 </button>
             </div>
