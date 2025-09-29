@@ -575,6 +575,11 @@ document.addEventListener('click', function(e) {
     if (e.target === highRiskOverlay) {
         closeHighRiskModal();
     }
+
+    const studentNavigationOverlay = document.getElementById('studentNavigationOverlay');
+    if (e.target === studentNavigationOverlay) {
+        closeStudentNavigationModal();
+    }
 });
 
 // HTML escape function to prevent XSS
