@@ -14,8 +14,13 @@
     z-index: 1050;
     display: flex;
     flex-direction: column;
-    overflow-y: hidden;
+    overflow-y: auto;
     backdrop-filter: blur(10px);
+}
+
+/* Disable scrolling in fullscreen mode */
+:root:fullscreen .sidebar {
+    overflow-y: hidden;
 }
 
 /* Sidebar Header */
@@ -381,14 +386,6 @@
     background: rgba(255, 255, 255, 0.5);
 }
 
-/* Make sidebar scrollable on small screens */
-@media (max-width: 1199px) {
-    .sidebar {
-        overflow-y: auto;
-        max-height: 100vh;
-        -webkit-overflow-scrolling: touch;
-    }
-}
 
 /* Animation for sidebar links */
 @keyframes slideInRight {
