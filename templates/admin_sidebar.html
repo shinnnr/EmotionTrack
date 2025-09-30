@@ -12,11 +12,32 @@
             <i class="fas fa-tachometer-alt"></i>
             <span>Dashboard</span>
         </a>
-        
+
         <a href="{{ url_for('admin.messages') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.messages' }}">
             <i class="fas fa-envelope"></i>
             <span>View Messages</span>
         </a>
+
+        <!-- Only show for faculty admins -->
+        {% if current_user.is_faculty_admin %}
+        <a href="{{ url_for('admin.my_students') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.my_students' }}">
+            <i class="fas fa-users"></i>
+            <span>My Students</span>
+        </a>
+
+        <a href="{{ url_for('admin.faculty_profile') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.faculty_profile' }}">
+            <i class="fas fa-user-cog"></i>
+            <span>Profile Settings</span>
+        </a>
+        {% endif %}
+
+        <!-- Only show Manage Faculty Admin for main admin -->
+        {% if current_user.username == 'admin@emotiontrack.app' %}
+        <a href="{{ url_for('admin.manage_faculty') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.manage_faculty' }}">
+            <i class="fas fa-users-cog"></i>
+            <span>Manage Faculty Admin</span>
+        </a>
+        {% endif %}
 
         <a href="{{ url_for('admin.view_alerts') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.view_alerts' }}">
             <i class="fas fa-exclamation-triangle"></i>
@@ -31,42 +52,21 @@
         </a>
         {% endif %}
 
-        <!-- Only show Profile Settings for faculty admins -->
-        {% if current_user.is_faculty_admin %}
-        <a href="{{ url_for('admin.my_students') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.my_students' }}">
-            <i class="fas fa-users"></i>
-            <span>My Students</span>
-        </a>
-        
-        <a href="{{ url_for('admin.faculty_profile') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.faculty_profile' }}">
-            <i class="fas fa-user-cog"></i>
-            <span>Profile Settings</span>
-        </a>
-        {% endif %}
-        
-        <!-- Only show Faculty Management for main admin -->
-        {% if current_user.username == 'admin@emotiontrack.app' %}
-        <a href="{{ url_for('admin.manage_faculty') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.manage_faculty' }}">
-            <i class="fas fa-users-cog"></i>
-            <span>Manage Faculty Admin</span>
-        </a>
-        {% endif %}
-        
         <button type="button" class="sidebar-link" onclick="exportData();">
             <i class="fas fa-download"></i>
             <span>Export Data</span>
         </button>
-        
+
         <button type="button" class="sidebar-link" onclick="viewAnalytics();">
             <i class="fas fa-chart-bar"></i>
             <span>Analytics</span>
         </button>
-        
+
         <button type="button" class="sidebar-link" onclick="generateReport();">
             <i class="fas fa-file-alt"></i>
             <span>Generate Report</span>
         </button>
-        
+
         <div class="sidebar-footer">
             <a href="{{ url_for('auth.logout') }}" class="sidebar-link logout-link" onclick="return confirm('Are you sure you want to logout?')">
                 <i class="fas fa-sign-out-alt"></i>
