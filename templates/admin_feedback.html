@@ -323,15 +323,15 @@ function showModal(modalId, size = '') {
         if (size) {
             modal.classList.add(size);
         }
-        modal.style.display = 'flex';
+        modal.classList.add('show');
         document.body.style.overflow = 'hidden';
-
-        // Mark body to indicate modal is open (but keep sidebar visible)
-        document.body.classList.add('modal-open');
 
         // Force modal above everything with maximum z-index
         modal.style.zIndex = '999999';
         modal.style.position = 'fixed';
+
+        // Mark body to indicate modal is open (but keep sidebar visible)
+        document.body.classList.add('modal-open');
     }
 }
 
