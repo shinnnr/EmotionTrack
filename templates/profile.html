@@ -470,12 +470,13 @@
     background: rgba(0, 0, 0, 0.5);
     z-index: 999999 !important;
     animation: fadeIn 0.3s ease;
+    padding: 60px 20px 20px 20px; /* Account for top navigation */
+    align-items: flex-start;
+    justify-content: center;
 }
 
 .custom-modal.show {
     display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .custom-modal-content {
@@ -643,12 +644,6 @@ body.modal-open {
 
 /* Mobile responsive design */
 @media (max-width: 768px) {
-    .custom-modal {
-        top: 4rem;
-        height: calc(100vh - 4rem);
-        align-items: flex-start;
-    }
-
     .custom-modal-content {
         margin: 1rem auto;
         max-width: calc(100vw - 2rem);
