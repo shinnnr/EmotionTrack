@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 // Show success message
-                showAlert('success', data.message);
+                showAlert(data.message, 'success');
                 updateSelectionState();
             } else {
                 showAlert('danger', data.message);
@@ -536,7 +536,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     row.remove();
-                    showAlert('success', data.message);
+                    showAlert(data.message, 'success');
                     updateSelectionState();
                 } else {
                     showAlert('danger', data.message);
@@ -549,32 +549,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Show alert messages
-    function showAlert(type, message) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        
-        // Safely set message content using textContent
-        alertDiv.textContent = message;
-        
-        // Create and append close button safely
-        const closeButton = document.createElement('button');
-        closeButton.type = 'button';
-        closeButton.className = 'btn-close';
-        closeButton.setAttribute('data-bs-dismiss', 'alert');
-        alertDiv.appendChild(closeButton);
-        
-        // Insert at top of container
-        const container = document.querySelector('.container-fluid');
-        container.insertBefore(alertDiv, container.firstChild);
-        
-        // Auto dismiss after 5 seconds
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.remove();
-            }
-        }, 5023);
-    }
+    // Show alert messages - using global showAlert function from admin.js
 
     // Initial state update
     updateSelectionState();
