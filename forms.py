@@ -42,7 +42,7 @@ class RegisterForm(FlaskForm):
     birthday = DateField('Birthday', validators=[DataRequired(), validate_birthday_not_future])
     gender = SelectField('Gender', choices=[('Male', 'Male'), ('Female', 'Female')])
     strand = SelectField('Strand', choices=[
-        ('STEM', 'STEM'), ('ABM', 'ABM'), ('HUMSS', 'HUMSS'),
+        ('STEM', 'STEM'), ('ABM', 'ABM'), ('HUMSS', 'HUMSS'), ('ASSH', 'ASSH'),
         ('GAS', 'GAS'), ('TVL', 'TVL')
     ])
     grade_level = SelectField('Grade Level', choices=[('11', 'Grade 11'), ('12', 'Grade 12')])
@@ -74,7 +74,7 @@ class ConsultationForm(FlaskForm):
 
 class FacultyProfileForm(FlaskForm):
     strand = SelectField('Strand', choices=[
-        ('STEM', 'STEM'), ('ABM', 'ABM'), ('HUMSS', 'HUMSS'),
+        ('STEM', 'STEM'), ('ABM', 'ABM'), ('HUMSS', 'HUMSS'), ('ASSH', 'ASSH'),
         ('GAS', 'GAS'), ('TVL', 'TVL')
     ], validators=[DataRequired()])
     grade_level = SelectField('Grade Level', choices=[('11', 'Grade 11'), ('12', 'Grade 12')], validators=[DataRequired()])
