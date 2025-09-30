@@ -97,7 +97,7 @@ class FeedbackForm(FlaskForm):
         ('3', '3 - Neutral'),
         ('4', '4 - Satisfied'),
         ('5', '5 - Very Satisfied')
-    ], validators=[DataRequired()])
+    ])
     subject = StringField('Subject', validators=[DataRequired(), Length(max=100)])
     message = TextAreaField('Your Feedback', validators=[DataRequired(), Length(max=1000)],
                            render_kw={"rows": 5, "placeholder": "Please share your thoughts, suggestions, or concerns..."})
