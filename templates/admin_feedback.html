@@ -219,22 +219,8 @@
 </div>
 
 <style>
-/* Custom Modal Styles */
-.custom-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 280px;
-    width: calc(100vw - 280px);
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1070;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 60px 20px 20px 20px;
-}
-
-#feedbackModal {
+/* Student Profile Modal - higher z-index to appear on top of other modals */
+#studentProfileOverlay {
     z-index: 1090;
 }
 
@@ -262,11 +248,11 @@
 }
 
 .custom-modal-header {
-    background: var(--clsu-green);
+    background: #0d6efd;
     color: white;
     padding: 1rem 1.5rem;
     display: flex;
-    justify-content: space-between;
+    justify-content: between;
     align-items: center;
 }
 
@@ -300,17 +286,70 @@
     overflow-x: hidden;
 }
 
+/* Suggested Responses Modal */
+.suggestions-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    padding-left: 300px; /* Account for sidebar width */
+}
+
+.suggestions-modal {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    position: relative;
+    animation: modalSlideIn 0.3s ease;
+}
+
+.suggestions-modal-header {
+    background: #198754;
+    color: white;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.suggestions-modal-body {
+    padding: 1.5rem;
+    max-height: calc(90vh - 80px);
+    overflow-y: auto;
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 991px) {
     .custom-modal-overlay {
-        left: 0;
-        width: 100%;
-        background: none;
-        padding: 20px;
+        padding-left: 20px;
     }
 
     .custom-modal {
         max-width: calc(100vw - 40px);
+    }
+
+    .suggestions-modal-overlay {
+        padding-left: 20px;
+    }
+}
+
+/* Mobile layout for admin header */
+@media (max-width: 768px) {
+    .admin-header .d-flex {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
     }
 }
 </style>
