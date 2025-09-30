@@ -163,7 +163,7 @@
 </div>
 
 <!-- Feedback Details Modal -->
-<div class="custom-modal-overlay" id="feedbackModal" style="display: none;">
+<div id="feedbackModal" class="custom-modal-overlay" style="display: none;">
     <div class="custom-modal modal-lg">
         <div class="custom-modal-header">
             <h5 class="custom-modal-title">
@@ -233,8 +233,8 @@
     justify-content: center;
     padding: 60px 20px 20px 300px; /* Account for sidebar width and top navigation */
 }
-/* Student Profile Modal - higher z-index to appear on top of other modals */
-#studentProfileOverlay {
+
+#feedbackModal {
     z-index: 1090;
 }
 
@@ -247,7 +247,6 @@
     max-height: 90vh;
     overflow: hidden;
     position: relative;
-    z-index: 1080;
     animation: modalSlideIn 0.3s ease;
 }
 
@@ -263,11 +262,11 @@
 }
 
 .custom-modal-header {
-    background: #0d6efd;
+    background: var(--clsu-green);
     color: white;
     padding: 1rem 1.5rem;
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -301,49 +300,6 @@
     overflow-x: hidden;
 }
 
-/* Suggested Responses Modal */
-.suggestions-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    padding-left: 300px; /* Account for sidebar width */
-}
-
-.suggestions-modal {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    width: 100%;
-    max-width: 900px;
-    max-height: 90vh;
-    overflow: hidden;
-    position: relative;
-    animation: modalSlideIn 0.3s ease;
-}
-
-.suggestions-modal-header {
-    background: #198754;
-    color: white;
-    padding: 1rem 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.suggestions-modal-body {
-    padding: 1.5rem;
-    max-height: calc(90vh - 80px);
-    overflow-y: auto;
-}
-
 /* Mobile responsive adjustments */
 @media (max-width: 991px) {
     .custom-modal-overlay {
@@ -352,19 +308,6 @@
 
     .custom-modal {
         max-width: calc(100vw - 40px);
-    }
-
-    .suggestions-modal-overlay {
-        padding-left: 20px;
-    }
-}
-
-/* Mobile layout for admin header */
-@media (max-width: 768px) {
-    .admin-header .d-flex {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 1rem !important;
     }
 }
 </style>
