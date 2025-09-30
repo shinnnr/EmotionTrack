@@ -1889,10 +1889,12 @@ def submit_feedback():
 
     form = FeedbackForm()
     if form.validate_on_submit():
+        # Convert rating to int if provided, else None
+        rating = int(form.rating.data) if form.rating.data else None
         feedback = StudentFeedback(
             user_id=current_user.id,
             feedback_type=form.feedback_type.data,
-            rating=form.rating.data,
+            rating=rating,
             subject=form.subject.data,
             message=form.message.data,
             is_anonymous=form.is_anonymous.data

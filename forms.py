@@ -91,13 +91,7 @@ class FeedbackForm(FlaskForm):
         ('bug_report', 'Bug Report'),
         ('satisfaction', 'Satisfaction Survey')
     ], validators=[DataRequired()])
-    rating = SelectField('Overall Rating (1-5)', choices=[
-        ('1', '1 - Very Dissatisfied'),
-        ('2', '2 - Dissatisfied'),
-        ('3', '3 - Neutral'),
-        ('4', '4 - Satisfied'),
-        ('5', '5 - Very Satisfied')
-    ])
+    rating = HiddenField('Overall Rating')
     subject = StringField('Subject', validators=[DataRequired(), Length(max=100)])
     message = TextAreaField('Your Feedback', validators=[DataRequired(), Length(max=1000)],
                            render_kw={"rows": 5, "placeholder": "Please share your thoughts, suggestions, or concerns..."})
