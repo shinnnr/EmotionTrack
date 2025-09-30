@@ -164,6 +164,7 @@
 
 <!-- Feedback View Modal -->
 <div id="feedbackModal" class="custom-modal">
+    <div class="custom-modal-backdrop"></div>
     <div class="custom-modal-content modal-lg">
         <div class="custom-modal-header">
             <h5 class="custom-modal-title">
@@ -238,9 +239,8 @@
     display: flex;
 }
 
-.custom-modal::before {
-    content: '';
-    position: absolute;
+.custom-modal-backdrop {
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
