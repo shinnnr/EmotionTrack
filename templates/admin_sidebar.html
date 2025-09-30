@@ -35,7 +35,7 @@
         {% if current_user.username == 'admin@emotiontrack.app' %}
         <a href="{{ url_for('admin.manage_faculty') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.manage_faculty' }}">
             <i class="fas fa-users-cog"></i>
-            <span>Manage Faculty Admin</span>
+            <span>Manage Faculty</span>
         </a>
         {% endif %}
 
