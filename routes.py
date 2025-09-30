@@ -1277,6 +1277,150 @@ def my_students():
                           assignment=assignment,
                           students_pagination=students_pagination)
 
+@admin_bp.route('/delete-alerts', methods=['POST'])
+@login_required
+def delete_alerts():
+    """Delete selected alerts"""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied.'})
+
+    try:
+        # Validate CSRF token
+        try:
+            validate_csrf(request.headers.get('X-CSRFToken'))
+        except ValidationError:
+            return jsonify({'success': False, 'message': 'CSRF token validation failed.'}), 400
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'Invalid request data.'})
+
+        alert_ids = data.get('alert_ids', [])
+
+        if not alert_ids:
+            return jsonify({'success': False, 'message': 'No alerts selected.'})
+
+        # Convert to integers and validate
+        try:
+            alert_ids = [int(id) for id in alert_ids]
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'message': 'Invalid alert IDs provided.'})
+
+        # Check access permissions based on admin type
+        accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+
+        # Get alerts that are accessible
+        accessible_alerts = GuidanceAlert.query.filter(
+            GuidanceAlert.id.in_(alert_ids),
+            GuidanceAlert.user_id.in_(accessible_student_ids)
+        ).all()
+
+        # Check if all requested alerts are accessible
+        accessible_ids = [alert.id for alert in accessible_alerts]
+        inaccessible_ids = [id for id in alert_ids if id not in accessible_ids]
+
+        if inaccessible_ids:
+            return jsonify({
+                'success': False,
+                'message': f'Access denied for some alerts. You can only delete alerts for students in your assigned section.'
+            })
+
+        if not accessible_alerts:
+            return jsonify({'success': False, 'message': 'No valid alerts found to delete.'})
+
+        # Delete the alerts
+        deleted_count = 0
+        for alert in accessible_alerts:
+            db.session.delete(alert)
+            deleted_count += 1
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Successfully deleted {deleted_count} alert(s).',
+            'deleted_count': deleted_count
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred while deleting alerts: {str(e)}'
+        })
+
+@admin_bp.route('/delete-feedback', methods=['POST'])
+@login_required
+def delete_feedback():
+    """Delete selected feedback"""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied.'})
+
+    try:
+        # Validate CSRF token
+        try:
+            validate_csrf(request.headers.get('X-CSRFToken'))
+        except ValidationError:
+            return jsonify({'success': False, 'message': 'CSRF token validation failed.'}), 400
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'Invalid request data.'})
+
+        feedback_ids = data.get('feedback_ids', [])
+
+        if not feedback_ids:
+            return jsonify({'success': False, 'message': 'No feedback selected.'})
+
+        # Convert to integers and validate
+        try:
+            feedback_ids = [int(id) for id in feedback_ids]
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'message': 'Invalid feedback IDs provided.'})
+
+        # Check access permissions based on admin type
+        accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+
+        # Get feedback that is accessible
+        accessible_feedback = StudentFeedback.query.filter(
+            StudentFeedback.id.in_(feedback_ids),
+            StudentFeedback.user_id.in_(accessible_student_ids)
+        ).all()
+
+        # Check if all requested feedback are accessible
+        accessible_ids = [feedback.id for feedback in accessible_feedback]
+        inaccessible_ids = [id for id in feedback_ids if id not in accessible_ids]
+
+        if inaccessible_ids:
+            return jsonify({
+                'success': False,
+                'message': f'Access denied for some feedback. You can only delete feedback for students in your assigned section.'
+            })
+
+        if not accessible_feedback:
+            return jsonify({'success': False, 'message': 'No valid feedback found to delete.'})
+
+        # Delete the feedback
+        deleted_count = 0
+        for feedback in accessible_feedback:
+            db.session.delete(feedback)
+            deleted_count += 1
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Successfully deleted {deleted_count} feedback item(s).',
+            'deleted_count': deleted_count
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred while deleting feedback: {str(e)}'
+        })
+
 @admin_bp.route('/delete-students', methods=['POST'])
 @login_required
 def delete_students():
