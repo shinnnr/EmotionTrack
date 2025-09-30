@@ -73,7 +73,7 @@
                                 {% for i in range(5, 0, -1) %}
                                     <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" class="d-none">
                                     <label for="star{{ i }}" class="star-label">
-                                        <i class="far fa-star"></i>
+                                        <i class="fas fa-star"></i>
                                     </label>
                                 {% endfor %}
                             </div>
@@ -128,24 +128,6 @@
     cursor: pointer;
     transition: color 0.2s;
 }
-
-input[type="radio"]:checked + .star-label {
-    color: #ffc107;
-}
-
-.star-label:hover ~ .star-label:before,
-.star-label:before {
-    content: "\f005";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-}
-
-input[type="radio"]:checked ~ .star-label:before {
-    content: "\f005";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    color: #ffc107;
-}
 </style>
 
 {% endblock %}
@@ -183,10 +165,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateStars(activeIndex) {
         stars.forEach((s, i) => {
+            const before = s.previousElementSibling.previousElementSibling; // input is before label, but wait
+            // Actually, since :before is pseudo, I can't control it with JS easily.
+            // Better to use CSS for hover too.
             if (i <= activeIndex) {
                 s.style.color = '#ffc107';
+                s.style.setProperty('--star-filled', 'block');
             } else {
                 s.style.color = '#ddd';
+                s.style.setProperty('--star-filled', 'none');
             }
         });
     }
