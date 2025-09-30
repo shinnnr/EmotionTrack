@@ -1278,6 +1278,7 @@ def my_students():
                           students_pagination=students_pagination)
 
 @admin_bp.route('/delete-alerts', methods=['POST'])
+@csrf.exempt
 @login_required
 def delete_alerts():
     """Delete selected alerts"""
@@ -1285,26 +1286,19 @@ def delete_alerts():
         return jsonify({'success': False, 'message': 'Access denied.'})
 
     try:
-        # Validate CSRF token
+        # Get alert IDs from form data
+        alert_ids_str = request.form.get('alert_ids')
+        if not alert_ids_str:
+            return jsonify({'success': False, 'message': 'No alerts selected.'})
+
+        # Parse comma-separated IDs
         try:
-            validate_csrf(request.headers.get('X-CSRFToken'))
-        except ValidationError:
-            return jsonify({'success': False, 'message': 'CSRF token validation failed.'}), 400
-
-        data = request.get_json()
-        if not data:
-            return jsonify({'success': False, 'message': 'Invalid request data.'})
-
-        alert_ids = data.get('alert_ids', [])
+            alert_ids = [int(id.strip()) for id in alert_ids_str.split(',') if id.strip()]
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'message': 'Invalid alert IDs provided.'})
 
         if not alert_ids:
             return jsonify({'success': False, 'message': 'No alerts selected.'})
-
-        # Convert to integers and validate
-        try:
-            alert_ids = [int(id) for id in alert_ids]
-        except (ValueError, TypeError):
-            return jsonify({'success': False, 'message': 'Invalid alert IDs provided.'})
 
         # Check access permissions based on admin type
         accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
@@ -1350,6 +1344,7 @@ def delete_alerts():
         })
 
 @admin_bp.route('/delete-feedback', methods=['POST'])
+@csrf.exempt
 @login_required
 def delete_feedback():
     """Delete selected feedback"""
@@ -1357,26 +1352,19 @@ def delete_feedback():
         return jsonify({'success': False, 'message': 'Access denied.'})
 
     try:
-        # Validate CSRF token
+        # Get feedback IDs from form data
+        feedback_ids_str = request.form.get('feedback_ids')
+        if not feedback_ids_str:
+            return jsonify({'success': False, 'message': 'No feedback selected.'})
+
+        # Parse comma-separated IDs
         try:
-            validate_csrf(request.headers.get('X-CSRFToken'))
-        except ValidationError:
-            return jsonify({'success': False, 'message': 'CSRF token validation failed.'}), 400
-
-        data = request.get_json()
-        if not data:
-            return jsonify({'success': False, 'message': 'Invalid request data.'})
-
-        feedback_ids = data.get('feedback_ids', [])
+            feedback_ids = [int(id.strip()) for id in feedback_ids_str.split(',') if id.strip()]
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'message': 'Invalid feedback IDs provided.'})
 
         if not feedback_ids:
             return jsonify({'success': False, 'message': 'No feedback selected.'})
-
-        # Convert to integers and validate
-        try:
-            feedback_ids = [int(id) for id in feedback_ids]
-        except (ValueError, TypeError):
-            return jsonify({'success': False, 'message': 'Invalid feedback IDs provided.'})
 
         # Check access permissions based on admin type
         accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
