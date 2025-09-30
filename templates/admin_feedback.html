@@ -248,6 +248,11 @@
     padding: 60px 20px 20px 300px; /* Account for sidebar width and top navigation */
 }
 
+/* Modal open state - disable body scroll */
+body.modal-open {
+    overflow: hidden;
+}
+
 .custom-modal {
     background: white;
     border-radius: 10px;
@@ -512,6 +517,9 @@ async function viewFeedback(feedbackId) {
     `;
     modal.style.display = 'flex';
 
+    // Disable body scroll
+    document.body.classList.add('modal-open');
+
     try {
         const response = await fetch(`/admin/api/feedback/${feedbackId}`);
         const data = await response.json();
@@ -569,6 +577,8 @@ async function viewFeedback(feedbackId) {
 
 function closeFeedbackModal() {
     document.getElementById('feedbackModal').style.display = 'none';
+    // Re-enable body scroll
+    document.body.classList.remove('modal-open');
 }
 </script>
 {% endblock %}

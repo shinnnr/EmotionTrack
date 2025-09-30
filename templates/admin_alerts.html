@@ -247,6 +247,11 @@
     padding: 60px 20px 20px 300px; /* Account for sidebar width and top navigation */
 }
 
+/* Modal open state - disable body scroll */
+body.modal-open {
+    overflow: hidden;
+}
+
 .custom-modal {
     background: white;
     border-radius: 10px;
@@ -382,6 +387,9 @@ async function viewAlert(alertId) {
     `;
     modal.style.display = 'flex';
 
+    // Disable body scroll
+    document.body.classList.add('modal-open');
+
     try {
         const response = await fetch(`/admin/api/alert/${alertId}`);
         const data = await response.json();
@@ -452,6 +460,8 @@ async function viewAlert(alertId) {
 
 function closeAlertModal() {
     document.getElementById('alertModal').style.display = 'none';
+    // Re-enable body scroll
+    document.body.classList.remove('modal-open');
 }
 
 async function resolveAlert(alertId) {
