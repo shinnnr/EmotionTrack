@@ -643,24 +643,28 @@ body.modal-open {
 
 /* Mobile responsive design */
 @media (max-width: 768px) {
-    .custom-modal-content {
-        margin: 1rem;
-        max-width: calc(100vw - 2rem);
-        margin-left: 1rem;
-        margin-right: 1rem;
+    .custom-modal {
+        top: 4rem;
+        height: calc(100vh - 4rem);
+        align-items: flex-start;
     }
-    
+
+    .custom-modal-content {
+        margin: 1rem auto;
+        max-width: calc(100vw - 2rem);
+    }
+
     .action-card {
         height: 130px;
         padding: 1.25rem 1rem;
     }
-    
+
     .action-icon {
         width: 40px;
         height: 40px;
         font-size: 1rem;
     }
-    
+
     .action-arrow {
         width: 16px;
         font-size: 0.75rem;
