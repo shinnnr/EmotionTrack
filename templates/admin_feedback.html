@@ -393,7 +393,13 @@ async function viewFeedback(feedbackId) {
 
     try {
         const response = await fetch(`/admin/api/feedback/${feedbackId}`);
-        const feedback = await response.json();
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Failed to load feedback details');
+        }
+
+        const feedback = data;
 
         document.getElementById('feedbackStudent').textContent = feedback.user.full_name + ' (LRN: ' + feedback.user.username + ')';
         document.getElementById('feedbackType').textContent = feedback.feedback_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
