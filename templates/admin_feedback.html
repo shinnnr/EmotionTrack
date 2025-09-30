@@ -312,7 +312,7 @@ function showModal(modalId, size = '') {
 
         // Add click outside to close modal
         const closeOnOutsideClick = (e) => {
-            if (e.target === modal) {
+            if (!modal.contains(e.target)) {
                 closeModal(modalId);
                 document.removeEventListener('click', closeOnOutsideClick);
             }
