@@ -1842,6 +1842,38 @@ def get_feedback_details(feedback_id):
         'responded_at': convert_to_manila_time(feedback.responded_at).isoformat() if feedback.responded_at else None
     })
 
+@admin_bp.route('/api/alert/<int:alert_id>')
+@login_required
+def get_alert_details(alert_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    alert = GuidanceAlert.query.get_or_404(alert_id)
+
+    # Check if admin can access this alert (based on student access)
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+    if alert.user_id not in accessible_student_ids:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    user_info = {
+        'id': alert.user.id,
+        'full_name': alert.user.full_name,
+        'username': alert.user.username
+    }
+
+    return jsonify({
+        'success': True,
+        'id': alert.id,
+        'user': user_info,
+        'alert_type': alert.alert_type,
+        'severity': alert.severity,
+        'title': alert.title,
+        'message': alert.message,
+        'is_resolved': alert.is_resolved,
+        'resolved_at': convert_to_manila_time(alert.resolved_at).isoformat() if alert.resolved_at else None,
+        'created_at': convert_to_manila_time(alert.created_at).isoformat() if alert.created_at else None
+    })
+
 @admin_bp.route('/feedback/<int:feedback_id>/respond', methods=['POST'])
 @login_required
 def respond_to_feedback(feedback_id):

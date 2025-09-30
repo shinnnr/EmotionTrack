@@ -77,7 +77,7 @@
                             <tbody>
                                 {% for alert in alerts %}
                                 <tr class="{{ 'table-warning' if not alert.is_resolved else '' }}">
-                                    <td>
+                                    <td class="student-cell" onclick="viewAlert({{ alert.id }})">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-sm me-3">
                                                 <div class="avatar-title rounded-circle bg-primary text-white">
@@ -159,7 +159,238 @@
     </div>
 </div>
 
+<!-- Alert Details Modal -->
+<div class="custom-modal-overlay" id="alertModal" style="display: none;">
+    <div class="custom-modal">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-exclamation-triangle me-2"></i>Alert Details
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeAlertModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body" id="alertContent">
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading alert...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Avatar Styles */
+.avatar-title {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+/* Custom Modal Styles */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1070;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px 20px 300px; /* Account for sidebar width and top navigation */
+}
+
+.custom-modal {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: calc(100vw - 350px);
+    max-height: 90vh;
+    overflow: hidden;
+    position: relative;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-modal-header {
+    background: var(--clsu-green);
+    color: white;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    flex-grow: 1;
+}
+
+.custom-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin: -0.5rem;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+}
+
+.custom-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.custom-modal-body {
+    padding: 1.5rem;
+    max-height: calc(90vh - 80px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 991px) {
+    .custom-modal-overlay {
+        padding-left: 20px;
+    }
+
+    .custom-modal {
+        max-width: calc(100vw - 40px);
+    }
+}
+
+/* Mobile table responsiveness */
+@media (max-width: 767px) {
+    .table-responsive {
+        overflow: visible;
+    }
+
+    th:nth-child(n+2), td:nth-child(n+2) {
+        display: none;
+    }
+
+    .student-cell {
+        cursor: pointer;
+    }
+
+    .student-cell:hover {
+        background-color: #f8f9fa;
+    }
+}
+</style>
+
 <script>
+let currentAlertId = null;
+
+async function viewAlert(alertId) {
+    currentAlertId = alertId;
+
+    // Show loading
+    const modal = document.getElementById('alertModal');
+    const content = document.getElementById('alertContent');
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading alert...</p>
+        </div>
+    `;
+    modal.style.display = 'flex';
+
+    try {
+        const response = await fetch(`/admin/api/alert/${alertId}`);
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Failed to load alert details');
+        }
+
+        const alert = data;
+
+        // Populate content
+        content.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label fw-bold">Student:</label>
+                <div class="p-2 bg-light rounded">${alert.user.full_name} (LRN: ${alert.user.username})</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Alert Type:</label>
+                <div class="p-2 bg-light rounded">${alert.alert_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Severity:</label>
+                <div class="p-2 bg-light rounded">
+                    ${alert.severity === 'critical' ? '<span class="badge bg-danger">Critical</span>' :
+                      alert.severity === 'high' ? '<span class="badge bg-warning">High</span>' :
+                      alert.severity === 'medium' ? '<span class="badge bg-info">Medium</span>' :
+                      '<span class="badge bg-light text-dark">Low</span>'}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Message:</label>
+                <div class="p-3 bg-light rounded">${alert.message}</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Date:</label>
+                <div class="p-2 bg-light rounded">${new Date(alert.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Status:</label>
+                <div class="p-2 bg-light rounded">
+                    ${alert.is_resolved ? '<span class="badge bg-success">Resolved</span>' : '<span class="badge bg-warning">Active</span>'}
+                    ${alert.resolved_at ? '<br><small class="text-muted">Resolved on ' + new Date(alert.resolved_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</small>' : ''}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeAlertModal()">Close</button>
+                ${!alert.is_resolved ? `<button type="button" class="btn btn-success" onclick="resolveAlert(${alert.id})">Resolve Alert</button>` : ''}
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading alert:', error);
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Alert</h5>
+                <p class="text-muted">Failed to load alert details. Please try again.</p>
+                <button class="btn btn-secondary" onclick="closeAlertModal()">Close</button>
+            </div>
+        `;
+    }
+}
+
+function closeAlertModal() {
+    document.getElementById('alertModal').style.display = 'none';
+}
+
 async function resolveAlert(alertId) {
     if (!confirm('Are you sure you want to resolve this alert?')) return;
 
