@@ -252,6 +252,7 @@
 @media (min-width: 992px) {
     .sidebar {
         transform: translateX(0) !important;
+        overflow-y: auto;
     }
     
     .sidebar-toggle {
