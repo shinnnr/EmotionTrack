@@ -321,8 +321,8 @@
         overflow: visible;
     }
 
-    /* Hide all columns except Student (2nd column) */
-    th:not(:nth-child(2)), td:not(:nth-child(2)) {
+    /* Hide all columns except Checkbox (1st) and Student (2nd column) */
+    th:nth-child(n+3), td:nth-child(n+3) {
         display: none !important;
     }
 
