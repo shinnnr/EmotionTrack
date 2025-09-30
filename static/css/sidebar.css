@@ -203,7 +203,7 @@
 }
 
 /* Mobile Responsive */
-@media (max-width: 991px) {
+@media (max-width: 990px) {
     .sidebar {
         transform: translateX(-100%);
         z-index: 1055;
@@ -259,19 +259,19 @@
     }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 991px) {
     .sidebar {
         transform: translateX(0) !important;
     }
-    
+
     .sidebar-toggle {
         display: none !important;
     }
-    
+
     .sidebar-overlay {
         display: none !important;
     }
-    
+
     .main-content.with-sidebar {
         margin-left: var(--sidebar-width);
     }
