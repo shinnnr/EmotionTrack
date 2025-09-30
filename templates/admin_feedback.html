@@ -323,7 +323,7 @@ function showModal(modalId, size = '') {
         if (size) {
             modal.classList.add(size);
         }
-        modal.classList.add('show');
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
 
         // Force modal above everything with maximum z-index
