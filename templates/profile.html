@@ -27,7 +27,7 @@
                     </h5>
                     
                     <div class="row">
-                        <div class="col-lg-6">
+                        <div class="col-lg-6" style="border-right: 1px solid #f1f3f4;">
                             <div class="profile-info">
                                 <div class="info-item mb-3">
                                     <label class="fw-bold text-muted small">Full Name</label>
@@ -644,23 +644,42 @@ body.modal-open {
 /* Mobile responsive design */
 @media (max-width: 768px) {
     .custom-modal-content {
-        margin: 1rem;
-        max-width: calc(100vw - 2rem);
-        margin-left: 1rem;
-        margin-right: 1rem;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        max-height: 80vh;
+        border-radius: 12px 12px 0 0;
+        margin: 0;
     }
-    
+
+    .custom-modal {
+        align-items: flex-end;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     .action-card {
         height: 130px;
         padding: 1.25rem 1rem;
     }
-    
+
     .action-icon {
         width: 40px;
         height: 40px;
         font-size: 1rem;
     }
-    
+
     .action-arrow {
         width: 16px;
         font-size: 0.75rem;
@@ -737,13 +756,20 @@ function showModal(modalId, size = '') {
         }
         modal.classList.add('show');
         document.body.style.overflow = 'hidden';
-        
+
         // Force modal above everything with maximum z-index
         modal.style.zIndex = '999999';
         modal.style.position = 'fixed';
-        
+
         // Mark body to indicate modal is open (but keep sidebar visible)
         document.body.classList.add('modal-open');
+
+        // Add background click to close
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal(modalId);
+            }
+        });
     }
 }
 
@@ -769,7 +795,7 @@ function createModal(title, content, size = '') {
     modal.className = 'custom-modal';
     modal.style.zIndex = '999999'; // Force above everything
     modal.style.position = 'fixed';
-    
+
     modal.innerHTML = `
         <div class="custom-modal-content ${size}">
             <div class="custom-modal-header">
@@ -783,10 +809,17 @@ function createModal(title, content, size = '') {
             </div>
         </div>
     `;
-    
+
     document.getElementById('customModalContainer').appendChild(modal);
     showModal(modalId);
-    
+
+    // Add background click to close
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal(modalId);
+        }
+    });
+
     // Auto-remove modal after closing
     setTimeout(() => {
         modal.addEventListener('transitionend', () => {
@@ -795,7 +828,7 @@ function createModal(title, content, size = '') {
             }
         });
     }, 100);
-    
+
     return modalId;
 }
 
