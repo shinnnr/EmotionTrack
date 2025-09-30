@@ -2146,12 +2146,13 @@ window.clearAnalyticsFilters = function() {
 }
 
 function initializeRealTimeUpdates() {
-    // Set up real-time updates for the dashboard
-    setInterval(refreshDashboardStats, 60000); // Update every minute
-    
-    // Setup WebSocket connection for real-time updates (if available)
-    if ('WebSocket' in window) {
+    // Setup WebSocket connection for real-time updates
+    if (typeof io !== 'undefined') {
         setupWebSocketConnection();
+    } else {
+        console.warn('Socket.IO not loaded, falling back to polling');
+        // Fallback to polling if Socket.IO is not available
+        setInterval(refreshDashboardStats, 60000); // Update every minute
     }
 }
 
@@ -2186,9 +2187,46 @@ function updateStatCard(type, newValue) {
 }
 
 function setupWebSocketConnection() {
-    // WebSocket setup for real-time notifications
-    // This would connect to a WebSocket server for live updates
-    console.log('WebSocket connection would be established here for real-time updates');
+    // Initialize Socket.IO connection
+    const socket = io();
+
+    // Join admin dashboard room when connected
+    socket.on('connect', function() {
+        console.log('Connected to server, joining admin dashboard room');
+        socket.emit('join_admin_dashboard');
+    });
+
+    // Listen for dashboard stats updates
+    socket.on('dashboard_stats_update', function(data) {
+        console.log('Received dashboard stats update:', data);
+        // Refresh dashboard stats when update is received
+        refreshDashboardStats();
+    });
+
+    // Handle connection errors
+    socket.on('connect_error', function(error) {
+        console.error('Socket.IO connection error:', error);
+        // Fallback to polling if WebSocket fails
+        if (!window.fallbackPollingStarted) {
+            console.log('Starting fallback polling due to WebSocket connection failure');
+            window.fallbackPollingStarted = true;
+            setInterval(refreshDashboardStats, 60000); // Update every minute
+        }
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', function(reason) {
+        console.log('Socket.IO disconnected:', reason);
+        // Start polling if not already started
+        if (!window.fallbackPollingStarted) {
+            console.log('Starting polling due to disconnection');
+            window.fallbackPollingStarted = true;
+            setInterval(refreshDashboardStats, 60000); // Update every minute
+        }
+    });
+
+    // Store socket instance globally for potential cleanup
+    window.adminSocket = socket;
 }
 
 // Utility functions for admin dashboard

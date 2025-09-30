@@ -6,12 +6,11 @@ from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import validate_csrf, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
-from app import db, csrf
-from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, get_current_time, convert_to_manila_time
 import pytz
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm, FeedbackForm
-from coping_recommendations import get_user_coping_recommendations, get_user_motivational_quote
-from alert_templates import get_alert_template, get_severity_level
+# Models will be imported lazily to avoid circular imports
+
+# Import models and app components inside functions to avoid circular imports
 
 # Create blueprints
 main_bp = Blueprint('main', __name__)
@@ -19,19 +18,29 @@ auth_bp = Blueprint('auth', __name__)
 api_bp = Blueprint('api', __name__)
 admin_bp = Blueprint('admin', __name__)
 
+def emit_dashboard_stats_update():
+    """Emit dashboard stats update to all admin users"""
+    try:
+        from app import socketio
+        socketio.emit('dashboard_stats_update', {}, to='admin_dashboard')
+    except Exception as e:
+        print(f"Error emitting dashboard stats update: {e}")
+
 # Helper functions for faculty admin access control
 def get_faculty_assignment(user):
     """Get the class assignment for a faculty admin user"""
+    from models import ClassAssignment
     if not user.is_admin:
         return None
     return ClassAssignment.query.filter_by(faculty_id=user.id).first()
 
 def get_students_for_faculty(user):
     """Get students that a faculty admin can access based on their assignment"""
+    from models import User
     # Main admin can see all students
     if user.username == 'admin@emotiontrack.app':
         return User.query.filter_by(is_admin=False)
-    
+
     # Faculty admin can only see students in their assigned section
     assignment = get_faculty_assignment(user)
     if assignment:
@@ -40,7 +49,7 @@ def get_students_for_faculty(user):
             User.section == assignment.section,
             User.is_admin == False
         )
-    
+
     # If no assignment, return empty query
     return User.query.filter(User.id == -1)  # Impossible condition to return empty
 
@@ -61,10 +70,10 @@ def index():
 def home():
     if current_user.is_admin:
         return redirect(url_for('admin.dashboard'))
-    
+
     # Get recent mood logs for user
     recent_logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(desc(MoodLog.log_date)).limit(5).all()
-    
+
     # Get latest DASS-21 result
     latest_dass = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).first()
     
@@ -271,6 +280,8 @@ def get_dass21_results():
 @main_bp.route('/emotion-log', methods=['GET', 'POST'])
 @login_required
 def emotion_log():
+    from models import MoodLog, db
+    from app import socketio
     form = EmotionLogForm()
     
     # Check DASS-21 status (weekly assessment)
@@ -360,6 +371,9 @@ def emotion_log():
                 print(f"Error generating alerts for mood log: {e}")
                 # Don't fail the mood log submission if alert generation fails
 
+            # Emit real-time dashboard stats update
+            emit_dashboard_stats_update()
+
             flash('Mood log saved successfully!', 'success')
 
             return redirect(url_for('main.home'))
@@ -430,6 +444,8 @@ def dass21_quiz():
 @main_bp.route('/process-dass21', methods=['POST'])
 @login_required
 def process_dass21():
+    from models import DASS21Result, db
+    from app import socketio
     try:
         # DASS-21 item mappings
         depression_items = [3, 5, 10, 13, 16, 17, 21]
@@ -496,6 +512,9 @@ def process_dass21():
             print(f"Error generating alerts for DASS-21: {e}")
             # Don't fail the DASS-21 submission if alert generation fails
 
+        # Emit real-time dashboard stats update
+        emit_dashboard_stats_update()
+
         return render_template('dass21_results.html',
                               depression_score=depression_final,
                               anxiety_score=anxiety_final,
@@ -513,46 +532,58 @@ def process_dass21():
 @main_bp.route('/consultation', methods=['GET', 'POST'])
 @login_required
 def consultation():
+    from app import db, socketio
+    from models import StudentMessage, convert_to_manila_time
+
     form = ConsultationForm()
-    
+
     if form.validate_on_submit():
         # Get conversation type from request
         conversation_type = request.form.get('conversation_type', 'guidance_office')
-        
+
         message = StudentMessage()
         message.sender_user_id = current_user.id
         message.message_text = form.message_text.data
         message.conversation_type = conversation_type
         db.session.add(message)
         db.session.commit()
-        
+
+        # Emit WebSocket event for real-time updates
+        room_name = f"consultation_{conversation_type}_{current_user.id}"
+        socketio.emit('new_student_message', {
+            'id': message.id,
+            'message_text': message.message_text,
+            'conversation_type': message.conversation_type,
+            'created_at': convert_to_manila_time(message.created_at).isoformat() if message.created_at else None
+        }, to=room_name)
+
         type_label = 'Guidance Office' if conversation_type == 'guidance_office' else 'Faculty Adviser'
         flash(f'Your message has been sent to {type_label}.', 'success')
         return redirect(url_for('main.consultation'))
-    
+
     # Get user's previous messages separated by conversation type
     guidance_messages = StudentMessage.query.filter_by(
-        sender_user_id=current_user.id, 
+        sender_user_id=current_user.id,
         conversation_type='guidance_office'
     ).order_by(StudentMessage.created_at).all()
-    
+
     faculty_messages = StudentMessage.query.filter_by(
-        sender_user_id=current_user.id, 
+        sender_user_id=current_user.id,
         conversation_type='faculty_adviser'
     ).order_by(StudentMessage.created_at).all()
-    
+
     # Mark all admin responses as read by the student when they visit this page
     all_messages = guidance_messages + faculty_messages
     for message in all_messages:
         if message.admin_response and not message.is_response_read_by_student:
             message.is_response_read_by_student = True
     db.session.commit()
-    
+
     messages = {
         'guidance_office': guidance_messages,
         'faculty_adviser': faculty_messages
     }
-    
+
     return render_template('consultation.html', form=form, messages=messages)
 
 @main_bp.route('/consultation/poll-messages', methods=['GET'])
@@ -967,32 +998,43 @@ def messages():
 def respond_message(message_id):
     if not current_user.is_admin:
         return jsonify({'success': False, 'message': 'Access denied'})
-    
+
     message = StudentMessage.query.get_or_404(message_id)
     response_text = request.form.get('response_text')
-    
+
     # Check if admin can respond to this conversation type
     is_main_admin = current_user.username == 'admin@emotiontrack.app'
     allowed_conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
-    
+
     if message.conversation_type != allowed_conversation_type:
         return jsonify({'success': False, 'message': 'Access denied. You can only respond to your conversation type.'})
-    
+
     # Check if faculty admin can access this student
     if not is_main_admin:
         accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
         if message.sender_user_id not in accessible_student_ids:
             return jsonify({'success': False, 'message': 'Access denied. You can only respond to students in your advisory section.'})
-    
+
     if response_text:
         message.admin_response = response_text
         message.is_read = True
         message.responded_by_admin_id = current_user.id
         message.responded_at = get_current_time()
         db.session.commit()
-        
+
+        # Emit WebSocket event for real-time updates to student
+        from app import socketio
+        room_name = f"consultation_{message.conversation_type}_{message.sender_user_id}"
+        socketio.emit('new_admin_response', {
+            'id': message.id,
+            'admin_response': message.admin_response,
+            'conversation_type': message.conversation_type,
+            'responded_at': convert_to_manila_time(message.responded_at).isoformat() if message.responded_at else None,
+            'responded_by_admin_id': message.responded_by_admin_id
+        }, to=room_name)
+
         return jsonify({'success': True, 'message': 'Response sent successfully'})
-    
+
     return jsonify({'success': False, 'message': 'Response text is required'})
 
 @admin_bp.route('/student-chat/<int:user_id>')
@@ -1490,30 +1532,30 @@ def delete_students():
 def send_message(user_id):
     if not current_user.is_admin:
         return jsonify({'success': False, 'message': 'Access denied'})
-    
+
     student = User.query.get_or_404(user_id)
     if student.is_admin:
         return jsonify({'success': False, 'message': 'Cannot message admin users'})
-    
+
     message_text = request.form.get('message_text')
     if not message_text or not message_text.strip():
         return jsonify({'success': False, 'message': 'Message text is required'})
-    
+
     # Add safeguard against automatic sending - require explicit manual confirmation
     manual_send = request.form.get('manual_send')
     if manual_send != 'true':
         return jsonify({'success': False, 'message': 'Manual confirmation required to prevent automatic sending'})
-    
+
     # Determine conversation type based on admin role
     is_main_admin = current_user.username == 'admin@emotiontrack.app'
     conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
-    
+
     # Check if faculty admin can access this student
     if not is_main_admin:
         accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
         if student.id not in accessible_student_ids:
             return jsonify({'success': False, 'message': 'Access denied. You can only message students in your advisory section.'})
-    
+
     # Create a new message from admin to student
     # We'll use the same StudentMessage model but indicate it's from admin
     message = StudentMessage()
@@ -1524,10 +1566,21 @@ def send_message(user_id):
     message.responded_by_admin_id = current_user.id
     message.is_read = True
     message.responded_at = get_current_time()
-    
+
     db.session.add(message)
     db.session.commit()
-    
+
+    # Emit WebSocket event for real-time updates to student
+    from app import socketio
+    room_name = f"consultation_{conversation_type}_{user_id}"
+    socketio.emit('new_admin_response', {
+        'id': message.id,
+        'admin_response': message.admin_response,
+        'conversation_type': message.conversation_type,
+        'responded_at': convert_to_manila_time(message.responded_at).isoformat() if message.responded_at else None,
+        'responded_by_admin_id': message.responded_by_admin_id
+    }, to=room_name)
+
     return jsonify({'success': True, 'message': 'Message sent successfully'})
 
 @admin_bp.route('/poll-student-messages/<int:user_id>', methods=['GET'])
@@ -1802,6 +1855,8 @@ def generate_guidance_alerts(user_id=None):
 
     if alerts_created:
         db.session.commit()
+        # Emit real-time dashboard stats update when alerts are created
+        emit_dashboard_stats_update()
 
     return alerts_created
 
