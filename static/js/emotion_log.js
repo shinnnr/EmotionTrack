@@ -698,12 +698,24 @@ function updateSaveButtonState() {
     const submitButton = document.getElementById('saveMoodLogBtn');
     const completionMessage = document.getElementById('completionMessage');
     const form = document.getElementById('emotionForm');
-    
+
     if (!submitButton || !completionMessage || !form) {
         console.warn('Missing elements for save button validation');
         return;
     }
-    
+
+    // Check if DASS-21 assessment is available
+    const dassAlert = document.querySelector('.alert.alert-info');
+    if (dassAlert && dassAlert.textContent.includes('Mental Wellness Assessment Available')) {
+        submitButton.disabled = true;
+        submitButton.classList.add('btn-secondary');
+        submitButton.classList.remove('btn-clsu-green');
+        completionMessage.textContent = 'Please take the DASS-21 Assessment first.';
+        completionMessage.classList.add('text-muted');
+        completionMessage.classList.remove('text-success');
+        return;
+    }
+
     // Check if all required fields are filled
     const sleepInput = form.querySelector('input[name="sleep"]');
     const energyInput = form.querySelector('input[name="energy"]');
