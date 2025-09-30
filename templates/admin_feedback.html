@@ -74,7 +74,7 @@
                             <tbody>
                                 {% for feedback in feedback_items %}
                                 <tr>
-                                    <td>
+                                    <td class="student-cell" onclick="viewFeedback({{ feedback.id }})">
                                         {% if feedback.is_anonymous %}
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-3">
@@ -185,6 +185,16 @@
 </div>
 
 <style>
+/* Avatar Styles */
+.avatar-title {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
 /* Custom Modal Styles */
 .custom-modal-overlay {
     position: fixed;
@@ -270,6 +280,25 @@
 
     .custom-modal {
         max-width: calc(100vw - 40px);
+    }
+}
+
+/* Mobile table responsiveness */
+@media (max-width: 767px) {
+    .table-responsive {
+        overflow: visible;
+    }
+
+    th:nth-child(n+2), td:nth-child(n+2) {
+        display: none;
+    }
+
+    .student-cell {
+        cursor: pointer;
+    }
+
+    .student-cell:hover {
+        background-color: #f8f9fa;
     }
 }
 </style>
