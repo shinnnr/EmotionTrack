@@ -46,6 +46,32 @@
         </div>
     </div>
 
+    <!-- Delete Selected Panel -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="selection-controls">
+                            <div class="form-check d-inline-block me-3">
+                                <input class="form-check-input" type="checkbox" id="selectAllFeedback">
+                                <label class="form-check-label fw-bold" for="selectAllFeedback">
+                                    Select All Feedback
+                                </label>
+                            </div>
+                            <span class="text-muted" id="feedbackSelectionCount">0 feedback selected</span>
+                        </div>
+                        <div class="action-controls">
+                            <button class="btn btn-danger" id="deleteSelectedFeedbackBtn" disabled>
+                                <i class="fas fa-trash me-2"></i>Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Feedback List -->
     <div class="row">
         <div class="col-12">
@@ -62,6 +88,11 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
+                                    <th>
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input" type="checkbox" id="headerSelectAllFeedback">
+                                        </div>
+                                    </th>
                                     <th>Student</th>
                                     <th>Type</th>
                                     <th>Subject</th>
@@ -73,6 +104,7 @@
                             <tbody>
                                 {% for feedback in feedback_items %}
                                 <tr>
+                                    <td><input type="checkbox" class="feedback-checkbox" value="{{ feedback.id }}" onchange="updateFeedbackDeletePanel()"></td>
                                     <td class="student-cell" onclick="viewFeedback({{ feedback.id }})">
                                         {% if feedback.is_anonymous %}
                                             <div class="d-flex align-items-center">
@@ -187,6 +219,20 @@
     border-radius: 50%;
 }
 
+.selection-controls {
+    display: flex;
+    align-items: center;
+}
+
+.action-controls .btn {
+    transition: all 0.3s ease;
+}
+
+.action-controls .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Custom Modal Styles */
 .custom-modal-overlay {
     position: fixed;
@@ -281,8 +327,9 @@
         overflow: visible;
     }
 
-    th:nth-child(n+2), td:nth-child(n+2) {
-        display: none;
+    /* Hide all columns except Checkbox (1st) and Student (2nd column) */
+    th:nth-child(n+3), td:nth-child(n+3) {
+        display: none !important;
     }
 
     .student-cell {
@@ -292,8 +339,159 @@
     .student-cell:hover {
         background-color: #f8f9fa;
     }
+
+    /* Make student column full width on mobile */
+    .table td:nth-child(2) {
+        width: 100% !important;
+        padding: 1rem !important;
+        position: relative !important;
+    }
+
+    /* Adjust card body padding on mobile */
+    .card-body {
+        padding: 1rem !important;
+    }
+
+    .container-fluid {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+
+    /* Mobile layout for search bar */
+    .input-group {
+        margin-bottom: 1rem !important;
+    }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFeedbackManagement();
+});
+
+function initializeFeedbackManagement() {
+    const selectAllCheckbox = document.getElementById('selectAllFeedback');
+    const headerSelectAllCheckbox = document.getElementById('headerSelectAllFeedback');
+    const feedbackCheckboxes = document.querySelectorAll('.feedback-checkbox');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedFeedbackBtn');
+    const selectionCount = document.getElementById('feedbackSelectionCount');
+
+    // Update selection count and button state
+    function updateSelectionState() {
+        const checkedBoxes = document.querySelectorAll('.feedback-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        selectionCount.textContent = count === 1 ? '1 feedback selected' : `${count} feedback selected`;
+        deleteSelectedBtn.disabled = count === 0;
+
+        // Update select all checkbox states
+        const allChecked = count === feedbackCheckboxes.length && count > 0;
+        const someChecked = count > 0;
+
+        selectAllCheckbox.checked = allChecked;
+        selectAllCheckbox.indeterminate = someChecked && !allChecked;
+        headerSelectAllCheckbox.checked = allChecked;
+        headerSelectAllCheckbox.indeterminate = someChecked && !allChecked;
+    }
+
+    // Handle select all functionality
+    function toggleSelectAll(checked) {
+        feedbackCheckboxes.forEach(checkbox => {
+            checkbox.checked = checked;
+        });
+        updateSelectionState();
+    }
+
+    // Event listeners
+    selectAllCheckbox.addEventListener('change', function() {
+        toggleSelectAll(this.checked);
+    });
+
+    headerSelectAllCheckbox.addEventListener('change', function() {
+        toggleSelectAll(this.checked);
+    });
+
+    feedbackCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectionState);
+    });
+
+    // Delete selected feedback
+    deleteSelectedBtn.addEventListener('click', function() {
+        const checkedBoxes = document.querySelectorAll('.feedback-checkbox:checked');
+        if (checkedBoxes.length === 0) return;
+
+        // Build confirmation message with feedback details
+        let confirmMessage = 'Are you sure you want to delete the following feedback(s)?\n\n';
+        const feedbackDetails = [];
+
+        checkedBoxes.forEach(checkbox => {
+            const row = checkbox.closest('tr');
+            const studentName = row.cells[1].textContent.trim().split('\n')[0]; // Get student name
+            const feedbackType = row.cells[2].textContent.trim();
+            feedbackDetails.push(`${studentName} (${feedbackType})`);
+            confirmMessage += '• ' + studentName + ' - ' + feedbackType + '\n';
+        });
+
+        confirmMessage += '\nThis action cannot be undone.';
+
+        // Use native confirm dialog
+        if (confirm(confirmMessage)) {
+            performGroupDeleteFeedback(checkedBoxes);
+        }
+    });
+
+    // Function to perform group delete
+    function performGroupDeleteFeedback(checkedBoxes) {
+        const feedbackIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+        // Show loading state on the delete button
+        const originalText = deleteSelectedBtn.innerHTML;
+        deleteSelectedBtn.disabled = true;
+        deleteSelectedBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+
+        // Send delete request
+        const formData = new FormData();
+        formData.append('feedback_ids', feedbackIds.join(','));
+
+        fetch('/admin/delete-feedback', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove deleted feedback rows from the page
+                checkedBoxes.forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    row.remove();
+                });
+
+                alert('Feedback deleted successfully!');
+                updateSelectionState();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting feedback.');
+        })
+        .finally(() => {
+            // Reset button state
+            deleteSelectedBtn.disabled = false;
+            deleteSelectedBtn.innerHTML = originalText;
+        });
+    }
+
+    // Initial state update
+    updateSelectionState();
+}
+
+function updateFeedbackDeletePanel() {
+    // This function is called from the checkbox onchange
+    // The DOMContentLoaded listener will handle the updates
+}
+</script>
 
 <script>
 let currentFeedbackId = null;
