@@ -27,7 +27,7 @@
                     </h5>
                     
                     <div class="row">
-                        <div class="col-lg-6" style="border-right: 1px solid #f1f3f4;">
+                        <div class="col-lg-6">
                             <div class="profile-info">
                                 <div class="info-item mb-3">
                                     <label class="fw-bold text-muted small">Full Name</label>
@@ -643,30 +643,8 @@ body.modal-open {
 
 /* Mobile responsive design */
 @media (max-width: 768px) {
-    .custom-modal-content {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        top: auto;
-        max-height: 80vh;
-        border-radius: 12px 12px 0 0;
-        margin: 0;
-    }
-
-    .custom-modal {
-        align-items: flex-end;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(100%);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .row .col-lg-6:first-child {
+        border-right: 1px solid #f1f3f4;
     }
 
     .action-card {
@@ -713,19 +691,19 @@ function initializeProfilePage() {
     // Journal Entries Button
     const journalBtn = document.getElementById('journalEntriesBtn');
     if (journalBtn) {
-        journalBtn.addEventListener('click', viewJournalEntries);
+        journalBtn.addEventListener('click', (e) => viewJournalEntries(e.target.closest('.action-card')));
     }
-    
+
     // Wellness Insights Button
     const insightsBtn = document.getElementById('wellnessInsightsBtn');
     if (insightsBtn) {
-        insightsBtn.addEventListener('click', viewWellnessInsights);
+        insightsBtn.addEventListener('click', (e) => viewWellnessInsights(e.target.closest('.action-card')));
     }
-    
+
     // DASS Results Button
     const dassBtn = document.getElementById('dassResultsBtn');
     if (dassBtn) {
-        dassBtn.addEventListener('click', viewDASSResults);
+        dassBtn.addEventListener('click', (e) => viewDASSResults(e.target.closest('.action-card')));
     }
     
     // Change Password Button
@@ -853,24 +831,40 @@ async function apiCall(endpoint) {
 }
 
 // Journal Entries functionality
-async function viewJournalEntries() {
+async function viewJournalEntries(button) {
     const loadingContent = `
         <div class="loading-content">
             <div class="spinner mb-3"></div>
             <p class="text-muted">Loading your journal entries...</p>
         </div>
     `;
-    
+
     const modalId = createModal(
-        '<i class="fas fa-book-open me-2"></i>My Journal Entries', 
-        loadingContent, 
+        '<i class="fas fa-book-open me-2"></i>My Journal Entries',
+        loadingContent,
         'modal-xl'
     );
-    
+
+    if (window.innerWidth <= 768) {
+        const modal = document.getElementById(modalId);
+        const rect = button.getBoundingClientRect();
+        const modalContent = modal.querySelector('.custom-modal-content');
+        modalContent.style.position = 'absolute';
+        modalContent.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+        modalContent.style.left = (rect.left + window.scrollX) + 'px';
+        modalContent.style.width = rect.width + 'px';
+        modalContent.style.maxHeight = '60vh';
+        modalContent.style.transform = 'none';
+        modal.style.alignItems = 'flex-start';
+        modal.style.justifyContent = 'flex-start';
+        modal.style.paddingTop = '0';
+        modal.style.background = 'none';
+    }
+
     try {
         const response = await apiCall('/api/mood-logs');
         const logs = response.logs || [];
-        
+
         let content;
         if (logs.length === 0) {
             content = `
@@ -885,10 +879,10 @@ async function viewJournalEntries() {
             `;
         } else {
             content = '<div class="journal-entries">';
-            
+
             // Group logs by date
             const groupedLogs = groupLogsByDate(logs);
-            
+
             for (const [date, entries] of Object.entries(groupedLogs)) {
                 content += `
                     <div class="journal-date-group mb-4">
@@ -898,19 +892,19 @@ async function viewJournalEntries() {
                         </h6>
                         <div class="row g-3">
                 `;
-                
+
                 entries.forEach(log => {
                     content += createJournalCard(log);
                 });
-                
+
                 content += '</div></div>';
             }
-            
+
             content += '</div>';
         }
-        
+
         document.querySelector(`#${modalId} .custom-modal-body`).innerHTML = content;
-        
+
     } catch (error) {
         document.querySelector(`#${modalId} .custom-modal-body`).innerHTML = `
             <div class="alert alert-danger">
@@ -922,23 +916,39 @@ async function viewJournalEntries() {
 }
 
 // Wellness Insights functionality
-async function viewWellnessInsights() {
+async function viewWellnessInsights(button) {
     const loadingContent = `
         <div class="loading-content">
             <div class="spinner mb-3"></div>
             <p class="text-muted">Analyzing your wellness patterns...</p>
         </div>
     `;
-    
+
     const modalId = createModal(
-        '<i class="fas fa-chart-pie me-2"></i>Wellness Insights', 
-        loadingContent, 
+        '<i class="fas fa-chart-pie me-2"></i>Wellness Insights',
+        loadingContent,
         'modal-lg'
     );
-    
+
+    if (window.innerWidth <= 768) {
+        const modal = document.getElementById(modalId);
+        const rect = button.getBoundingClientRect();
+        const modalContent = modal.querySelector('.custom-modal-content');
+        modalContent.style.position = 'absolute';
+        modalContent.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+        modalContent.style.left = (rect.left + window.scrollX) + 'px';
+        modalContent.style.width = rect.width + 'px';
+        modalContent.style.maxHeight = '60vh';
+        modalContent.style.transform = 'none';
+        modal.style.alignItems = 'flex-start';
+        modal.style.justifyContent = 'flex-start';
+        modal.style.paddingTop = '0';
+        modal.style.background = 'none';
+    }
+
     try {
         const insights = await apiCall('/api/wellness-insights');
-        
+
         let content;
         if (!insights.has_data) {
             content = `
@@ -996,15 +1006,15 @@ async function viewWellnessInsights() {
                         <i class="fas fa-lightbulb me-2"></i>Wellness Recommendations
                     </h6>
                     <p class="mb-0 text-muted">
-                        Continue tracking your emotions regularly to maintain awareness of your mental health patterns. 
+                        Continue tracking your emotions regularly to maintain awareness of your mental health patterns.
                         Consider speaking with a counselor if you notice concerning trends.
                     </p>
                 </div>
             `;
         }
-        
+
         document.querySelector(`#${modalId} .custom-modal-body`).innerHTML = content;
-        
+
     } catch (error) {
         document.querySelector(`#${modalId} .custom-modal-body`).innerHTML = `
             <div class="alert alert-danger">
@@ -1016,24 +1026,40 @@ async function viewWellnessInsights() {
 }
 
 // DASS Results functionality
-async function viewDASSResults() {
+async function viewDASSResults(button) {
     const loadingContent = `
         <div class="loading-content">
             <div class="spinner mb-3"></div>
             <p class="text-muted">Loading your DASS-21 results...</p>
         </div>
     `;
-    
+
     const modalId = createModal(
-        '<i class="fas fa-brain me-2"></i>DASS-21 Assessment Results', 
-        loadingContent, 
+        '<i class="fas fa-brain me-2"></i>DASS-21 Assessment Results',
+        loadingContent,
         'modal-lg'
     );
-    
+
+    if (window.innerWidth <= 768) {
+        const modal = document.getElementById(modalId);
+        const rect = button.getBoundingClientRect();
+        const modalContent = modal.querySelector('.custom-modal-content');
+        modalContent.style.position = 'absolute';
+        modalContent.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+        modalContent.style.left = (rect.left + window.scrollX) + 'px';
+        modalContent.style.width = rect.width + 'px';
+        modalContent.style.maxHeight = '60vh';
+        modalContent.style.transform = 'none';
+        modal.style.alignItems = 'flex-start';
+        modal.style.justifyContent = 'flex-start';
+        modal.style.paddingTop = '0';
+        modal.style.background = 'none';
+    }
+
     try {
         const response = await apiCall('/api/dass21-results');
         const results = response.results || [];
-        
+
         let content;
         if (results.length === 0) {
             content = `
@@ -1048,7 +1074,7 @@ async function viewDASSResults() {
             `;
         } else {
             content = '<div class="dass-results">';
-            
+
             results.slice(0, 5).forEach(result => {
                 const date = new Date(result.created_at).toLocaleDateString();
                 content += `
@@ -1085,18 +1111,18 @@ async function viewDASSResults() {
                     </div>
                 `;
             });
-            
+
             content += '</div>';
-            
+
             if (results.length > 5) {
                 content += `<div class="mt-3 text-center">
                     <small class="text-muted">Showing 5 most recent results (${results.length} total)</small>
                 </div>`;
             }
         }
-        
+
         document.querySelector(`#${modalId} .custom-modal-body`).innerHTML = content;
-        
+
     } catch (error) {
         document.querySelector(`#${modalId} .custom-modal-body`).innerHTML = `
             <div class="alert alert-danger">
