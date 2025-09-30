@@ -75,17 +75,31 @@
                                 {% for feedback in feedback_items %}
                                 <tr>
                                     <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-sm me-3">
-                                                <div class="avatar-title rounded-circle bg-primary text-white">
-                                                    {{ feedback.user.firstname[0] if feedback.user.firstname else '' }}{{ feedback.user.lastname[0] if feedback.user.lastname else '' }}
+                                        {% if feedback.is_anonymous %}
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm me-3">
+                                                    <div class="avatar-title rounded-circle bg-secondary text-white">
+                                                        A
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">Anonymous</h6>
+                                                    <small class="text-muted">Anonymous submission</small>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="mb-0">{{ feedback.user.full_name }}</h6>
-                                                <small class="text-muted">LRN: {{ feedback.user.username }}</small>
+                                        {% else %}
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm me-3">
+                                                    <div class="avatar-title rounded-circle bg-primary text-white">
+                                                        {{ feedback.user.firstname[0] if feedback.user.firstname else '' }}{{ feedback.user.lastname[0] if feedback.user.lastname else '' }}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">{{ feedback.user.full_name }}</h6>
+                                                    <small class="text-muted">LRN: {{ feedback.user.username }}</small>
+                                                </div>
                                             </div>
-                                        </div>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <span class="badge bg-secondary">

@@ -1684,7 +1684,7 @@ def view_alerts():
     # Get pagination parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    status_filter = request.args.get('status', 'all')  # 'all', 'active', 'resolved'
+    status_filter = request.args.get('status_filter', 'all')  # 'all', 'active', 'resolved'
 
     # Get accessible student IDs
     accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
@@ -1783,7 +1783,7 @@ def manage_feedback():
     # Get pagination parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    type_filter = request.args.get('type', 'all')
+    type_filter = request.args.get('type_filter', 'all')
 
     # Build query
     query = StudentFeedback.query
@@ -1814,14 +1814,24 @@ def get_feedback_details(feedback_id):
     if feedback.user_id not in accessible_student_ids:
         return jsonify({'success': False, 'message': 'Access denied'})
 
-    return jsonify({
-        'success': True,
-        'id': feedback.id,
-        'user': {
+    # Handle anonymous feedback
+    if feedback.is_anonymous:
+        user_info = {
+            'id': None,
+            'full_name': 'Anonymous',
+            'username': 'Anonymous'
+        }
+    else:
+        user_info = {
             'id': feedback.user.id,
             'full_name': feedback.user.full_name,
             'username': feedback.user.username
-        },
+        }
+
+    return jsonify({
+        'success': True,
+        'id': feedback.id,
+        'user': user_info,
         'feedback_type': feedback.feedback_type,
         'subject': feedback.subject,
         'message': feedback.message,
