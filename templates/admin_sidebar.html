@@ -23,10 +23,13 @@
             <span>Alerts</span>
         </a>
 
+        <!-- Only show Manage Feedback for main admin -->
+        {% if current_user.username == 'admin@emotiontrack.app' %}
         <a href="{{ url_for('admin.manage_feedback') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.manage_feedback' }}">
             <i class="fas fa-comments"></i>
             <span>Manage Feedback</span>
         </a>
+        {% endif %}
 
         <!-- Only show Profile Settings for faculty admins -->
         {% if current_user.is_faculty_admin %}
