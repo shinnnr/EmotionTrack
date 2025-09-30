@@ -162,73 +162,53 @@
     </div>
 </div>
 
-<!-- Feedback Details Panel -->
-<div id="feedbackPanel" class="custom-modal modal-lg" style="display: none;">
-    <div class="custom-modal-header">
-        <h5 class="custom-modal-title">
-            <i class="fas fa-comment me-2"></i>Feedback Details
-        </h5>
-        <button type="button" class="custom-modal-close" onclick="closeModal('feedbackPanel')">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div class="custom-modal-body">
-        <div class="mb-3">
-            <label class="form-label fw-bold">Student:</label>
-            <div id="feedbackStudent" class="p-2 bg-light rounded"></div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-bold">Type:</label>
-            <div id="feedbackType" class="p-2 bg-light rounded"></div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-bold">Subject:</label>
-            <div id="feedbackSubject" class="p-2 bg-light rounded"></div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-bold">Message:</label>
-            <div id="feedbackMessage" class="p-3 bg-light rounded"></div>
-        </div>
-
-        <div class="mb-3" id="ratingSection" style="display: none;">
-            <label class="form-label fw-bold">Rating:</label>
-            <div id="feedbackRating" class="p-2 bg-light rounded"></div>
-        </div>
-
-        <div class="mb-3" id="responseSection">
-            <label class="form-label fw-bold">Your Response:</label>
-            <div id="existingResponse" class="p-3 bg-success bg-opacity-10 rounded mb-3" style="display: none;">
-                <small class="text-muted">Existing Response:</small>
-                <div id="existingResponseText"></div>
-            </div>
-            <textarea class="form-control" id="responseText" rows="4" placeholder="Type your response to the feedback..."></textarea>
-        </div>
-
-        <div class="d-flex justify-content-end gap-3 mt-4">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('feedbackPanel')">Close</button>
-            <button type="button" class="btn btn-primary" onclick="sendResponse()">
-                <i class="fas fa-reply me-2"></i>Send Response
+<!-- Feedback Details Modal -->
+<div class="custom-modal-overlay" id="feedbackModal" style="display: none;">
+    <div class="custom-modal">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-comment me-2"></i>Feedback Details
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeFeedbackModal()">
+                <i class="fas fa-times"></i>
             </button>
+        </div>
+        <div class="custom-modal-body" id="feedbackContent">
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading feedback...</p>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
 /* Custom Modal Styles */
-.custom-modal {
+.custom-modal-overlay {
     position: fixed;
-    top: 20px;
-    left: 300px;
-    z-index: 1090;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1070;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px 20px 300px; /* Account for sidebar width and top navigation */
+}
+
+.custom-modal {
     background: white;
     border-radius: 10px;
-    border: 1px solid #ddd;
-    width: calc(100vw - 350px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: calc(100vw - 350px);
     max-height: 90vh;
     overflow: hidden;
+    position: relative;
     animation: modalSlideIn 0.3s ease;
 }
 
@@ -284,56 +264,34 @@
 
 /* Mobile responsive adjustments */
 @media (max-width: 991px) {
+    .custom-modal-overlay {
+        padding-left: 20px;
+    }
+
     .custom-modal {
-        left: 20px;
-        top: 20px;
-        width: calc(100vw - 40px);
+        max-width: calc(100vw - 40px);
     }
 }
 </style>
 
 <script>
-// Modal utility functions
-function showModal(modalId, size = '') {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        if (size) {
-            modal.classList.add(size);
-        }
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-
-        // Force modal above everything with maximum z-index
-        modal.style.zIndex = '999999';
-        modal.style.position = 'fixed';
-
-        // Add click outside to close modal
-        const closeOnOutsideClick = (e) => {
-            if (!modal.contains(e.target)) {
-                closeModal(modalId);
-                document.removeEventListener('click', closeOnOutsideClick);
-            }
-        };
-        document.addEventListener('click', closeOnOutsideClick);
-    }
-}
-
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-
-        // Reset modal styles
-        modal.style.zIndex = '';
-        modal.style.position = '';
-    }
-}
-
 let currentFeedbackId = null;
 
 async function viewFeedback(feedbackId) {
     currentFeedbackId = feedbackId;
+
+    // Show loading
+    const modal = document.getElementById('feedbackModal');
+    const content = document.getElementById('feedbackContent');
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading feedback...</p>
+        </div>
+    `;
+    modal.style.display = 'flex';
 
     try {
         const response = await fetch(`/admin/api/feedback/${feedbackId}`);
@@ -345,36 +303,71 @@ async function viewFeedback(feedbackId) {
 
         const feedback = data;
 
-        document.getElementById('feedbackStudent').textContent = feedback.user.full_name + ' (LRN: ' + feedback.user.username + ')';
-        document.getElementById('feedbackType').textContent = feedback.feedback_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-        document.getElementById('feedbackSubject').textContent = feedback.subject;
-        document.getElementById('feedbackMessage').textContent = feedback.message;
+        // Populate content
+        content.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label fw-bold">Student:</label>
+                <div class="p-2 bg-light rounded">${feedback.user.full_name} (LRN: ${feedback.user.username})</div>
+            </div>
 
-        if (feedback.rating) {
-            document.getElementById('ratingSection').style.display = 'block';
-            let stars = '';
-            for (let i = 1; i <= 5; i++) {
-                stars += `<i class="fas fa-star ${i <= feedback.rating ? 'text-warning' : 'text-muted'}"></i>`;
-            }
-            document.getElementById('feedbackRating').innerHTML = stars + ` <small>(${feedback.rating}/5)</small>`;
-        } else {
-            document.getElementById('ratingSection').style.display = 'none';
-        }
+            <div class="mb-3">
+                <label class="form-label fw-bold">Type:</label>
+                <div class="p-2 bg-light rounded">${feedback.feedback_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+            </div>
 
-        if (feedback.admin_response) {
-            document.getElementById('existingResponseText').textContent = feedback.admin_response;
-            document.getElementById('existingResponse').style.display = 'block';
-            document.getElementById('responseText').value = feedback.admin_response;
-        } else {
-            document.getElementById('existingResponse').style.display = 'none';
-            document.getElementById('responseText').value = '';
-        }
+            <div class="mb-3">
+                <label class="form-label fw-bold">Subject:</label>
+                <div class="p-2 bg-light rounded">${feedback.subject}</div>
+            </div>
 
-        showModal('feedbackPanel');
+            <div class="mb-3">
+                <label class="form-label fw-bold">Message:</label>
+                <div class="p-3 bg-light rounded">${feedback.message}</div>
+            </div>
+
+            ${feedback.rating ? `
+            <div class="mb-3">
+                <label class="form-label fw-bold">Rating:</label>
+                <div class="p-2 bg-light rounded">
+                    ${Array.from({length: 5}, (_, i) => `<i class="fas fa-star ${i < feedback.rating ? 'text-warning' : 'text-muted'}"></i>`).join('')}
+                    <small> (${feedback.rating}/5)</small>
+                </div>
+            </div>
+            ` : ''}
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Your Response:</label>
+                ${feedback.admin_response ? `
+                <div class="p-3 bg-success bg-opacity-10 rounded mb-3">
+                    <small class="text-muted">Existing Response:</small>
+                    <div>${feedback.admin_response}</div>
+                </div>
+                ` : ''}
+                <textarea class="form-control" id="responseText" rows="4" placeholder="Type your response to the feedback...">${feedback.admin_response || ''}</textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeFeedbackModal()">Close</button>
+                <button type="button" class="btn btn-primary" onclick="sendResponse()">
+                    <i class="fas fa-reply me-2"></i>Send Response
+                </button>
+            </div>
+        `;
     } catch (error) {
         console.error('Error loading feedback:', error);
-        // Error is already handled by the throw in the try block
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h5 class="text-danger">Error Loading Feedback</h5>
+                <p class="text-muted">Failed to load feedback details. Please try again.</p>
+                <button class="btn btn-secondary" onclick="closeFeedbackModal()">Close</button>
+            </div>
+        `;
     }
+}
+
+function closeFeedbackModal() {
+    document.getElementById('feedbackModal').style.display = 'none';
 }
 
 async function sendResponse() {
