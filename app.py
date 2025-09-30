@@ -6,11 +6,10 @@ from dotenv import load_dotenv
 # Load environment variables from .env file if it exists
 load_dotenv()
 
-from flask import Flask, request
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, current_user
+from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
-from flask_socketio import SocketIO
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -36,9 +35,6 @@ csrf = CSRFProtect()
 
 # create the app
 app = Flask(__name__)
-
-# Initialize SocketIO after app creation
-socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Configure session and CSRF settings
 session_secret = os.environ.get("SESSION_SECRET")
@@ -92,32 +88,16 @@ login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
 
-# initialize the app with the extension, flask-sqlalchemy >= 3.0.x
-db.init_app(app)
-login_manager.init_app(app)
-csrf.init_app(app)
-login_manager.login_view = 'auth.login'
-login_manager.login_message = 'Please log in to access this page.'
-login_manager.login_message_category = 'info'
-
 # User loader for Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
     from models import User
     return User.query.get(int(user_id))
 
-# Register blueprints
-from routes import main_bp, auth_bp, api_bp, admin_bp
-app.register_blueprint(main_bp)
-app.register_blueprint(auth_bp, url_prefix='/auth')
-app.register_blueprint(api_bp, url_prefix='/api')
-app.register_blueprint(admin_bp, url_prefix='/admin')
-
-# Import models after blueprints are registered
 with app.app_context():
-    import models
+    # Make sure to import the models here or their tables won't be created
+    import models  # noqa: F401
 
-with app.app_context():
     try:
         db.create_all()
         logger.info("Database tables created/verified successfully")
@@ -153,83 +133,13 @@ with app.app_context():
         logger.error(f"Database initialization failed: {str(e)}")
         logger.warning("App will continue to start, but database operations may fail until connection is restored")
         # Don't raise the exception - allow the app to start even if database is unavailable
-
-    # SocketIO event handlers
-    @socketio.on('connect')
-    def handle_connect():
-        if not current_user.is_authenticated:
-            return False
-        socketio.join_room(str(current_user.id))
-        logger.info(f'User {current_user.id} connected')
-
-    @socketio.on('disconnect')
-    def handle_disconnect():
-        logger.info(f'User {current_user.id} disconnected')
-
-    @socketio.on('join_room')
-    def handle_join_room(data):
-        room = data.get('room')
-        if room:
-            socketio.join_room(room)
-            socketio.emit('room_joined', {'room': room}, to=request.sid)
-
-    @socketio.on('leave_room')
-    def handle_leave_room(data):
-        room = data.get('room')
-        if room:
-            socketio.leave_room(room)
-            socketio.emit('room_left', {'room': room}, to=request.sid)
-
-    @socketio.on('join_consultation_room')
-    def handle_join_consultation_room(data):
-        """Join consultation room for real-time messaging"""
-        if not current_user.is_authenticated:
-            return False
-
-        conversation_type = data.get('conversation_type', 'guidance_office')
-        room_name = f"consultation_{conversation_type}_{current_user.id}"
-        socketio.join_room(room_name)
-        socketio.emit('consultation_room_joined', {
-            'room': room_name,
-            'conversation_type': conversation_type
-        }, to=request.sid)
-        logger.info(f'User {current_user.id} joined consultation room: {room_name}')
-
-    @socketio.on('leave_consultation_room')
-    def handle_leave_consultation_room(data):
-        """Leave consultation room"""
-        if not current_user.is_authenticated:
-            return False
-
-        conversation_type = data.get('conversation_type', 'guidance_office')
-        room_name = f"consultation_{conversation_type}_{current_user.id}"
-        socketio.leave_room(room_name)
-        socketio.emit('consultation_room_left', {
-            'room': room_name,
-            'conversation_type': conversation_type
-        }, to=request.sid)
-        logger.info(f'User {current_user.id} left consultation room: {room_name}')
-
-    @socketio.on('join_admin_dashboard')
-    def handle_join_admin_dashboard():
-        """Join admin dashboard room for real-time updates"""
-        if not current_user.is_authenticated or not current_user.is_admin:
-            return False
-
-        # Join admin dashboard room
-        socketio.join_room('admin_dashboard')
-        socketio.emit('admin_dashboard_joined', {'room': 'admin_dashboard'}, to=request.sid)
-        logger.info(f'Admin {current_user.id} joined admin dashboard room')
-
-    @socketio.on('leave_admin_dashboard')
-    def handle_leave_admin_dashboard():
-        """Leave admin dashboard room"""
-        if not current_user.is_authenticated or not current_user.is_admin:
-            return False
-
-        socketio.leave_room('admin_dashboard')
-        socketio.emit('admin_dashboard_left', {'room': 'admin_dashboard'}, to=request.sid)
-        logger.info(f'Admin {current_user.id} left admin dashboard room')
+    
+    # Register blueprints after models are imported to avoid circular imports
+    from routes import main_bp, auth_bp, api_bp, admin_bp
+    app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(admin_bp, url_prefix='/admin')
 
     # Add template filters for time handling
     from models import convert_to_manila_time, get_current_time
@@ -260,5 +170,4 @@ with app.app_context():
             return manila_dt.strftime('%I:%M %p<br><small class="text-muted">%b %d, %Y</small>')
 
 if __name__ == '__main__':
-    # Use regular Flask development server for now to avoid SocketIO import issues
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     initializeDualChat();
     scrollToBottom('guidance');
-    initializeWebSocketConnection();
+    startRealtimePolling();
 });
 
 function initializeDualChat() {
@@ -39,11 +39,6 @@ function initializeDualChat() {
             const chatType = targetId === '#guidance-chat' ? 'guidance' : 'faculty';
             scrollToBottom(chatType);
             markAsRead(chatType);
-            // Ensure we're in the correct room for this conversation type
-            const conversationType = chatType === 'guidance' ? 'guidance_office' : 'faculty_adviser';
-            if (!currentRooms[chatType]) {
-                joinConsultationRoom(conversationType);
-            }
         });
     });
 }
@@ -268,114 +263,113 @@ function scrollToBottom(chatType) {
     }
 }
 
-// WebSocket connection
-let socket = null;
-let currentRooms = {
-    guidance: false,
-    faculty: false
+// Real-time polling functions
+let pollingInterval = null;
+let lastSeenIds = {
+    guidance: 0,
+    faculty: 0
 };
 
-function initializeWebSocketConnection() {
-    // Initialize SocketIO connection
-    socket = io();
-
-    socket.on('connect', function() {
-        console.log('Connected to WebSocket server');
-
-        // Join consultation rooms for both conversation types
-        joinConsultationRoom('guidance_office');
-        joinConsultationRoom('faculty_adviser');
+function startRealtimePolling() {
+    // Prevent multiple polling intervals
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+    
+    // Initialize last seen IDs from existing messages on page load
+    const guidanceMessages = document.querySelectorAll('#guidanceMessages [data-message-id]');
+    const facultyMessages = document.querySelectorAll('#facultyMessages [data-message-id]');
+    
+    guidanceMessages.forEach(msg => {
+        const messageId = parseInt(msg.getAttribute('data-message-id'));
+        if (!isNaN(messageId)) {
+            lastSeenIds.guidance = Math.max(lastSeenIds.guidance, messageId);
+        }
     });
-
-    socket.on('disconnect', function() {
-        console.log('Disconnected from WebSocket server');
-        currentRooms.guidance = false;
-        currentRooms.faculty = false;
+    
+    facultyMessages.forEach(msg => {
+        const messageId = parseInt(msg.getAttribute('data-message-id'));
+        if (!isNaN(messageId)) {
+            lastSeenIds.faculty = Math.max(lastSeenIds.faculty, messageId);
+        }
     });
-
-    socket.on('consultation_room_joined', function(data) {
-        console.log('Joined consultation room:', data.room);
-        const chatType = data.conversation_type === 'guidance_office' ? 'guidance' : 'faculty';
-        currentRooms[chatType] = true;
-    });
-
-    socket.on('consultation_room_left', function(data) {
-        console.log('Left consultation room:', data.room);
-        const chatType = data.conversation_type === 'guidance_office' ? 'guidance' : 'faculty';
-        currentRooms[chatType] = false;
-    });
-
-    // Listen for new admin responses
-    socket.on('new_admin_response', function(data) {
-        console.log('Received new admin response:', data);
-        handleNewAdminResponse(data);
-    });
-
-    // Listen for new student messages (for admin side, but keeping for consistency)
-    socket.on('new_student_message', function(data) {
-        console.log('Received new student message:', data);
-        handleNewStudentMessage(data);
-    });
-
-    socket.on('connect_error', function(error) {
-        console.error('WebSocket connection error:', error);
-    });
+    
+    // Poll for new messages every 5 seconds
+    pollingInterval = setInterval(checkForNewMessages, 5023);
 }
 
-function joinConsultationRoom(conversationType) {
-    if (socket && socket.connected) {
-        socket.emit('join_consultation_room', {
-            conversation_type: conversationType
+async function checkForNewMessages() {
+    try {
+        const response = await fetch(`/consultation/poll-messages?since_guidance_id=${lastSeenIds.guidance}&since_faculty_id=${lastSeenIds.faculty}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrf_token]')?.value || ''
+            }
         });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Update guidance office messages
+            if (data.guidance_office && data.guidance_office.length > 0) {
+                updateChatMessages(data.guidance_office, 'guidance');
+                // Update last seen ID
+                const lastMsg = data.guidance_office[data.guidance_office.length - 1];
+                lastSeenIds.guidance = Math.max(lastSeenIds.guidance, lastMsg.id);
+            }
+            
+            // Update faculty adviser messages
+            if (data.faculty_adviser && data.faculty_adviser.length > 0) {
+                updateChatMessages(data.faculty_adviser, 'faculty');
+                // Update last seen ID
+                const lastMsg = data.faculty_adviser[data.faculty_adviser.length - 1];
+                lastSeenIds.faculty = Math.max(lastSeenIds.faculty, lastMsg.id);
+            }
+            
+            // Update unread counts
+            updateUnreadCounts(data.unread_counts);
+        }
+    } catch (error) {
+        console.error('Error polling for messages:', error);
     }
 }
 
-function leaveConsultationRoom(conversationType) {
-    if (socket && socket.connected) {
-        socket.emit('leave_consultation_room', {
-            conversation_type: conversationType
-        });
+function updateChatMessages(messages, chatType) {
+    messages.forEach(message => {
+        if (message.admin_response) {
+            // Add new admin response with message ID for deduplication
+            addMessageToChat(message.admin_response, 'admin', chatType, message.id);
+            
+            // Show notification if not on active tab
+            const activeTab = document.querySelector('#consultationTabs .nav-link.active');
+            const isActiveTab = (chatType === 'guidance' && activeTab.id === 'guidance-tab') ||
+                              (chatType === 'faculty' && activeTab.id === 'faculty-tab');
+            
+            if (!isActiveTab) {
+                showNotification(`New message from ${chatType === 'guidance' ? 'Guidance Office' : 'Faculty Adviser'}!`, 'info');
+            }
+        }
+    });
+}
+
+function updateUnreadCounts(unreadCounts) {
+    const guidanceUnread = document.getElementById('guidance-unread');
+    const facultyUnread = document.getElementById('faculty-unread');
+    
+    if (unreadCounts.guidance_office > 0) {
+        guidanceUnread.textContent = unreadCounts.guidance_office;
+        guidanceUnread.style.display = 'inline';
+    } else {
+        guidanceUnread.style.display = 'none';
+    }
+    
+    if (unreadCounts.faculty_adviser > 0) {
+        facultyUnread.textContent = unreadCounts.faculty_adviser;
+        facultyUnread.style.display = 'inline';
+    } else {
+        facultyUnread.style.display = 'none';
     }
 }
-
-function handleNewAdminResponse(data) {
-    // Only handle messages for the current user's conversation type
-    const chatType = data.conversation_type === 'guidance_office' ? 'guidance' : 'faculty';
-
-    // Add the new admin response to the chat
-    addMessageToChat(data.admin_response, 'admin', chatType, data.id);
-
-    // Update unread counts if not on active tab
-    updateUnreadCountForResponse(data.conversation_type);
-
-    // Show notification if not on active tab
-    const activeTab = document.querySelector('#consultationTabs .nav-link.active');
-    const isActiveTab = (chatType === 'guidance' && activeTab.id === 'guidance-tab') ||
-                       (chatType === 'faculty' && activeTab.id === 'faculty-tab');
-
-    if (!isActiveTab) {
-        const senderName = chatType === 'guidance' ? 'Guidance Office' : 'Faculty Adviser';
-        showNotification(`New message from ${senderName}!`, 'info');
-    }
-}
-
-function handleNewStudentMessage(data) {
-    // This is mainly for admin side, but keeping for consistency
-    const chatType = data.conversation_type === 'guidance_office' ? 'guidance' : 'faculty';
-    addMessageToChat(data.message_text, 'student', chatType, data.id);
-}
-
-function updateUnreadCountForResponse(conversationType) {
-    const chatType = conversationType === 'guidance_office' ? 'guidance' : 'faculty';
-    const unreadElement = document.getElementById(`${chatType}-unread`);
-
-    if (unreadElement) {
-        const currentCount = parseInt(unreadElement.textContent) || 0;
-        unreadElement.textContent = currentCount + 1;
-        unreadElement.style.display = 'inline';
-    }
-}
-
 
 function markAsRead(chatType) {
     // Mark messages as read when tab is opened
