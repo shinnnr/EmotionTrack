@@ -70,28 +70,24 @@
         </div>
     </div>
 
-    <!-- Search -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" id="alertSearchInput" placeholder="Search alerts by student name or LRN">
-                        <button class="btn btn-outline-secondary" type="button" id="alertClearSearchBtn" title="Clear search">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Alerts List -->
     <div class="row">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
+                    <!-- Search Bar -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="alertSearchInput" placeholder="Search alerts by student name or LRN">
+                                <button class="btn btn-outline-secondary" type="button" id="alertClearSearchBtn" title="Clear search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <p class="text-muted mb-0">
                             <span id="alertsCount">{{ alerts|length if alerts else 0 }}</span> alerts
@@ -325,8 +321,9 @@
         overflow: visible;
     }
 
-    th:nth-child(n+2), td:nth-child(n+2) {
-        display: none;
+    /* Hide all columns except Student (2nd column) */
+    th:not(:nth-child(2)), td:not(:nth-child(2)) {
+        display: none !important;
     }
 
     .student-cell {
@@ -335,6 +332,28 @@
 
     .student-cell:hover {
         background-color: #f8f9fa;
+    }
+
+    /* Make student column full width on mobile */
+    .table td:nth-child(2) {
+        width: 100% !important;
+        padding: 1rem !important;
+        position: relative !important;
+    }
+
+    /* Adjust card body padding on mobile */
+    .card-body {
+        padding: 1rem !important;
+    }
+
+    .container-fluid {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+
+    /* Mobile layout for search bar */
+    .input-group {
+        margin-bottom: 1rem !important;
     }
 }
 </style>
