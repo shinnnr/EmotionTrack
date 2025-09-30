@@ -70,7 +70,7 @@
                                 <i class="fas fa-star me-2"></i>Overall Rating (1-5)
                             </label>
                             <div class="rating-stars">
-                                {% for i in range(1, 6) %}
+                                {% for i in range(5, 0, -1) %}
                                     <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" class="d-none">
                                     <label for="star{{ i }}" class="star-label">
                                         <i class="far fa-star"></i>
@@ -129,9 +129,7 @@
     transition: color 0.2s;
 }
 
-.star-label:hover,
-.star-label:hover ~ .star-label,
-input[type="radio"]:checked ~ .star-label {
+input[type="radio"]:checked + .star-label {
     color: #ffc107;
 }
 
@@ -161,17 +159,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     stars.forEach((star, index) => {
         star.addEventListener('click', function() {
-            ratingInput.value = index + 1;
+            ratingInput.value = 5 - index;
             // Update visual feedback
-            stars.forEach((s, i) => {
-                if (i <= index) {
-                    s.style.color = '#ffc107';
-                } else {
-                    s.style.color = '#ddd';
-                }
-            });
+            updateStars(index);
+        });
+
+        star.addEventListener('mouseenter', function() {
+            updateStars(index);
+        });
+
+        star.addEventListener('mouseleave', function() {
+            // Reset to checked state
+            const checkedInput = document.querySelector('input[name="rating"]:checked');
+            if (checkedInput) {
+                const checkedIndex = Array.from(stars).indexOf(document.querySelector(`label[for="${checkedInput.id}"]`));
+                updateStars(checkedIndex);
+            } else {
+                // No rating selected, reset all
+                stars.forEach(s => s.style.color = '#ddd');
+            }
         });
     });
+
+    function updateStars(activeIndex) {
+        stars.forEach((s, i) => {
+            if (i <= activeIndex) {
+                s.style.color = '#ffc107';
+            } else {
+                s.style.color = '#ddd';
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
