@@ -99,6 +99,14 @@
                         <table class="table table-hover" id="alertsTable">
                             <thead>
                                 <tr>
+                                    <th>
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input" type="checkbox" id="headerSelectAll">
+                                            <label class="form-check-label fw-bold" for="headerSelectAll">
+                                                Select All
+                                            </label>
+                                        </div>
+                                    </th>
                                     <th>Student</th>
                                     <th>Alert Type</th>
                                     <th>Severity</th>
@@ -481,6 +489,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initializeAlertManagement() {
     const selectAllCheckbox = document.getElementById('selectAll');
+    const headerSelectAllCheckbox = document.getElementById('headerSelectAll');
     const alertCheckboxes = document.querySelectorAll('.alert-checkbox');
     const deleteSelectedBtn = document.getElementById('deleteSelectedAlertsBtn');
     const selectionCount = document.getElementById('alertSelectionCount');
@@ -501,6 +510,8 @@ function initializeAlertManagement() {
 
         selectAllCheckbox.checked = allChecked;
         selectAllCheckbox.indeterminate = someChecked && !allChecked;
+        headerSelectAllCheckbox.checked = allChecked;
+        headerSelectAllCheckbox.indeterminate = someChecked && !allChecked;
     }
 
     // Handle select all functionality
@@ -513,6 +524,10 @@ function initializeAlertManagement() {
 
     // Event listeners
     selectAllCheckbox.addEventListener('change', function() {
+        toggleSelectAll(this.checked);
+    });
+
+    headerSelectAllCheckbox.addEventListener('change', function() {
         toggleSelectAll(this.checked);
     });
 
