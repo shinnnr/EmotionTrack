@@ -223,15 +223,15 @@
 .custom-modal-overlay {
     position: fixed;
     top: 0;
-    left: 0;
-    width: 100%;
+    left: 280px;
+    width: calc(100vw - 280px);
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     z-index: 1070;
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    padding: 60px 20px 20px 300px; /* Account for sidebar width and top navigation */
+    padding: 60px 20px 20px 20px;
 }
 
 .custom-modal {
@@ -299,6 +299,8 @@
 /* Mobile responsive adjustments */
 @media (max-width: 991px) {
     .custom-modal-overlay {
+        left: 0;
+        width: 100%;
         padding-left: 20px;
     }
 
