@@ -87,6 +87,22 @@
                             {% endif %}
                         </div>
 
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_anonymous(class="form-check-input") }}
+                                <label class="form-check-label" for="{{ form.is_anonymous.id }}">
+                                    Submit anonymously
+                                </label>
+                            </div>
+                            {% if form.is_anonymous.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.is_anonymous.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
                         <div class="d-flex justify-content-end gap-3">
                             <a href="{{ url_for('main.home') }}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Back to Home

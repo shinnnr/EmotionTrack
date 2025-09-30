@@ -9,7 +9,7 @@ from sqlalchemy import func, desc
 from app import db, csrf
 from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, get_current_time, convert_to_manila_time
 import pytz
-from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm
+from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm, FeedbackForm
 from coping_recommendations import get_user_coping_recommendations, get_user_motivational_quote
 from alert_templates import get_alert_template, get_severity_level
 
@@ -1801,6 +1801,37 @@ def manage_feedback():
                           pagination=feedback_pagination,
                           type_filter=type_filter)
 
+@admin_bp.route('/api/feedback/<int:feedback_id>')
+@login_required
+def get_feedback_details(feedback_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    feedback = StudentFeedback.query.get_or_404(feedback_id)
+
+    # Check if admin can access this feedback (based on student access)
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+    if feedback.user_id not in accessible_student_ids:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    return jsonify({
+        'success': True,
+        'id': feedback.id,
+        'user': {
+            'id': feedback.user.id,
+            'full_name': feedback.user.full_name,
+            'username': feedback.user.username
+        },
+        'feedback_type': feedback.feedback_type,
+        'subject': feedback.subject,
+        'message': feedback.message,
+        'rating': feedback.rating,
+        'is_anonymous': feedback.is_anonymous,
+        'admin_response': feedback.admin_response,
+        'created_at': convert_to_manila_time(feedback.created_at).isoformat() if feedback.created_at else None,
+        'responded_at': convert_to_manila_time(feedback.responded_at).isoformat() if feedback.responded_at else None
+    })
+
 @admin_bp.route('/feedback/<int:feedback_id>/respond', methods=['POST'])
 @login_required
 def respond_to_feedback(feedback_id):
@@ -1808,6 +1839,12 @@ def respond_to_feedback(feedback_id):
         return jsonify({'success': False, 'message': 'Access denied'})
 
     feedback = StudentFeedback.query.get_or_404(feedback_id)
+
+    # Check if admin can access this feedback
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+    if feedback.user_id not in accessible_student_ids:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
     response_text = request.form.get('response_text')
 
     if response_text:
