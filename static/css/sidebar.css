@@ -381,8 +381,8 @@
     background: rgba(255, 255, 255, 0.5);
 }
 
-/* Make sidebar scrollable only on mobile landscape */
-@media (max-width: 991px) and (orientation: landscape) {
+/* Make sidebar scrollable on small screens */
+@media (max-width: 1199px) {
     .sidebar {
         overflow-y: auto;
         max-height: 100vh;
