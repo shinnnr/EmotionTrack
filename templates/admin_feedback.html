@@ -307,9 +307,6 @@ function showModal(modalId, size = '') {
         modal.style.zIndex = '999999';
         modal.style.position = 'fixed';
 
-        // Mark body to indicate modal is open (but keep sidebar visible)
-        document.body.classList.add('modal-open');
-
         // Add click outside to close modal
         const closeOnOutsideClick = (e) => {
             if (!modal.contains(e.target)) {
@@ -330,9 +327,6 @@ function closeModal(modalId) {
         // Reset modal styles
         modal.style.zIndex = '';
         modal.style.position = '';
-
-        // Remove modal state from body
-        document.body.classList.remove('modal-open');
     }
 }
 
