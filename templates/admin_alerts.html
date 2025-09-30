@@ -15,11 +15,6 @@
                     </h1>
                     <p class="lead text-muted">Monitor and manage student alerts and concerns</p>
                 </div>
-                <div>
-                    <button class="btn btn-clsu-green" onclick="generateAlerts()">
-                        <i class="fas fa-sync me-2"></i>Generate Alerts
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -49,6 +44,46 @@
         </div>
     </div>
 
+    <!-- Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-8">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search by student name or LRN..." onkeyup="filterAlerts()">
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">Search results will be filtered in real-time</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Selected Panel -->
+    <div class="row mb-3" id="deletePanel" style="display: none;">
+        <div class="col-12">
+            <div class="alert alert-warning border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="selectedCount">0</span> alert(s) selected for deletion
+                    </div>
+                    <div>
+                        <button class="btn btn-danger btn-sm me-2" onclick="deleteSelectedStudents()">
+                            <i class="fas fa-trash me-1"></i>Delete Selected
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Alerts List -->
     <div class="row">
         <div class="col-12">
@@ -62,9 +97,10 @@
 
                     {% if alerts %}
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover" id="alertsTable">
                             <thead>
                                 <tr>
+                                    <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                                     <th>Student</th>
                                     <th>Alert Type</th>
                                     <th>Severity</th>
@@ -77,6 +113,7 @@
                             <tbody>
                                 {% for alert in alerts %}
                                 <tr class="{{ 'table-warning' if not alert.is_resolved else '' }}">
+                                    <td><input type="checkbox" class="alert-checkbox" value="{{ alert.id }}" onchange="updateDeletePanel()"></td>
                                     <td class="student-cell" onclick="viewAlert({{ alert.id }})">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-sm me-3">
@@ -417,31 +454,93 @@ async function resolveAlert(alertId) {
     }
 }
 
-async function generateAlerts() {
-    if (!confirm('Generate new alerts for all students? This may take a moment.')) return;
+function filterAlerts() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#alertsTable tbody tr');
+
+    rows.forEach(row => {
+        const studentName = row.cells[1].textContent.toLowerCase();
+        const studentLRN = row.cells[1].textContent.toLowerCase(); // LRN is in the same cell
+
+        if (studentName.includes(searchTerm) || studentLRN.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.alert-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+
+    updateDeletePanel();
+}
+
+function updateDeletePanel() {
+    const checkboxes = document.querySelectorAll('.alert-checkbox:checked');
+    const selectedCount = checkboxes.length;
+
+    const deletePanel = document.getElementById('deletePanel');
+    const selectedCountSpan = document.getElementById('selectedCount');
+
+    if (selectedCount > 0) {
+        deletePanel.style.display = 'block';
+        selectedCountSpan.textContent = selectedCount;
+    } else {
+        deletePanel.style.display = 'none';
+    }
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.alert-checkbox');
+    const selectAll = document.getElementById('selectAll');
+
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    selectAll.checked = false;
+    updateDeletePanel();
+}
+
+async function deleteSelectedStudents() {
+    const checkboxes = document.querySelectorAll('.alert-checkbox:checked');
+    const selectedAlertIds = Array.from(checkboxes).map(cb => cb.value);
+
+    if (selectedAlertIds.length === 0) {
+        alert('No alerts selected.');
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedAlertIds.length} selected alert(s)? This action cannot be undone.`)) {
+        return;
+    }
 
     try {
-        const response = await fetch('/admin/api/generate-alerts', {
+        const response = await fetch('/admin/delete-alerts', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
             },
-            body: JSON.stringify({})
+            body: JSON.stringify({ alert_ids: selectedAlertIds })
         });
 
         const result = await response.json();
 
         if (result.success) {
-            alert(`Successfully generated ${result.alerts_created} alerts!`);
+            alert(result.message);
             location.reload();
         } else {
             alert('Error: ' + result.message);
         }
     } catch (error) {
-        console.error('Error generating alerts:', error);
-        alert('Failed to generate alerts. Please try again.');
+        console.error('Error deleting alerts:', error);
+        alert('Failed to delete alerts. Please try again.');
     }
 }
+
 </script>
 {% endblock %}
