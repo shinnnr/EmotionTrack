@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback Management - {% if current_user.is_faculty_admin %}Faculty Dashboard{% else %}Admin Dashboard{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold">
+                        <i class="fas fa-comments me-3"></i>
+                        Student Feedback
+                    </h1>
+                    <p class="lead text-muted">Manage and respond to student feedback</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <form method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="type_filter" class="form-label fw-bold">Filter by Type</label>
+                            <select name="type_filter" id="type_filter" class="form-select">
+                                <option value="all" {{ 'selected' if type_filter == 'all' else '' }}>All Types</option>
+                                <option value="general" {{ 'selected' if type_filter == 'general' else '' }}>General Feedback</option>
+                                <option value="feature_request" {{ 'selected' if type_filter == 'feature_request' else '' }}>Feature Request</option>
+                                <option value="bug_report" {{ 'selected' if type_filter == 'bug_report' else '' }}>Bug Report</option>
+                                <option value="satisfaction" {{ 'selected' if type_filter == 'satisfaction' else '' }}>Satisfaction Survey</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-clsu-green">
+                                <i class="fas fa-filter me-2"></i>Apply Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="text-muted mb-0">
+                            <span id="feedbackCount">{{ feedback_items|length if feedback_items else 0 }}</span> feedback items
+                        </p>
+                    </div>
+
+                    {% if feedback_items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Type</th>
+                                    <th>Subject</th>
+                                    <th>Rating</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for feedback in feedback_items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm me-3">
+                                                <div class="avatar-title rounded-circle bg-primary text-white">
+                                                    {{ feedback.user.firstname[0] if feedback.user.firstname else '' }}{{ feedback.user.lastname[0] if feedback.user.lastname else '' }}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ feedback.user.full_name }}</h6>
+                                                <small class="text-muted">LRN: {{ feedback.user.username }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            {{ feedback.feedback_type.replace('_', ' ').title() }}
+                                        </span>
+                                    </td>
+                                    <td style="max-width: 200px;">
+                                        <div class="text-truncate" title="{{ feedback.subject }}">
+                                            {{ feedback.subject }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if feedback.rating %}
+                                            <div class="d-flex align-items-center">
+                                                {% for i in range(5) %}
+                                                    <i class="fas fa-star {{ 'text-warning' if i < feedback.rating else 'text-muted' }}"></i>
+                                                {% endfor %}
+                                                <small class="ms-2 text-muted">{{ feedback.rating }}/5</small>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ feedback.created_at | manila_time | strftime('%b %d, %Y') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if feedback.admin_response %}
+                                            <span class="badge bg-success">Responded</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewFeedback({{ feedback.id }})">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {{ pagination.links }}
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-comments fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Feedback</h4>
+                        <p class="text-muted">No student feedback has been submitted yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback View Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-comment me-2"></i>Feedback Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Student:</label>
+                    <div id="feedbackStudent" class="p-2 bg-light rounded"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Type:</label>
+                    <div id="feedbackType" class="p-2 bg-light rounded"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Subject:</label>
+                    <div id="feedbackSubject" class="p-2 bg-light rounded"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Message:</label>
+                    <div id="feedbackMessage" class="p-3 bg-light rounded"></div>
+                </div>
+
+                <div class="mb-3" id="ratingSection" style="display: none;">
+                    <label class="form-label fw-bold">Rating:</label>
+                    <div id="feedbackRating" class="p-2 bg-light rounded"></div>
+                </div>
+
+                <div class="mb-3" id="responseSection">
+                    <label class="form-label fw-bold">Your Response:</label>
+                    <div id="existingResponse" class="p-3 bg-success bg-opacity-10 rounded mb-3" style="display: none;">
+                        <small class="text-muted">Existing Response:</small>
+                        <div id="existingResponseText"></div>
+                    </div>
+                    <textarea class="form-control" id="responseText" rows="4" placeholder="Type your response to the feedback..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="sendResponse()">
+                    <i class="fas fa-reply me-2"></i>Send Response
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentFeedbackId = null;
+
+async function viewFeedback(feedbackId) {
+    currentFeedbackId = feedbackId;
+
+    try {
+        const response = await fetch(`/admin/api/feedback/${feedbackId}`);
+        const feedback = await response.json();
+
+        document.getElementById('feedbackStudent').textContent = feedback.user.full_name + ' (LRN: ' + feedback.user.username + ')';
+        document.getElementById('feedbackType').textContent = feedback.feedback_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        document.getElementById('feedbackSubject').textContent = feedback.subject;
+        document.getElementById('feedbackMessage').textContent = feedback.message;
+
+        if (feedback.rating) {
+            document.getElementById('ratingSection').style.display = 'block';
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += `<i class="fas fa-star ${i <= feedback.rating ? 'text-warning' : 'text-muted'}"></i>`;
+            }
+            document.getElementById('feedbackRating').innerHTML = stars + ` <small>(${feedback.rating}/5)</small>`;
+        } else {
+            document.getElementById('ratingSection').style.display = 'none';
+        }
+
+        if (feedback.admin_response) {
+            document.getElementById('existingResponseText').textContent = feedback.admin_response;
+            document.getElementById('existingResponse').style.display = 'block';
+            document.getElementById('responseText').value = feedback.admin_response;
+        } else {
+            document.getElementById('existingResponse').style.display = 'none';
+            document.getElementById('responseText').value = '';
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+        modal.show();
+    } catch (error) {
+        console.error('Error loading feedback:', error);
+        alert('Failed to load feedback details.');
+    }
+}
+
+async function sendResponse() {
+    if (!currentFeedbackId) return;
+
+    const responseText = document.getElementById('responseText').value.trim();
+    if (!responseText) {
+        alert('Please enter a response.');
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('response_text', responseText);
+
+        const response = await fetch(`/admin/feedback/${currentFeedbackId}/respond`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Response sent successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error sending response:', error);
+        alert('Failed to send response. Please try again.');
+    }
+}
+</script>
+{% endblock %}
