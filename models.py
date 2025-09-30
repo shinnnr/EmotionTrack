@@ -210,14 +210,10 @@ class StudentFeedback(db.Model):
     subject = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=False)
     is_anonymous = db.Column(db.Boolean, default=False)
-    admin_response = db.Column(db.Text, nullable=True)
-    responded_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    responded_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=get_current_time)
 
     # Relationships
     user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('feedback', cascade='all, delete-orphan'))
-    responder = db.relationship('User', foreign_keys=[responded_by])
 
     def __repr__(self):
         return f'<StudentFeedback {self.feedback_type} by User {self.user_id}>'

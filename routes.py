@@ -1837,9 +1837,7 @@ def get_feedback_details(feedback_id):
         'message': feedback.message,
         'rating': feedback.rating,
         'is_anonymous': feedback.is_anonymous,
-        'admin_response': feedback.admin_response,
-        'created_at': convert_to_manila_time(feedback.created_at).isoformat() if feedback.created_at else None,
-        'responded_at': convert_to_manila_time(feedback.responded_at).isoformat() if feedback.responded_at else None
+        'created_at': convert_to_manila_time(feedback.created_at).isoformat() if feedback.created_at else None
     })
 
 @admin_bp.route('/api/alert/<int:alert_id>')
@@ -1874,30 +1872,6 @@ def get_alert_details(alert_id):
         'created_at': convert_to_manila_time(alert.created_at).isoformat() if alert.created_at else None
     })
 
-@admin_bp.route('/feedback/<int:feedback_id>/respond', methods=['POST'])
-@login_required
-def respond_to_feedback(feedback_id):
-    if not current_user.is_admin:
-        return jsonify({'success': False, 'message': 'Access denied'})
-
-    feedback = StudentFeedback.query.get_or_404(feedback_id)
-
-    # Check if admin can access this feedback
-    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
-    if feedback.user_id not in accessible_student_ids:
-        return jsonify({'success': False, 'message': 'Access denied'})
-
-    response_text = request.form.get('response_text')
-
-    if response_text:
-        feedback.admin_response = response_text
-        feedback.responded_by = current_user.id
-        feedback.responded_at = get_current_time()
-        db.session.commit()
-
-        return jsonify({'success': True, 'message': 'Response sent successfully'})
-
-    return jsonify({'success': False, 'message': 'Response text is required'})
 
 @admin_bp.route('/suggested-responses/<int:user_id>')
 @login_required
