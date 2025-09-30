@@ -227,8 +227,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999999 !important;
+    z-index: 1000001 !important;
     animation: fadeIn 0.3s ease;
     padding: 60px 20px 20px 20px;
     align-items: flex-start;
@@ -237,6 +236,17 @@
 
 .custom-modal.show {
     display: flex;
+}
+
+.custom-modal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000000 !important;
 }
 
 .custom-modal-content {
@@ -248,7 +258,7 @@
     overflow-y: auto;
     animation: slideIn 0.3s ease;
     position: relative;
-    z-index: 1000000 !important;
+    z-index: 1000002 !important;
     margin-left: auto;
     margin-right: 2rem;
 }
@@ -429,7 +439,7 @@ async function viewFeedback(feedbackId) {
         showModal('feedbackModal');
     } catch (error) {
         console.error('Error loading feedback:', error);
-        alert('Failed to load feedback details.');
+        // Error is already handled by the throw in the try block
     }
 }
 
