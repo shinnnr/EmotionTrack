@@ -223,15 +223,15 @@
 .custom-modal-overlay {
     position: fixed;
     top: 0;
-    left: 0;
-    width: 100%;
+    left: 280px;
+    width: calc(100vw - 280px);
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     z-index: 1070;
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    padding: 60px 20px 20px 300px; /* Account for sidebar width and top navigation */
+    padding: 60px 20px 20px 20px;
 }
 
 #feedbackModal {
@@ -303,7 +303,10 @@
 /* Mobile responsive adjustments */
 @media (max-width: 991px) {
     .custom-modal-overlay {
-        padding-left: 20px;
+        left: 0;
+        width: 100%;
+        background: none;
+        padding: 20px;
     }
 
     .custom-modal {
@@ -326,15 +329,9 @@ function showModal(modalId, size = '') {
         // Mark body to indicate modal is open (but keep sidebar visible)
         document.body.classList.add('modal-open');
 
-        // Add background click to close modal
-        if (!modal.hasAttribute('data-bg-click-added')) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeModal(modalId);
-                }
-            });
-            modal.setAttribute('data-bg-click-added', 'true');
-        }
+        // Force modal above everything with maximum z-index
+        modal.style.zIndex = '999999';
+        modal.style.position = 'fixed';
     }
 }
 
@@ -343,6 +340,10 @@ function closeModal(modalId) {
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
+
+        // Reset modal styles
+        modal.style.zIndex = '';
+        modal.style.position = '';
 
         // Remove modal state from body
         document.body.classList.remove('modal-open');
