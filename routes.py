@@ -1760,7 +1760,7 @@ def submit_feedback():
         feedback = StudentFeedback(
             user_id=current_user.id,
             feedback_type=form.feedback_type.data,
-            rating=form.rating.data if form.feedback_type.data == 'satisfaction' else None,
+            rating=form.rating.data,
             subject=form.subject.data,
             message=form.message.data,
             is_anonymous=form.is_anonymous.data
