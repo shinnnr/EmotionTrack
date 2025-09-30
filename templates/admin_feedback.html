@@ -187,8 +187,8 @@
 </div>
 
 <!-- Feedback Details Modal -->
-<div class="custom-modal-overlay" id="feedbackModal" style="display: none;">
-    <div class="custom-modal">
+<div class="custom-modal-overlay" id="feedbackModal" style="display: none;" onclick="closeFeedbackModal()">
+    <div class="custom-modal" onclick="event.stopPropagation()">
         <div class="custom-modal-header">
             <h5 class="custom-modal-title">
                 <i class="fas fa-comment me-2"></i>Feedback Details

@@ -200,8 +200,8 @@
 </div>
 
 <!-- Alert Details Modal -->
-<div class="custom-modal-overlay" id="alertModal" style="display: none;">
-    <div class="custom-modal">
+<div class="custom-modal-overlay" id="alertModal" style="display: none;" onclick="closeAlertModal()">
+    <div class="custom-modal" onclick="event.stopPropagation()">
         <div class="custom-modal-header">
             <h5 class="custom-modal-title">
                 <i class="fas fa-exclamation-triangle me-2"></i>Alert Details
