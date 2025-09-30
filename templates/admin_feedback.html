@@ -363,8 +363,6 @@ function showModal(modalId, size = '') {
         modal.classList.add('show');
         document.body.style.overflow = 'hidden';
 
-        // Force modal above everything with maximum z-index
-        modal.style.zIndex = '999999';
         modal.style.position = 'fixed';
 
         // Mark body to indicate modal is open (but keep sidebar visible)
