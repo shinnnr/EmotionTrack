@@ -163,16 +163,17 @@
 </div>
 
 <!-- Feedback View Modal -->
-<div class="modal fade" id="feedbackModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-comment me-2"></i>Feedback Details
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
+<div id="feedbackModal" class="custom-modal">
+    <div class="custom-modal-content modal-lg">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-comment me-2"></i>Feedback Details
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeModal('feedbackModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Student:</label>
                     <div id="feedbackStudent" class="p-2 bg-light rounded"></div>
@@ -207,8 +208,8 @@
                     <textarea class="form-control" id="responseText" rows="4" placeholder="Type your response to the feedback..."></textarea>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <div class="d-flex justify-content-end gap-3 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('feedbackModal')">Close</button>
                 <button type="button" class="btn btn-primary" onclick="sendResponse()">
                     <i class="fas fa-reply me-2"></i>Send Response
                 </button>
@@ -218,20 +219,173 @@
 </div>
 
 <style>
-#feedbackModal .modal-dialog {
-    z-index: 1000000 !important;
-}
-
-#feedbackModal {
+/* Custom Modal Styles */
+.custom-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
     z-index: 999999 !important;
+    animation: fadeIn 0.3s ease;
+    padding: 60px 20px 20px 20px;
+    align-items: flex-start;
+    justify-content: center;
 }
 
-.modal-backdrop {
-    z-index: 999998 !important;
+.custom-modal.show {
+    display: flex;
+}
+
+.custom-modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 70vw;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease;
+    position: relative;
+    z-index: 1000000 !important;
+    margin-left: auto;
+    margin-right: 2rem;
+}
+
+.custom-modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--clsu-green);
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.custom-modal-title {
+    margin: 0;
+    font-weight: 600;
+    flex-grow: 1;
+}
+
+.custom-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.custom-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.custom-modal-body {
+    padding: 1.5rem;
+}
+
+.modal-lg .custom-modal-content {
+    max-width: 800px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Desktop modal positioning */
+@media (min-width: 992px) {
+    .custom-modal-content {
+        max-width: 60vw;
+        margin-left: 280px;
+        margin-right: 2rem;
+    }
+
+    .modal-lg .custom-modal-content {
+        max-width: 50vw;
+        margin-left: 280px;
+    }
+}
+
+/* Tablet modal positioning */
+@media (min-width: 769px) and (max-width: 991px) {
+    .custom-modal-content {
+        max-width: 75vw;
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
+}
+
+/* Mobile responsive design */
+@media (max-width: 768px) {
+    .custom-modal-content {
+        margin: 1rem auto;
+        max-width: calc(100vw - 2rem);
+    }
 }
 </style>
 
 <script>
+// Modal utility functions
+function showModal(modalId, size = '') {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        if (size) {
+            modal.classList.add(size);
+        }
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        // Force modal above everything with maximum z-index
+        modal.style.zIndex = '999999';
+        modal.style.position = 'fixed';
+
+        // Mark body to indicate modal is open (but keep sidebar visible)
+        document.body.classList.add('modal-open');
+
+        // Add background click to close modal
+        if (!modal.hasAttribute('data-bg-click-added')) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal(modalId);
+                }
+            });
+            modal.setAttribute('data-bg-click-added', 'true');
+        }
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+
+        // Reset modal styles
+        modal.style.zIndex = '';
+        modal.style.position = '';
+
+        // Remove modal state from body
+        document.body.classList.remove('modal-open');
+    }
+}
+
 let currentFeedbackId = null;
 
 async function viewFeedback(feedbackId) {
@@ -266,8 +420,7 @@ async function viewFeedback(feedbackId) {
             document.getElementById('responseText').value = '';
         }
 
-        const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
-        modal.show();
+        showModal('feedbackModal');
     } catch (error) {
         console.error('Error loading feedback:', error);
         alert('Failed to load feedback details.');
