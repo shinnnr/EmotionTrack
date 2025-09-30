@@ -193,8 +193,10 @@ async function generateAlerts() {
         const response = await fetch('/admin/api/generate-alerts', {
             method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
-            }
+            },
+            body: JSON.stringify({})
         });
 
         const result = await response.json();
