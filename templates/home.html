@@ -633,9 +633,13 @@ document.addEventListener('keydown', function(event) {
 @media (max-width: 480px) {
     /* Extra small devices (phones < 480px) */
     .custom-modal {
-        padding: 60px 10px 10px 10px; /* Reduced padding for very small screens */
+        padding: 0 10px 10px 10px; /* Remove top padding to eliminate undimmed space */
         align-items: flex-start;
         justify-content: center;
+    }
+
+    .custom-modal-content {
+        margin-top: 60px; /* Account for navigation bar with margin instead of padding */
     }
 
     .custom-modal-content {
