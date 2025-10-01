@@ -494,88 +494,84 @@ document.addEventListener('keydown', function(event) {
     }
 }
 
-/* Custom Modal Styles */
-.custom-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1050;
-    justify-content: center;
-    align-items: center;
-    animation: fadeIn 0.15s ease-out;
+/* Modal state for body */
+body.modal-open {
+    overflow: hidden !important;
 }
 
-.custom-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.4);
-    cursor: pointer;
-    z-index: 1049;
+/* Force modal above everything */
+.custom-modal.show {
+    z-index: 999999 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
 }
 
-.custom-modal-content {
-    position: relative;
-    background: #ffffff;
-    border-radius: 0.5rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    width: 90%;
-    max-width: 70vw;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    z-index: 1051;
-    animation: slideIn 0.2s ease-out;
+/* Desktop modal positioning */
+@media (min-width: 992px) {
+    .custom-modal-content {
+        max-width: 60vw;
+        margin-left: 280px;
+        margin-right: 2rem;
+    }
+    
+    .modal-lg .custom-modal-content {
+        max-width: 50vw;
+        margin-left: 280px;
+    }
+    
+    .modal-xl .custom-modal-content {
+        max-width: 65vw;
+        margin-left: 280px;
+    }
 }
 
-.custom-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.5rem;
-    background: var(--clsu-green);
-    color: white;
-    border-radius: 0.75rem 0.75rem 0 0;
-    flex-shrink: 0;
+/* Tablet modal positioning */
+@media (min-width: 769px) and (max-width: 991px) {
+    .custom-modal-content {
+        max-width: 75vw;
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
 }
 
-.custom-modal-title {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
+/* Mobile responsive design */
+@media (max-width: 768px) {
+    .custom-modal-content {
+        margin: 1rem auto;
+        max-width: calc(100vw - 2rem);
+    }
+
+    .action-card {
+        height: 130px;
+        padding: 1.25rem 1rem;
+    }
+
+    .action-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .action-arrow {
+        width: 16px;
+        font-size: 0.75rem;
+    }
 }
 
-.custom-modal-close {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.25rem;
-    cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 4px;
-    transition: background 0.2s ease;
-}
-
-.custom-modal-close:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.custom-modal-body {
-    padding: 1.5rem;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.custom-modal-footer {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid #dee2e6;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
+/* Tablet and smaller desktop responsive design */
+@media (max-width: 1200px) {
+    .action-card {
+        height: 140px;
+        padding: 1.25rem 1rem;
+    }
+    
+    .action-arrow {
+        width: 18px;
+        font-size: 0.8rem;
+    }
 }
 
 /* Insights cards styling */
