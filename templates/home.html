@@ -325,6 +325,17 @@ function openInsightsModal() {
     const modal = document.getElementById('insightsModal');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+    // Add background click to close modal (matching profile modal behavior)
+    if (!modal.hasAttribute('data-bg-click-added')) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeInsightsModal();
+            }
+        });
+        modal.setAttribute('data-bg-click-added', 'true');
+    }
+
     loadInsights();
 }
 
@@ -512,7 +523,7 @@ document.addEventListener('keydown', function(event) {
     border-radius: 0.5rem;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     width: 90%;
-    max-width: 800px;
+    max-width: 70vw;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
@@ -524,11 +535,14 @@ document.addEventListener('keydown', function(event) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: #2c5234;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    background: var(--clsu-green);
     color: white;
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
+    border-radius: 12px 12px 0 0;
     flex-shrink: 0;
 }
 
@@ -673,65 +687,31 @@ document.addEventListener('keydown', function(event) {
     }
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
-    /* Medium devices (tablets) */
-    .custom-modal {
-        padding: 20px;
-        align-items: center;
-        justify-content: center;
+/* Desktop modal positioning - matching profile modal responsiveness */
+@media (min-width: 992px) {
+    .custom-modal-content {
+        max-width: 60vw;
+        margin-left: 280px;
+        margin-right: 2rem;
     }
 
+    .modal-lg .custom-modal-content {
+        max-width: 50vw;
+        margin-left: 280px;
+    }
+
+    .modal-xl .custom-modal-content {
+        max-width: 65vw;
+        margin-left: 280px;
+    }
+}
+
+/* Tablet modal positioning */
+@media (min-width: 769px) and (max-width: 991px) {
     .custom-modal-content {
-        width: 75vw;
         max-width: 75vw;
-        max-height: 85vh;
-    }
-
-    .custom-modal-overlay {
-        cursor: default !important;
-        pointer-events: none;
-    }
-}
-
-@media (min-width: 1025px) and (max-width: 1200px) {
-    /* Large devices (desktops) */
-    .custom-modal {
-        justify-content: flex-start;
-        align-items: center;
-        padding: 20px 20px 20px 300px; /* Account for sidebar */
-    }
-
-    .custom-modal-content {
-        width: 35vw;
-        max-width: 35vw;
-        max-height: 80vh;
-        margin: 0;
-    }
-
-    .custom-modal-overlay {
-        cursor: default !important;
-        pointer-events: none;
-    }
-}
-
-@media (min-width: 1201px) {
-    /* Extra large devices */
-    .custom-modal {
-        justify-content: flex-start;
-        align-items: center;
-        padding: 20px 20px 20px 320px; /* Account for wider sidebar */
-    }
-
-    .custom-modal-content {
-        width: 30vw;
-        max-width: 30vw;
-        max-height: 75vh;
-        margin: 0;
-    }
-
-    .custom-modal-overlay {
-        cursor: default !important;
-        pointer-events: none;
+        margin-left: 1rem;
+        margin-right: 1rem;
     }
 }
 
