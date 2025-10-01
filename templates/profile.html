@@ -1147,9 +1147,22 @@ async function viewDailyTips() {
         const response = await apiCall('/api/daily-wellness-tips');
         const tips = response.tips || [];
         const quote = response.motivational_quote || '';
+        const hasLogs = response.has_logs || false;
 
         let content;
-        if (tips.length === 0) {
+        if (!hasLogs) {
+            // User hasn't logged any emotions yet
+            content = `
+                <div class="text-center py-5">
+                    <i class="fas fa-heart fa-4x text-clsu-gold mb-4"></i>
+                    <h5 class="fw-bold text-clsu-green mb-3">Start Your Wellness Journey</h5>
+                    <p class="text-muted mb-4">${response.message || 'Start your wellness journey by logging your emotions first!'}</p>
+                    <a href="/emotion-log" class="btn btn-clsu-green btn-lg">
+                        <i class="fas fa-plus me-2"></i>Log Your Emotions
+                    </a>
+                </div>
+            `;
+        } else if (tips.length === 0) {
             content = `
                 <div class="text-center py-5">
                     <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>

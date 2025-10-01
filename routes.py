@@ -236,6 +236,18 @@ def get_motivational_quote():
 @login_required
 def get_daily_wellness_tips():
     try:
+        # Check if user has any mood logs
+        has_mood_logs = MoodLog.query.filter_by(user_id=current_user.id).count() > 0
+
+        if not has_mood_logs:
+            # User hasn't logged any emotions yet
+            return jsonify({
+                'has_logs': False,
+                'message': 'Start your wellness journey by logging your emotions first!',
+                'tips': [],
+                'motivational_quote': 'Every journey begins with a single step. Your mental health matters.'
+            })
+
         # Get the latest stored tips for the user
         latest_tips = DailyTips.query.filter_by(user_id=current_user.id).order_by(DailyTips.created_at.desc()).first()
 
@@ -249,6 +261,7 @@ def get_daily_wellness_tips():
             quote = get_user_motivational_quote(current_user.id)
 
         return jsonify({
+            'has_logs': True,
             'tips': tips,
             'motivational_quote': quote
         })
