@@ -145,7 +145,22 @@
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <div class="col-md-6 col-lg-3">
+                            <div class="action-card" id="dailyTipsBtn">
+                                <div class="action-icon bg-warning">
+                                    <i class="fas fa-lightbulb"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h6 class="fw-bold mb-1">Daily Wellness Tips</h6>
+                                    <p class="text-muted mb-0 small">Personalized tips for you</p>
+                                </div>
+                                <div class="action-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="col-md-6 col-lg-3">
                             <div class="action-card" id="dassResultsBtn">
                                 <div class="action-icon bg-success">
@@ -177,6 +192,26 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Daily Wellness Tips Modal -->
+<div id="dailyTipsModal" class="custom-modal">
+    <div class="custom-modal-content modal-lg">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title" id="dailyTipsModalLabel">
+                <i class="fas fa-lightbulb me-2"></i>Daily Wellness Tips
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeModal('dailyTipsModal')" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body">
+            <div class="text-center py-4">
+                <div class="spinner mb-3"></div>
+                <p class="text-muted">Loading your personalized wellness tips...</p>
             </div>
         </div>
     </div>
@@ -706,6 +741,12 @@ function initializeProfilePage() {
         insightsBtn.addEventListener('click', viewWellnessInsights);
     }
     
+    // Daily Tips Button
+    const dailyTipsBtn = document.getElementById('dailyTipsBtn');
+    if (dailyTipsBtn) {
+        dailyTipsBtn.addEventListener('click', viewDailyTips);
+    }
+
     // DASS Results Button
     const dassBtn = document.getElementById('dassResultsBtn');
     if (dassBtn) {
@@ -1085,6 +1126,115 @@ async function viewDASSResults() {
             </div>
         `;
     }
+}
+
+// Daily Wellness Tips functionality
+async function viewDailyTips() {
+    const loadingContent = `
+        <div class="loading-content">
+            <div class="spinner mb-3"></div>
+            <p class="text-muted">Loading your personalized wellness tips...</p>
+        </div>
+    `;
+
+    const modalId = createModal(
+        '<i class="fas fa-lightbulb me-2"></i>Daily Wellness Tips',
+        loadingContent,
+        'modal-lg'
+    );
+
+    try {
+        const response = await apiCall('/api/daily-wellness-tips');
+        const tips = response.tips || [];
+        const quote = response.motivational_quote || '';
+
+        let content;
+        if (tips.length === 0) {
+            content = `
+                <div class="text-center py-5">
+                    <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No tips available</h5>
+                    <p class="text-muted">Start logging your emotions to get personalized wellness tips.</p>
+                    <a href="/emotion-log" class="btn btn-clsu-green">
+                        <i class="fas fa-plus me-2"></i>Log Emotions
+                    </a>
+                </div>
+            `;
+        } else {
+            content = `
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-info border-0 shadow-sm mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-quote-left fa-2x text-info me-3"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="alert-heading fw-bold mb-1">Motivational Quote</h6>
+                                    <p class="mb-0">${quote}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+            `;
+
+            tips.forEach((tip, index) => {
+                const iconClass = getTipIcon(index);
+                content += `
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="bg-clsu-green text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="${iconClass}"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="mb-0">${tip}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            content += `
+                </div>
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6 class="fw-bold text-clsu-green mb-2">
+                        <i class="fas fa-heart me-2"></i>Remember
+                    </h6>
+                    <p class="mb-0 text-muted">
+                        These tips are personalized based on your emotional patterns. Continue tracking your emotions regularly to receive more tailored recommendations.
+                    </p>
+                </div>
+            `;
+        }
+
+        document.querySelector(`#${modalId} .custom-modal-body`).innerHTML = content;
+
+    } catch (error) {
+        document.querySelector(`#${modalId} .custom-modal-body`).innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Unable to load wellness tips. Please try again later.
+            </div>
+        `;
+    }
+}
+
+function getTipIcon(index) {
+    const icons = [
+        'fas fa-brain',
+        'fas fa-heart',
+        'fas fa-moon',
+        'fas fa-running',
+        'fas fa-users',
+        'fas fa-smile'
+    ];
+    return icons[index % icons.length];
 }
 
 // Change Password functionality

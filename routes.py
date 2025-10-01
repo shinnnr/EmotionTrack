@@ -232,6 +232,22 @@ def get_motivational_quote():
         return jsonify({'error': str(e)}), 500
 
 
+@main_bp.route('/api/daily-wellness-tips')
+@login_required
+def get_daily_wellness_tips():
+    try:
+        # Get the latest tips for the user (same logic as emotion_log)
+        tips = get_user_coping_recommendations(current_user.id, limit=6)
+        quote = get_user_motivational_quote(current_user.id)
+
+        return jsonify({
+            'tips': tips,
+            'motivational_quote': quote
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @main_bp.route('/api/dass21-results')
 @login_required
 def get_dass21_results():
