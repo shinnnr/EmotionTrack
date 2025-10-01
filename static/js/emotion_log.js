@@ -693,17 +693,13 @@ document.head.insertAdjacentHTML('beforeend', emotionLogStyles);
 // Daily Tips Modal functionality
 function closeDailyTipsModal() {
     const modal = document.getElementById('dailyTipsModal');
-    const backdrop = document.querySelector('.modal-backdrop');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
+        // Re-enable scrolling
+        document.body.classList.remove('modal-open');
+        // Redirect to home after closing modal
+        window.location.href = '/home';
     }
-    if (backdrop) {
-        backdrop.style.display = 'none';
-    }
-    // Re-enable scrolling
-    document.body.classList.remove('modal-open');
-    // Redirect to home after closing modal
-    window.location.href = '/home';
 }
 
 // Initialize modal when page loads (for tips display)
@@ -712,6 +708,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (modal) {
         // Disable scrolling when modal is shown
         document.body.classList.add('modal-open');
+
+        // Add background click to close modal
+        if (!modal.hasAttribute('data-bg-click-added')) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeDailyTipsModal();
+                }
+            });
+            modal.setAttribute('data-bg-click-added', 'true');
+        }
     }
 });
 

@@ -333,16 +333,17 @@
 
 <!-- Daily Tips Modal -->
 {% if show_daily_tips %}
-<div id="dailyTipsModal" class="modal fade show daily-tips-modal" style="display: block;" tabindex="-1" aria-labelledby="dailyTipsModalLabel" aria-hidden="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg daily-tips-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-clsu-green text-white">
-                <h5 class="modal-title" id="dailyTipsModalLabel">
-                    <i class="fas fa-lightbulb me-2"></i>Daily Wellness Tips
-                </h5>
-                <button type="button" class="btn-close btn-close-white" onclick="closeDailyTipsModal()" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
+<div id="dailyTipsModal" class="custom-modal show" tabindex="-1" aria-labelledby="dailyTipsModalLabel" aria-hidden="false">
+    <div class="custom-modal-content modal-lg">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title" id="dailyTipsModalLabel">
+                <i class="fas fa-lightbulb me-2"></i>Daily Wellness Tips
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeDailyTipsModal()" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body">
                 <!-- Motivational Quote -->
                 <div class="text-center mb-4">
                     <blockquote class="blockquote">
@@ -395,16 +396,9 @@
                     <p class="text-muted">Great job logging your emotions! Keep up the good work.</p>
                 </div>
                 {% endif %}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-clsu-green" onclick="closeDailyTipsModal()">
-                    <i class="fas fa-check me-1"></i>Got it!
-                </button>
-            </div>
         </div>
     </div>
 </div>
-<div class="modal-backdrop fade show" onclick="closeDailyTipsModal()"></div>
 {% endif %}
 
 <script src="{{ url_for('static', filename='js/emotion_log.js') }}"></script>
@@ -459,126 +453,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% block extra_css %}
 <style>
-/* Daily Tips Modal Custom Positioning */
-.daily-tips-modal .modal-dialog {
-    margin: 0;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.daily-tips-modal .modal-content {
-    border-radius: 0.5rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.daily-tips-modal .modal-header {
-    flex-shrink: 0;
-}
-
-.daily-tips-modal .modal-body {
-    overflow-y: auto;
-    flex: 1;
-}
-
-/* Extra small devices (phones, <576px) */
-@media (max-width: 575.98px) {
-    .daily-tips-modal .modal-dialog {
-        top: 60px;
-        left: 10px;
-        right: 10px;
-        bottom: 10px;
-        align-items: flex-start;
-    }
-
-    .daily-tips-modal .modal-content {
-        width: 100%;
-        max-width: none;
-        margin: 0;
-        max-height: calc(100vh - 80px);
-    }
-}
-
-/* Small devices (tablets, 576px - 767px) */
-@media (min-width: 576px) and (max-width: 767.98px) {
-    .daily-tips-modal .modal-dialog {
-        top: 60px;
-        left: 20px;
-        right: 20px;
-        bottom: 20px;
-        align-items: flex-start;
-    }
-
-    .daily-tips-modal .modal-content {
-        width: 100%;
-        max-width: none;
-        margin: 0;
-        max-height: calc(100vh - 100px);
-    }
-}
-
-/* Medium devices (tablets, 768px - 991px) */
-@media (min-width: 768px) and (max-width: 991.98px) {
-    .daily-tips-modal .modal-dialog {
-        left: 200px; /* Smaller sidebar */
-        right: 20px;
-        top: 20px;
-        bottom: 20px;
-    }
-
-    .daily-tips-modal .modal-content {
-        max-width: 500px;
-        margin: auto;
-        max-height: calc(100vh - 40px);
-    }
-}
-
-/* Large devices (desktops, 992px - 1199px) */
-@media (min-width: 992px) and (max-width: 1199.98px) {
-    .daily-tips-modal .modal-dialog {
-        left: 250px;
-        right: 20px;
-        top: 20px;
-        bottom: 20px;
-    }
-
-    .daily-tips-modal .modal-content {
-        max-width: 600px;
-        margin: auto;
-        max-height: calc(100vh - 40px);
-    }
-}
-
-/* Extra large devices (large desktops, >=1200px) */
-@media (min-width: 1200px) {
-    .daily-tips-modal .modal-dialog {
-        left: 250px;
-        right: 50px;
-        top: 30px;
-        bottom: 30px;
-    }
-
-    .daily-tips-modal .modal-content {
-        max-width: 700px;
-        margin: auto;
-        max-height: calc(100vh - 60px);
-    }
-}
-
-/* Disable scrolling when modal is open */
-body.modal-open {
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-}
 
 .emotion-item {
     display: flex;
