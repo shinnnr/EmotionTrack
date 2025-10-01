@@ -629,22 +629,66 @@ document.addEventListener('keydown', function(event) {
     color: var(--clsu-gold) !important;
 }
 
-/* Modal state for body */
-body.modal-open {
-    overflow: hidden !important;
+/* Responsive design for all devices */
+@media (max-width: 480px) {
+    /* Extra small devices (phones < 480px) */
+    .custom-modal {
+        padding: 0 10px 10px 10px; /* Remove top padding to eliminate undimmed space */
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .custom-modal-content {
+        margin-top: 60px; /* Account for navigation bar with margin instead of padding */
+    }
+
+    .custom-modal-content {
+        margin: 0.5rem auto;
+        width: 95vw;
+        max-width: 95vw;
+        max-height: 90vh;
+    }
+
+    .custom-modal-header {
+        padding: 1rem;
+    }
+
+    .custom-modal-body {
+        padding: 1rem;
+    }
+
+    .insights-card {
+        padding: 1rem;
+    }
+
+    .custom-modal-overlay {
+        cursor: default !important;
+        pointer-events: none;
+    }
 }
 
-/* Force modal above everything */
-.custom-modal.show {
-    z-index: 999999 !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
+@media (min-width: 481px) and (max-width: 768px) {
+    /* Small devices (phones 481px - 768px) */
+    .custom-modal {
+        padding-top: 80px;
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .custom-modal-content {
+        margin: 1rem auto;
+        width: 90vw;
+        max-width: 90vw;
+        max-height: 85vh;
+    }
+
+    .custom-modal-overlay {
+        cursor: default !important;
+        pointer-events: none;
+    }
 }
 
-/* Desktop modal positioning */
+/* Desktop modal positioning - matching profile modal responsiveness */
 @media (min-width: 992px) {
     .custom-modal-content {
         max-width: 60vw;
@@ -672,22 +716,32 @@ body.modal-open {
     }
 }
 
-/* Mobile responsive design */
-@media (max-width: 768px) {
-    .custom-modal-content {
-        margin: 1rem auto;
-        max-width: calc(100vw - 2rem);
-    }
+/* Ensure backdrop cursor behavior is correct */
+.custom-modal-overlay {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
 
-    .insights-card {
-        padding: 1rem;
+/* Override cursor for desktop where backdrop clicks are disabled */
+@media (min-width: 769px) {
+    .custom-modal-overlay {
+        cursor: default !important;
     }
 }
 
-/* Tablet and smaller desktop responsive design */
-@media (max-width: 1200px) {
-    .insights-card {
-        padding: 1rem;
+/* Prevent modal content clicks from bubbling to backdrop */
+.custom-modal-content {
+    pointer-events: auto;
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+    .custom-close-btn {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 }
 </style>
