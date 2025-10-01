@@ -115,9 +115,9 @@
                             </thead>
                             <tbody>
                                 {% for alert in alerts %}
-                                <tr class="{{ 'table-warning' if not alert.is_resolved else '' }}">
-                                    <td><input type="checkbox" class="alert-checkbox" value="{{ alert.id }}" onchange="updateDeletePanel()"></td>
-                                    <td class="student-cell" onclick="viewAlert({{ alert.id }})">
+                                <tr class="{{ 'table-warning' if not alert.is_resolved else '' }}" onclick="viewAlert({{ alert.id }})">
+                                    <td><input type="checkbox" class="alert-checkbox" value="{{ alert.id }}" onchange="updateDeletePanel()" onclick="event.stopPropagation()"></td>
+                                    <td class="student-cell">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-sm me-3">
                                                 <div class="avatar-title rounded-circle bg-primary text-white">
@@ -170,7 +170,7 @@
                                     </td>
                                     <td>
                                         {% if not alert.is_resolved %}
-                                        <button class="btn btn-sm btn-success" onclick="resolveAlert({{ alert.id }})">
+                                        <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); resolveAlert({{ alert.id }})">
                                             <i class="fas fa-check me-1"></i>Resolve
                                         </button>
                                         {% else %}
@@ -364,6 +364,17 @@ body.modal-open {
     /* Mobile layout for search bar */
     .input-group {
         margin-bottom: 1rem !important;
+    }
+}
+
+/* Desktop row clickability */
+@media (min-width: 768px) {
+    #alertsTable tbody tr {
+        cursor: pointer;
+    }
+
+    #alertsTable tbody tr:hover {
+        background-color: #f8f9fa;
     }
 }
 </style>
