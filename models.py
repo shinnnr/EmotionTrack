@@ -217,3 +217,18 @@ class StudentFeedback(db.Model):
 
     def __repr__(self):
         return f'<StudentFeedback {self.feedback_type} by User {self.user_id}>'
+
+class DailyTips(db.Model):
+    __tablename__ = 'daily_tips'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    tips = db.Column(db.Text, nullable=False)  # JSON string of tips array
+    motivational_quote = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=get_current_time)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('daily_tips', cascade='all, delete-orphan'))
+
+    def __repr__(self):
+        return f'<DailyTips for User {self.user_id} on {self.created_at}>'

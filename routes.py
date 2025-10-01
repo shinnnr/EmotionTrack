@@ -7,7 +7,7 @@ from flask_wtf.csrf import validate_csrf, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from app import db, csrf
-from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, get_current_time, convert_to_manila_time
+from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, DailyTips, get_current_time, convert_to_manila_time
 import pytz
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm, FeedbackForm
 from coping_recommendations import get_user_coping_recommendations, get_user_motivational_quote
@@ -236,9 +236,17 @@ def get_motivational_quote():
 @login_required
 def get_daily_wellness_tips():
     try:
-        # Get the latest tips for the user (same logic as emotion_log)
-        tips = get_user_coping_recommendations(current_user.id, limit=6)
-        quote = get_user_motivational_quote(current_user.id)
+        # Get the latest stored tips for the user
+        latest_tips = DailyTips.query.filter_by(user_id=current_user.id).order_by(DailyTips.created_at.desc()).first()
+
+        if latest_tips:
+            # Parse the stored tips from JSON
+            tips = json.loads(latest_tips.tips)
+            quote = latest_tips.motivational_quote
+        else:
+            # Fallback: generate new tips if no stored tips exist
+            tips = get_user_coping_recommendations(current_user.id, limit=6)
+            quote = get_user_motivational_quote(current_user.id)
 
         return jsonify({
             'tips': tips,
@@ -380,6 +388,15 @@ def emotion_log():
             try:
                 daily_tips = get_user_coping_recommendations(current_user.id, limit=3)
                 motivational_quote = get_user_motivational_quote(current_user.id)
+
+                # Save tips to database for later retrieval
+                daily_tips_record = DailyTips(
+                    user_id=current_user.id,
+                    tips=json.dumps(daily_tips),
+                    motivational_quote=motivational_quote
+                )
+                db.session.add(daily_tips_record)
+                db.session.commit()
             except Exception as e:
                 print(f"Error generating daily tips: {e}")
                 daily_tips = []
