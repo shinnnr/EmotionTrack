@@ -517,7 +517,8 @@ document.addEventListener('keydown', function(event) {
     width: 90%;
     max-width: 800px;
     max-height: 90vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     z-index: 1051;
     animation: slideIn 0.2s ease-out;
 }
@@ -531,6 +532,7 @@ document.addEventListener('keydown', function(event) {
     color: white;
     border-top-left-radius: 0.5rem;
     border-top-right-radius: 0.5rem;
+    flex-shrink: 0;
 }
 
 .custom-modal-title {
@@ -556,6 +558,8 @@ document.addEventListener('keydown', function(event) {
 
 .custom-modal-body {
     padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .custom-modal-footer {
