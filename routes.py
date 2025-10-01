@@ -2642,7 +2642,9 @@ def export_data():
         # Multiple types selected - create ZIP file
         else:
             zip_buffer = io.BytesIO()
-            
+            # Capture timestamp once for all files in the ZIP to ensure time accuracy
+            export_timestamp = get_current_time().strftime("%Y%m%d_%H%M%S")
+
             with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
                 for export_type in export_types:
                     output = io.StringIO()
@@ -2714,7 +2716,7 @@ def export_data():
                             ])
                     
                     # Add CSV to ZIP
-                    filename = f'emotiontrack_{export_type}_{get_current_time().strftime("%Y%m%d_%H%M%S")}.csv'
+                    filename = f'emotiontrack_{export_type}_{export_timestamp}.csv'
                     zip_file.writestr(filename, output.getvalue())
             
             zip_buffer.seek(0)
@@ -2722,7 +2724,7 @@ def export_data():
             return Response(
                 zip_buffer.getvalue(),
                 mimetype='application/zip',
-                headers={'Content-Disposition': f'attachment; filename=emotiontrack_export_{get_current_time().strftime("%Y%m%d_%H%M%S")}.zip'}
+                headers={'Content-Disposition': f'attachment; filename=emotiontrack_export_{export_timestamp}.zip'}
             )
         
     except Exception as e:
