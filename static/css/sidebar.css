@@ -257,16 +257,17 @@
 @media (min-width: 992px) {
     .sidebar {
         transform: translateX(0) !important;
+        overflow-y: hidden;
     }
-    
+
     .sidebar-toggle {
         display: none !important;
     }
-    
+
     .sidebar-overlay {
         display: none !important;
     }
-    
+
     .main-content.with-sidebar {
         margin-left: var(--sidebar-width);
     }

@@ -1079,11 +1079,6 @@ function initializeRiskAssessment() {
             item.style.borderLeftColor = '#dc3545';
             item.style.borderLeftWidth = '6px';
             item.classList.add('high-priority');
-            
-            // Add blinking effect for extremely severe cases
-            if (item.textContent.includes('Extremely Severe')) {
-                item.style.animation = 'urgent-blink 2s infinite';
-            }
         }
         
         // View profile button click is handled by the button itself, not the whole card
