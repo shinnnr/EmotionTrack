@@ -1883,9 +1883,7 @@ def view_alerts():
     accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
 
     # Build query
-    query = GuidanceAlert.query
-    if accessible_student_ids:
-        query = query.filter(GuidanceAlert.user_id.in_(accessible_student_ids))
+    query = GuidanceAlert.query.filter(GuidanceAlert.user_id.in_(accessible_student_ids))
 
     if status_filter == 'active':
         query = query.filter_by(is_resolved=False)
