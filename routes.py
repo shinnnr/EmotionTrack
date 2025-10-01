@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import validate_csrf, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -557,25 +557,37 @@ def process_dass21():
             print(f"Error generating alerts for DASS-21: {e}")
             # Don't fail the DASS-21 submission if alert generation fails
 
-        # Redirect to results page to prevent duplicate submissions on reload
-        return redirect(url_for('main.dass21_results', result_id=dass_result.id))
+        # Store result ID in session and redirect to results page to prevent duplicate submissions on reload
+        session['dass21_result_id'] = dass_result.id
+        return redirect(url_for('main.dass21_results'))
         
     except Exception as e:
         db.session.rollback()
         flash(f'An error occurred while processing your assessment: {str(e)}', 'error')
         return redirect(url_for('main.dass21_quiz'))
 
-@main_bp.route('/dass21-results/<int:result_id>')
+@main_bp.route('/dass21-results')
 @login_required
-def dass21_results(result_id):
+def dass21_results():
     """Display DASS-21 assessment results"""
     try:
+        # Get result ID from session
+        result_id = session.get('dass21_result_id')
+
+        if not result_id:
+            flash('No assessment results found. Please complete the assessment first.', 'error')
+            return redirect(url_for('main.home'))
+
         # Fetch the result from database
         result = DASS21Result.query.get_or_404(result_id)
 
         # Ensure the result belongs to the current user
         if result.user_id != current_user.id:
-            abort(403)
+            flash('You do not have permission to view this assessment result.', 'error')
+            return redirect(url_for('main.home'))
+
+        # Clear the session to prevent reuse
+        session.pop('dass21_result_id', None)
 
         # Render the results template with fetched data
         return render_template('dass21_results.html',
