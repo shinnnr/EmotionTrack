@@ -22,9 +22,9 @@ def validate_birthday_not_future(form, field):
 def validate_lrn(form, field):
     """Custom validator for LRN (Learner's Reference Number) - exactly 12 digits"""
     if not field.data:
-        raise ValidationError('LRN is required.')
+        raise ValidationError('Enter valid LRN.')
     if not re.match(r'^\d{12}$', field.data):
-        raise ValidationError('LRN must be exactly 12 digits.')
+        raise ValidationError('Enter valid LRN.')
 
 class LoginForm(FlaskForm):
     username = StringField('LRN / Employee ID', validators=[DataRequired()])
