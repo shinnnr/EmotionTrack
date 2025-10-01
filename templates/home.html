@@ -178,7 +178,7 @@
                         </div>
                         
                         <div class="col-md-6 col-lg-3">
-                            <button class="quick-action-card w-100 border-0" onclick="openInsightsModal()">
+                            <button class="quick-action-card w-100 border-0" onclick="showModal('insightsModal', 'modal-lg')">
                                 <div class="card bg-gradient-warning text-white h-100">
                                     <div class="card-body text-center">
                                         <i class="fas fa-chart-line fa-2x mb-3"></i>
@@ -294,15 +294,14 @@
 </div>
 
 <!-- Custom Insights Modal -->
-<div id="insightsModal" class="custom-modal" style="display: none;">
-    <div class="custom-modal-overlay" onclick="closeInsightsModal()"></div>
-    <div class="custom-modal-content">
+<div id="insightsModal" class="custom-modal">
+    <div class="custom-modal-content modal-lg">
         <div class="custom-modal-header">
             <h5 class="custom-modal-title">
                 <i class="fas fa-chart-line me-2"></i>
                 Your Wellness Insights
             </h5>
-            <button type="button" class="custom-modal-close" onclick="closeInsightsModal()" aria-label="Close">
+            <button type="button" class="custom-modal-close" onclick="closeModal('insightsModal')" aria-label="Close">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -319,30 +318,10 @@
     </div>
 </div>
 
-<script>
-// Custom modal functions
+// Custom modal functions for insights
 function openInsightsModal() {
-    const modal = document.getElementById('insightsModal');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
-
-    // Add background click to close modal (matching profile modal behavior)
-    if (!modal.hasAttribute('data-bg-click-added')) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeInsightsModal();
-            }
-        });
-        modal.setAttribute('data-bg-click-added', 'true');
-    }
-
+    showModal('insightsModal', 'modal-lg');
     loadInsights();
-}
-
-function closeInsightsModal() {
-    const modal = document.getElementById('insightsModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = ''; // Restore scrolling
 }
 
 function loadInsights() {
@@ -442,8 +421,8 @@ function loadInsights() {
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         const modal = document.getElementById('insightsModal');
-        if (modal && modal.style.display === 'flex') {
-            closeInsightsModal();
+        if (modal && modal.classList.contains('show')) {
+            closeModal('insightsModal');
         }
     }
 });
