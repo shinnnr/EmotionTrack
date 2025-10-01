@@ -9,7 +9,8 @@ import pytz
 manila_tz = pytz.timezone('Asia/Manila')
 
 def get_current_time():
-    return datetime.now(manila_tz)
+    """Get current time in Manila timezone"""
+    return datetime.now(pytz.UTC).astimezone(manila_tz)
 
 def convert_to_manila_time(dt):
     """Convert a datetime to Manila time, handling both naive and aware datetimes"""
