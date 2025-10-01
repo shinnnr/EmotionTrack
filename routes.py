@@ -806,7 +806,7 @@ def dashboard():
     # Get pagination parameters
     risk_page = request.args.get('risk_page', 1, type=int)
     activity_page = request.args.get('activity_page', 1, type=int)
-    risk_per_page = 3  # 3 high risk students per page
+    risk_per_page = 10  # 10 high risk students per page
     activity_per_page = 10  # 10 activity items per page
     
     # Get statistics for admin dashboard (filtered by faculty section if applicable)

@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 
 # Debug: Check if .env file exists and try to load it explicitly
 env_file_path = os.path.join(os.getcwd(), '.env')
-logger.debug(f"Current working directory: {os.getcwd()}")
-logger.debug(f".env file exists: {os.path.exists(env_file_path)}")
+logger.info(f"Current working directory: {os.getcwd()}")
+logger.info(f".env file exists: {os.path.exists(env_file_path)}")
 if os.path.exists(env_file_path):
-    logger.debug("Loading .env file explicitly")
+    logger.info("Loading .env file explicitly")
     load_dotenv(env_file_path)
 
 class Base(DeclarativeBase):
@@ -55,8 +55,8 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1) # needed for url_for 
 
 # configure the database, relative to the app instance folder
 database_url = os.environ.get("DATABASE_URL")
-logger.debug(f"Database URL present: {database_url is not None}")
-logger.debug(f"Database URL length: {len(database_url) if database_url else 0}")
+logger.info(f"Database URL present: {database_url is not None}")
+logger.info(f"Database URL length: {len(database_url) if database_url else 0}")
 
 # Ensure we have a valid database URL
 if not database_url:
@@ -69,7 +69,7 @@ if len(database_url) == 0:
     logger.error("DATABASE_URL is empty after stripping whitespace!")
     raise RuntimeError("DATABASE_URL environment variable is empty")
 
-logger.debug(f"Database URL starts with: {database_url[:20]}...")
+logger.info(f"Database URL starts with: {database_url[:20]}...")
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
@@ -100,7 +100,7 @@ with app.app_context():
 
     try:
         db.create_all()
-        logger.debug("Database tables created/verified successfully")
+        logger.info("Database tables created/verified successfully")
 
         # Create admin user if it doesn't exist
         from models import User
@@ -125,9 +125,9 @@ with app.app_context():
             admin.role = 'guidance_admin'
             db.session.add(admin)
             db.session.commit()
-            logger.debug("Created admin user: admin@emotiontrack.app")
+            logger.info("Created admin user: admin@emotiontrack.app")
         else:
-            logger.debug("Admin user already exists")
+            logger.info("Admin user already exists")
 
     except Exception as e:
         logger.error(f"Database initialization failed: {str(e)}")
