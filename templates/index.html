@@ -84,7 +84,7 @@
                             
                             <div class="mb-3">
                                 <label class="form-label">First Name</label>
-                                {{ register_form.firstname(class="form-control" + (" is-invalid" if register_form.firstname.errors else "")) }}
+                                {{ register_form.firstname(class="form-control" + (" is-invalid" if register_form.firstname.errors else ""), minlength="2", title="Please lengthen this text to 2 characters.", required=True) }}
                                 {% if register_form.firstname.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in register_form.firstname.errors %}
@@ -95,7 +95,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Last Name</label>
-                                {{ register_form.lastname(class="form-control" + (" is-invalid" if register_form.lastname.errors else "")) }}
+                                {{ register_form.lastname(class="form-control" + (" is-invalid" if register_form.lastname.errors else ""), minlength="2", title="Please lengthen this text to 2 characters.", required=True) }}
                                 {% if register_form.lastname.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in register_form.lastname.errors %}
@@ -107,7 +107,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">LRN</label>
-                                {{ register_form.username(class="form-control" + (" is-invalid" if register_form.username.errors else ""), pattern="^\d{12}$", title="LRN must be exactly 12 digits", inputmode="numeric") }}
+                                {{ register_form.username(class="form-control" + (" is-invalid" if register_form.username.errors else ""), pattern="^\d{12}$", title="Enter valid LRN.", inputmode="numeric", required=True) }}
                                 {% if register_form.username.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in register_form.username.errors %}
@@ -119,7 +119,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Birthday</label>
-                                {{ register_form.birthday(class="form-control" + (" is-invalid" if register_form.birthday.errors else "")) }}
+                                {{ register_form.birthday(class="form-control" + (" is-invalid" if register_form.birthday.errors else ""), type="date", required=True) }}
                                 {% if register_form.birthday.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in register_form.birthday.errors %}
@@ -132,7 +132,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Password</label>
                                 <div class="password-input-group">
-                                    {{ register_form.password(class="form-control password-field" + (" is-invalid" if register_form.password.errors else ""), placeholder=" ") }}
+                                    {{ register_form.password(class="form-control password-field" + (" is-invalid" if register_form.password.errors else ""), placeholder=" ", minlength="6", title="Please lengthen this text to 6 characters.", required=True) }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.password.id }}', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -148,7 +148,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Confirm Password</label>
                                 <div class="password-input-group">
-                                    {{ register_form.confirm_password(class="form-control password-field" + (" is-invalid" if register_form.confirm_password.errors else ""), placeholder=" ") }}
+                                    {{ register_form.confirm_password(class="form-control password-field" + (" is-invalid" if register_form.confirm_password.errors else ""), placeholder=" ", required=True) }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.confirm_password.id }}', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -164,7 +164,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Gender</label>
-                                {{ register_form.gender(class="form-select" + (" is-invalid" if register_form.gender.errors else "")) }}
+                                {{ register_form.gender(class="form-select" + (" is-invalid" if register_form.gender.errors else ""), required=True) }}
                                 {% if register_form.gender.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in register_form.gender.errors %}
@@ -175,7 +175,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Strand</label>
-                                {{ register_form.strand(class="form-select" + (" is-invalid" if register_form.strand.errors else "")) }}
+                                {{ register_form.strand(class="form-select" + (" is-invalid" if register_form.strand.errors else ""), required=True) }}
                                 {% if register_form.strand.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in register_form.strand.errors %}
@@ -186,7 +186,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Grade</label>
-                                {{ register_form.grade_level(class="form-select" + (" is-invalid" if register_form.grade_level.errors else "")) }}
+                                {{ register_form.grade_level(class="form-select" + (" is-invalid" if register_form.grade_level.errors else ""), required=True) }}
                                 {% if register_form.grade_level.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in register_form.grade_level.errors %}
@@ -198,7 +198,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Section</label>
-                                {{ register_form.section(class="form-control" + (" is-invalid" if register_form.section.errors else "")) }}
+                                {{ register_form.section(class="form-control" + (" is-invalid" if register_form.section.errors else ""), maxlength="50", required=True) }}
                                 {% if register_form.section.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in register_form.section.errors %}
@@ -211,7 +211,7 @@
                             <!-- Privacy Agreement -->
                             <div class="mb-3">
                                 <div class="form-check">
-                                    {{ register_form.privacy_agreement(class="form-check-input" + (" is-invalid" if register_form.privacy_agreement.errors else "")) }}
+                                    {{ register_form.privacy_agreement(class="form-check-input" + (" is-invalid" if register_form.privacy_agreement.errors else ""), required=True) }}
                                     <label class="form-check-label text-muted" for="{{ register_form.privacy_agreement.id }}">
                                         <small>
                                             <i class="fas fa-shield-alt me-1"></i>
