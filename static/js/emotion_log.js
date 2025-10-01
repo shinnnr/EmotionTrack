@@ -700,9 +700,20 @@ function closeDailyTipsModal() {
     if (backdrop) {
         backdrop.style.display = 'none';
     }
+    // Re-enable scrolling
+    document.body.classList.remove('modal-open');
     // Redirect to home after closing modal
     window.location.href = '/home';
 }
+
+// Initialize modal when page loads (for tips display)
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('dailyTipsModal');
+    if (modal) {
+        // Disable scrolling when modal is shown
+        document.body.classList.add('modal-open');
+    }
+});
 
 
 

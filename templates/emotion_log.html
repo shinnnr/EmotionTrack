@@ -333,8 +333,8 @@
 
 <!-- Daily Tips Modal -->
 {% if show_daily_tips %}
-<div id="dailyTipsModal" class="modal fade show" style="display: block;" tabindex="-1" aria-labelledby="dailyTipsModalLabel" aria-hidden="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+<div id="dailyTipsModal" class="modal fade show daily-tips-modal" style="display: block;" tabindex="-1" aria-labelledby="dailyTipsModalLabel" aria-hidden="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg daily-tips-dialog">
         <div class="modal-content">
             <div class="modal-header bg-clsu-green text-white">
                 <h5 class="modal-title" id="dailyTipsModalLabel">
@@ -459,6 +459,63 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% block extra_css %}
 <style>
+/* Daily Tips Modal Custom Positioning */
+.daily-tips-modal .modal-dialog {
+    margin: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.daily-tips-modal .modal-content {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Mobile positioning - below navigation toggle */
+@media (max-width: 767.98px) {
+    .daily-tips-modal .modal-dialog {
+        top: 60px; /* Adjust based on nav height */
+        align-items: flex-start;
+        padding: 1rem;
+    }
+
+    .daily-tips-modal .modal-content {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+    }
+}
+
+/* Desktop positioning - centered in remaining space */
+@media (min-width: 768px) {
+    .daily-tips-modal .modal-dialog {
+        left: 250px; /* Assuming sidebar width */
+        right: 0;
+        top: 0;
+        bottom: 0;
+    }
+
+    .daily-tips-modal .modal-content {
+        max-width: 600px;
+        margin: auto;
+    }
+}
+
+/* Disable scrolling when modal is open */
+body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+}
+
 .emotion-item {
     display: flex;
     flex-direction: column;
