@@ -2567,7 +2567,7 @@ def export_data():
             
             if export_type == 'users':
                 writer = csv.writer(output)
-                writer.writerow(['ID', 'First Name', 'Last Name', 'Email', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'])
+                writer.writerow(['ID', 'First Name', 'Last Name', 'LRN', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'])
                 
                 query = User.query.filter(User.id.in_(accessible_student_ids))
                 if start_datetime and end_datetime:
@@ -2583,7 +2583,7 @@ def export_data():
             
             elif export_type == 'mood_logs':
                 writer = csv.writer(output)
-                writer.writerow(['Log ID', 'User Email', 'User Name', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
+                writer.writerow(['Log ID', 'LRN', 'User Name', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
                 
                 query = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id).filter(User.id.in_(accessible_student_ids))
                 if start_datetime and end_datetime:
@@ -2599,8 +2599,8 @@ def export_data():
             
             elif export_type == 'dass21':
                 writer = csv.writer(output)
-                writer.writerow(['ID', 'User Email', 'User Name', 'Depression Score', 'Anxiety Score', 'Stress Score', 
-                               'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'])
+                writer.writerow(['ID', 'LRN', 'User Name', 'Depression Score', 'Anxiety Score', 'Stress Score',
+                                'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'])
                 
                 query = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id).filter(User.id.in_(accessible_student_ids))
                 if start_datetime and end_datetime:
@@ -2616,7 +2616,7 @@ def export_data():
             
             elif export_type == 'messages':
                 writer = csv.writer(output)
-                writer.writerow(['ID', 'Student Email', 'Student Name', 'Message Text', 'Admin Response', 'Is Read', 'Created At', 'Responded At'])
+                writer.writerow(['ID', 'LRN', 'Student Name', 'Message Text', 'Admin Response', 'Is Read', 'Created At', 'Responded At'])
                 
                 query = db.session.query(StudentMessage, User).join(User, StudentMessage.sender_user_id == User.id).filter(User.id.in_(accessible_student_ids))
                 if start_datetime and end_datetime:
@@ -2649,7 +2649,7 @@ def export_data():
                     
                     if export_type == 'users':
                         writer = csv.writer(output)
-                        writer.writerow(['ID', 'First Name', 'Last Name', 'Email', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'])
+                        writer.writerow(['ID', 'First Name', 'Last Name', 'LRN', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'])
                         
                         query = User.query.filter(User.id.in_(accessible_student_ids))
                         if start_datetime and end_datetime:
@@ -2665,7 +2665,7 @@ def export_data():
                     
                     elif export_type == 'mood_logs':
                         writer = csv.writer(output)
-                        writer.writerow(['Log ID', 'User Email', 'User Name', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
+                        writer.writerow(['Log ID', 'LRN', 'User Name', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'])
                         
                         query = db.session.query(MoodLog, User).join(User, MoodLog.user_id == User.id).filter(User.id.in_(accessible_student_ids))
                         if start_datetime and end_datetime:
@@ -2681,8 +2681,8 @@ def export_data():
                     
                     elif export_type == 'dass21':
                         writer = csv.writer(output)
-                        writer.writerow(['ID', 'User Email', 'User Name', 'Depression Score', 'Anxiety Score', 'Stress Score', 
-                                       'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'])
+                        writer.writerow(['ID', 'LRN', 'User Name', 'Depression Score', 'Anxiety Score', 'Stress Score',
+                                        'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'])
                         
                         query = db.session.query(DASS21Result, User).join(User, DASS21Result.user_id == User.id).filter(User.id.in_(accessible_student_ids))
                         if start_datetime and end_datetime:
@@ -2698,7 +2698,7 @@ def export_data():
                     
                     elif export_type == 'messages':
                         writer = csv.writer(output)
-                        writer.writerow(['ID', 'Student Email', 'Student Name', 'Message Text', 'Admin Response', 'Is Read', 'Created At', 'Responded At'])
+                        writer.writerow(['ID', 'LRN', 'Student Name', 'Message Text', 'Admin Response', 'Is Read', 'Created At', 'Responded At'])
                         
                         query = db.session.query(StudentMessage, User).join(User, StudentMessage.sender_user_id == User.id).filter(User.id.in_(accessible_student_ids))
                         if start_datetime and end_datetime:
