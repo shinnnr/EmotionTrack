@@ -677,17 +677,41 @@ document.addEventListener('keydown', function(event) {
 
 @media (min-width: 1025px) and (max-width: 1200px) {
     /* Large devices (desktops) */
+    .custom-modal {
+        justify-content: flex-start;
+        align-items: center;
+        padding: 20px 20px 20px 300px; /* Account for sidebar */
+    }
+
     .custom-modal-content {
-        max-width: 750px;
+        max-width: 500px;
         max-height: 80vh;
+        margin: 0;
+    }
+
+    .custom-modal-overlay {
+        cursor: default !important;
+        pointer-events: none;
     }
 }
 
 @media (min-width: 1201px) {
     /* Extra large devices */
+    .custom-modal {
+        justify-content: flex-start;
+        align-items: center;
+        padding: 20px 20px 20px 320px; /* Account for wider sidebar */
+    }
+
     .custom-modal-content {
-        max-width: 800px;
+        max-width: 550px;
         max-height: 75vh;
+        margin: 0;
+    }
+
+    .custom-modal-overlay {
+        cursor: default !important;
+        pointer-events: none;
     }
 }
 
