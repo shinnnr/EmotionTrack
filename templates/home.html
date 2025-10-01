@@ -238,6 +238,34 @@
         </div>
     </div>
 
+    <!-- Daily Wellness Tips -->
+    <div class="row g-4 mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title fw-bold mb-0">
+                            <i class="fas fa-lightbulb text-clsu-gold me-2"></i>
+                            Daily Wellness Tips
+                        </h5>
+                        <button class="btn btn-outline-clsu-green btn-sm" onclick="openDailyTipsModal()">
+                            <i class="fas fa-external-link-alt me-1"></i>View All
+                        </button>
+                    </div>
+
+                    <div id="dailyTipsContent">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-clsu-green" role="status">
+                                <span class="visually-hidden">Loading tips...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading your personalized wellness tips...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Latest DASS-21 Results -->
     {% if latest_dass %}
     <div class="row mt-4">
@@ -438,14 +466,317 @@ function loadInsights() {
     });
 }
 
+// Daily Wellness Tips functionality
+function openDailyTipsModal() {
+    // Use the existing daily tips modal from profile page
+    const modalId = 'dailyTipsModal';
+    const modal = document.getElementById(modalId);
+
+    if (modal) {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        // Load tips content
+        loadDailyTipsForModal();
+    } else {
+        // Create modal if it doesn't exist
+        createDailyTipsModal();
+    }
+}
+
+function loadDailyTipsForHome() {
+    const content = document.getElementById('dailyTipsContent');
+
+    fetch('/api/daily-wellness-tips', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        const tips = data.tips || [];
+        const quote = data.motivational_quote || '';
+        const hasLogs = data.has_logs || false;
+
+        if (!hasLogs) {
+            content.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-heart fa-3x text-clsu-gold mb-3"></i>
+                    <h6 class="fw-bold text-clsu-green mb-2">Start Your Wellness Journey</h6>
+                    <p class="text-muted mb-3">${data.message || 'Log your emotions to get personalized wellness tips!'}</p>
+                    <a href="/emotion-log" class="btn btn-clsu-green btn-sm">
+                        <i class="fas fa-plus me-2"></i>Log Emotions
+                    </a>
+                </div>
+            `;
+        } else if (tips.length === 0) {
+            content.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-lightbulb fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No tips available right now. Check back later!</p>
+                </div>
+            `;
+        } else {
+            // Show only the first 2 tips on home page
+            const displayTips = tips.slice(0, 2);
+
+            let html = '';
+
+            // Add motivational quote if available
+            if (quote) {
+                html += `
+                    <div class="alert alert-info border-0 shadow-sm mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-quote-left fa-2x text-info me-3"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading fw-bold mb-1">Daily Inspiration</h6>
+                                <p class="mb-0">${quote}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Add tips
+            html += '<div class="row g-3">';
+            displayTips.forEach((tip, index) => {
+                const iconClass = getTipIcon(index);
+                const tipTitle = tip.title || 'Wellness Tip';
+                const tipDescription = tip.description || tip;
+
+                html += `
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="bg-clsu-green text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                            <i class="${iconClass} fa-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold mb-2">${tipTitle}</h6>
+                                        <p class="mb-0 small text-muted">${tipDescription}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            content.innerHTML = html;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading daily tips:', error);
+        content.innerHTML = `
+            <div class="alert alert-warning border-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Unable to load wellness tips. Please try again later.
+            </div>
+        `;
+    });
+}
+
+function createDailyTipsModal() {
+    const modal = document.createElement('div');
+    modal.id = 'dailyTipsModal';
+    modal.className = 'custom-modal';
+    modal.innerHTML = `
+        <div class="custom-modal-content modal-lg">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title" id="dailyTipsModalLabel">
+                    <i class="fas fa-lightbulb me-2"></i>Daily Wellness Tips
+                </h5>
+                <button type="button" class="custom-modal-close" onclick="closeModal('dailyTipsModal')" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="custom-modal-body">
+                <div class="text-center py-4">
+                    <div class="spinner mb-3"></div>
+                    <p class="text-muted">Loading your personalized wellness tips...</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    // Add background click to close
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal('dailyTipsModal');
+        }
+    });
+
+    loadDailyTipsForModal();
+}
+
+function loadDailyTipsForModal() {
+    // This function is defined in profile.js, so we can reuse it
+    if (typeof viewDailyTips === 'function') {
+        // If profile.js is loaded, use its function
+        viewDailyTips();
+    } else {
+        // Otherwise, load tips directly
+        fetch('/api/daily-wellness-tips', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            const modalBody = document.querySelector('#dailyTipsModal .custom-modal-body');
+            if (modalBody) {
+                const tips = data.tips || [];
+                const quote = data.motivational_quote || '';
+                const hasLogs = data.has_logs || false;
+
+                if (!hasLogs) {
+                    modalBody.innerHTML = `
+                        <div class="text-center py-5">
+                            <i class="fas fa-heart fa-4x text-clsu-gold mb-4"></i>
+                            <h5 class="fw-bold text-clsu-green mb-3">Start Your Wellness Journey</h5>
+                            <p class="text-muted mb-4">${data.message || 'Start your wellness journey by logging your emotions first!'}</p>
+                            <a href="/emotion-log" class="btn btn-clsu-green btn-lg">
+                                <i class="fas fa-plus me-2"></i>Log Your Emotions
+                            </a>
+                        </div>
+                    `;
+                } else if (tips.length === 0) {
+                    modalBody.innerHTML = `
+                        <div class="text-center py-5">
+                            <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No tips available</h5>
+                            <p class="text-muted">Start logging your emotions to get personalized wellness tips.</p>
+                            <a href="/emotion-log" class="btn btn-clsu-green">
+                                <i class="fas fa-plus me-2"></i>Log Emotions
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    let content = `
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="alert alert-info border-0 shadow-sm mb-4">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-quote-left fa-2x text-info me-3"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="alert-heading fw-bold mb-1">Motivational Quote</h6>
+                                            <p class="mb-0">${quote}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                    `;
+
+                    tips.forEach((tip, index) => {
+                        const iconClass = getTipIcon(index);
+                        const tipTitle = tip.title || 'Wellness Tip';
+                        const tipDescription = tip.description || tip;
+                        const tipCategory = tip.category || '';
+                        const tipDuration = tip.duration || '';
+
+                        content += `
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0 me-3">
+                                                <div class="bg-clsu-green text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="${iconClass}"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-bold mb-2">${tipTitle}</h6>
+                                                <p class="mb-2">${tipDescription}</p>
+                                                ${tipCategory ? `<small class="text-muted"><i class="fas fa-tag me-1"></i>${tipCategory}</small>` : ''}
+                                                ${tipDuration ? `<br><small class="text-muted"><i class="fas fa-clock me-1"></i>${tipDuration}</small>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    content += `
+                        </div>
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6 class="fw-bold text-clsu-green mb-2">
+                                <i class="fas fa-heart me-2"></i>Remember
+                            </h6>
+                            <p class="mb-0 text-muted">
+                                These tips are personalized based on your emotional patterns. Continue tracking your emotions regularly to receive more tailored recommendations.
+                            </p>
+                        </div>
+                    `;
+
+                    modalBody.innerHTML = content;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading tips for modal:', error);
+            const modalBody = document.querySelector('#dailyTipsModal .custom-modal-body');
+            if (modalBody) {
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Unable to load wellness tips. Please try again later.
+                    </div>
+                `;
+            }
+        });
+    }
+}
+
+function getTipIcon(index) {
+    const icons = [
+        'fas fa-brain',
+        'fas fa-heart',
+        'fas fa-moon',
+        'fas fa-running',
+        'fas fa-users',
+        'fas fa-smile'
+    ];
+    return icons[index % icons.length];
+}
+
 // Close modal when pressing Escape key
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
-        const modal = document.getElementById('insightsModal');
-        if (modal && modal.style.display === 'flex') {
+        const insightsModal = document.getElementById('insightsModal');
+        if (insightsModal && insightsModal.style.display === 'flex') {
             closeInsightsModal();
         }
+
+        const dailyTipsModal = document.getElementById('dailyTipsModal');
+        if (dailyTipsModal && dailyTipsModal.classList.contains('show')) {
+            closeModal('dailyTipsModal');
+        }
     }
+});
+
+// Load daily tips when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadDailyTipsForHome();
 });
 </script>
 {% endblock %}
