@@ -546,7 +546,7 @@ def process_dass21():
         dass_result.depression_severity = depression_severity
         dass_result.anxiety_severity = anxiety_severity
         dass_result.stress_severity = stress_severity
-        
+
         db.session.add(dass_result)
         db.session.commit()
 
@@ -557,19 +557,39 @@ def process_dass21():
             print(f"Error generating alerts for DASS-21: {e}")
             # Don't fail the DASS-21 submission if alert generation fails
 
-        return render_template('dass21_results.html',
-                              depression_score=depression_final,
-                              anxiety_score=anxiety_final,
-                              stress_score=stress_final,
-                              depression_severity=depression_severity,
-                              anxiety_severity=anxiety_severity,
-                              stress_severity=stress_severity,
-                              moment=get_current_time())
+        # Redirect to results page to prevent duplicate submissions on reload
+        return redirect(url_for('main.dass21_results', result_id=dass_result.id))
         
     except Exception as e:
         db.session.rollback()
         flash(f'An error occurred while processing your assessment: {str(e)}', 'error')
         return redirect(url_for('main.dass21_quiz'))
+
+@main_bp.route('/dass21-results/<int:result_id>')
+@login_required
+def dass21_results(result_id):
+    """Display DASS-21 assessment results"""
+    try:
+        # Fetch the result from database
+        result = DASS21Result.query.get_or_404(result_id)
+
+        # Ensure the result belongs to the current user
+        if result.user_id != current_user.id:
+            abort(403)
+
+        # Render the results template with fetched data
+        return render_template('dass21_results.html',
+                              depression_score=result.depression_score,
+                              anxiety_score=result.anxiety_score,
+                              stress_score=result.stress_score,
+                              depression_severity=result.depression_severity,
+                              anxiety_severity=result.anxiety_severity,
+                              stress_severity=result.stress_severity,
+                              moment=result.created_at)
+
+    except Exception as e:
+        flash(f'An error occurred while retrieving your assessment results: {str(e)}', 'error')
+        return redirect(url_for('main.home'))
 
 @main_bp.route('/consultation', methods=['GET', 'POST'])
 @login_required
