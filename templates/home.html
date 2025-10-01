@@ -629,8 +629,9 @@ document.addEventListener('keydown', function(event) {
 
     .custom-modal-content {
         margin: 0.5rem auto;
-        max-width: calc(100vw - 1rem);
-        max-height: 95vh;
+        width: 95vw;
+        max-width: 95vw;
+        max-height: 90vh;
     }
 
     .custom-modal-header {
@@ -644,6 +645,11 @@ document.addEventListener('keydown', function(event) {
     .insights-card {
         padding: 1rem;
     }
+
+    .custom-modal-overlay {
+        cursor: default !important;
+        pointer-events: none;
+    }
 }
 
 @media (min-width: 481px) and (max-width: 768px) {
@@ -656,8 +662,14 @@ document.addEventListener('keydown', function(event) {
 
     .custom-modal-content {
         margin: 1rem auto;
-        max-width: calc(100vw - 2rem);
-        max-height: 90vh;
+        width: 90vw;
+        max-width: 90vw;
+        max-height: 85vh;
+    }
+
+    .custom-modal-overlay {
+        cursor: default !important;
+        pointer-events: none;
     }
 }
 
@@ -670,8 +682,14 @@ document.addEventListener('keydown', function(event) {
     }
 
     .custom-modal-content {
-        max-width: 700px;
+        width: 75vw;
+        max-width: 75vw;
         max-height: 85vh;
+    }
+
+    .custom-modal-overlay {
+        cursor: default !important;
+        pointer-events: none;
     }
 }
 
@@ -684,7 +702,8 @@ document.addEventListener('keydown', function(event) {
     }
 
     .custom-modal-content {
-        max-width: 500px;
+        width: 35vw;
+        max-width: 35vw;
         max-height: 80vh;
         margin: 0;
     }
@@ -704,7 +723,8 @@ document.addEventListener('keydown', function(event) {
     }
 
     .custom-modal-content {
-        max-width: 550px;
+        width: 30vw;
+        max-width: 30vw;
         max-height: 75vh;
         margin: 0;
     }
