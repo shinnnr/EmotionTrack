@@ -2715,9 +2715,14 @@ def export_data():
                                 convert_to_manila_time(message.responded_at).strftime('%Y-%m-%d %H:%M:%S') if message.responded_at else ''
                             ])
                     
-                    # Add CSV to ZIP
+                    # Add CSV to ZIP with correct modification time
                     filename = f'emotiontrack_{export_type}_{export_timestamp}.csv'
-                    zip_file.writestr(filename, output.getvalue())
+                    zip_info = zipfile.ZipInfo(filename)
+                    # Set the modification time to the export timestamp (Manila time)
+                    export_datetime = get_current_time()
+                    zip_info.date_time = (export_datetime.year, export_datetime.month, export_datetime.day,
+                                        export_datetime.hour, export_datetime.minute, export_datetime.second)
+                    zip_file.writestr(zip_info, output.getvalue())
             
             zip_buffer.seek(0)
             
