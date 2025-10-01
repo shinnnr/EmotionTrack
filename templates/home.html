@@ -618,17 +618,98 @@ document.addEventListener('keydown', function(event) {
     color: var(--clsu-gold) !important;
 }
 
-/* Mobile responsive design */
-@media (max-width: 768px) {
+/* Responsive design for all devices */
+@media (max-width: 480px) {
+    /* Extra small devices (phones < 480px) */
     .custom-modal {
-        padding-top: 80px; /* Position modal below navigation bar on mobile */
-        align-items: flex-start; /* Align to top instead of center */
+        padding: 60px 10px 10px 10px; /* Reduced padding for very small screens */
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .custom-modal-content {
+        margin: 0.5rem auto;
+        max-width: calc(100vw - 1rem);
+        max-height: 95vh;
+    }
+
+    .custom-modal-header {
+        padding: 1rem;
+    }
+
+    .custom-modal-body {
+        padding: 1rem;
+    }
+
+    .insights-card {
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    /* Small devices (phones 481px - 768px) */
+    .custom-modal {
+        padding-top: 80px;
+        align-items: flex-start;
         justify-content: center;
     }
 
     .custom-modal-content {
         margin: 1rem auto;
         max-width: calc(100vw - 2rem);
+        max-height: 90vh;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    /* Medium devices (tablets) */
+    .custom-modal {
+        padding: 20px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .custom-modal-content {
+        max-width: 700px;
+        max-height: 85vh;
+    }
+}
+
+@media (min-width: 1025px) and (max-width: 1200px) {
+    /* Large devices (desktops) */
+    .custom-modal-content {
+        max-width: 750px;
+        max-height: 80vh;
+    }
+}
+
+@media (min-width: 1201px) {
+    /* Extra large devices */
+    .custom-modal-content {
+        max-width: 800px;
+        max-height: 75vh;
+    }
+}
+
+/* Ensure backdrop click works reliably */
+.custom-modal-overlay {
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent modal content clicks from bubbling to backdrop */
+.custom-modal-content {
+    pointer-events: auto;
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+    .custom-close-btn {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 }
 </style>
