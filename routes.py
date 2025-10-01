@@ -586,8 +586,8 @@ def dass21_results():
             flash('You do not have permission to view this assessment result.', 'error')
             return redirect(url_for('main.home'))
 
-        # Clear the session to prevent reuse
-        session.pop('dass21_result_id', None)
+        # Keep result_id in session to allow page reload
+        # Note: This allows bookmarking and sharing of results URL
 
         # Render the results template with fetched data
         return render_template('dass21_results.html',
