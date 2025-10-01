@@ -243,6 +243,23 @@ function displayStudentList(students) {
 
     tableBody.innerHTML = '';
 
+    // Check if no students found
+    if (students.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-4">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Students Found</h5>
+                    <p class="text-muted">No students are currently assigned to this section.</p>
+                </td>
+            </tr>
+        `;
+        studentList.style.display = 'block';
+        // Initialize search functionality even with no students
+        initializeStudentSearch();
+        return;
+    }
+
     students.forEach(student => {
         const row = document.createElement('tr');
         row.style.cursor = 'pointer';
