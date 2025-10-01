@@ -33,21 +33,21 @@ class LoginForm(FlaskForm):
     # CSRF protection is handled globally
 
 class RegisterForm(FlaskForm):
-    firstname = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
-    lastname = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
-    username = StringField('LRN', validators=[DataRequired(), validate_lrn])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('Confirm Password', 
-                                   validators=[DataRequired(), EqualTo('password')])
-    birthday = DateField('Birthday', validators=[DataRequired(), validate_birthday_not_future])
-    gender = SelectField('Gender', choices=[('Male', 'Male'), ('Female', 'Female')])
+    firstname = StringField('First Name', validators=[DataRequired(message='This field is required.'), Length(min=2, max=50, message='Please lengthen this text to 2 characters.'), validate_name_no_numbers])
+    lastname = StringField('Last Name', validators=[DataRequired(message='This field is required.'), Length(min=2, max=50, message='Please lengthen this text to 2 characters.'), validate_name_no_numbers])
+    username = StringField('LRN', validators=[DataRequired(message='This field is required.'), validate_lrn])
+    password = PasswordField('Password', validators=[DataRequired(message='This field is required.'), Length(min=6, message='Please lengthen this text to 6 characters.')])
+    confirm_password = PasswordField('Confirm Password',
+                                    validators=[DataRequired(message='This field is required.'), EqualTo('password', message='Passwords must match.')])
+    birthday = DateField('Birthday', validators=[DataRequired(message='This field is required.'), validate_birthday_not_future])
+    gender = SelectField('Gender', choices=[('Male', 'Male'), ('Female', 'Female')], validators=[DataRequired(message='This field is required.')])
     strand = SelectField('Strand', choices=[
         ('STEM', 'STEM'), ('ABM', 'ABM'), ('HUMSS', 'HUMSS'), ('ASSH', 'ASSH'),
         ('GAS', 'GAS'), ('TVL', 'TVL')
-    ])
-    grade_level = SelectField('Grade Level', choices=[('11', 'Grade 11'), ('12', 'Grade 12')])
-    section = StringField('Section', validators=[DataRequired(), Length(max=50)], render_kw={"placeholder": "Example: MARX"})
-    privacy_agreement = BooleanField('I agree that my data is private and secure and will only be used by the guidance office', validators=[DataRequired()])
+    ], validators=[DataRequired(message='This field is required.')])
+    grade_level = SelectField('Grade Level', choices=[('11', 'Grade 11'), ('12', 'Grade 12')], validators=[DataRequired(message='This field is required.')])
+    section = StringField('Section', validators=[DataRequired(message='This field is required.'), Length(max=50)], render_kw={"placeholder": "Example: MARX"})
+    privacy_agreement = BooleanField('I agree that my data is private and secure and will only be used by the guidance office', validators=[DataRequired(message='This field is required.')])
 
 class EmotionLogForm(FlaskForm):
     emotions = HiddenField('Selected Emotions', validators=[DataRequired()])

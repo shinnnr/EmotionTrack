@@ -165,14 +165,35 @@
                             <div class="mb-3">
                                 <label class="form-label">Gender</label>
                                 {{ register_form.gender(class="form-select") }}
+                                {% if register_form.gender.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in register_form.gender.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Strand</label>
                                 {{ register_form.strand(class="form-select") }}
+                                {% if register_form.strand.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in register_form.strand.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Grade</label>
                                 {{ register_form.grade_level(class="form-select") }}
+                                {% if register_form.grade_level.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in register_form.grade_level.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                             
                             <div class="mb-3">
