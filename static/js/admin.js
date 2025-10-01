@@ -2376,7 +2376,7 @@ async function generateDetailedAnalysisCSV() {
             return csvData;
         } else {
             // Fallback structure
-            const headers = ['ID', 'First Name', 'Last Name', 'Email', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'];
+            const headers = ['ID', 'First Name', 'Last Name', 'LRN', 'Gender', 'Strand', 'Grade Level', 'Section', 'Created At'];
             const data = [['No data available', '', '', '', '', '', '', '', '']];
             return [headers, ...data].map(row => row.join(',')).join('\n');
         }
@@ -2398,7 +2398,7 @@ async function generateRiskAssessmentCSV() {
             return csvData;
         } else {
             // Fallback structure
-            const headers = ['ID', 'User Email', 'Depression Score', 'Anxiety Score', 'Stress Score', 'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'];
+            const headers = ['ID', 'LRN', 'Depression Score', 'Anxiety Score', 'Stress Score', 'Depression Severity', 'Anxiety Severity', 'Stress Severity', 'Created At'];
             const data = [['No assessments found', '', '', '', '', '', '', '', '']];
             return [headers, ...data].map(row => row.join(',')).join('\n');
         }
@@ -2420,7 +2420,7 @@ async function generateTrendAnalysisCSV() {
             return csvData;
         } else {
             // Fallback structure
-            const headers = ['Log ID', 'User Email', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'];
+            const headers = ['Log ID', 'LRN', 'Emotion', 'Sleep Hours', 'Energy Level', 'Triggers', 'Coping', 'Gratitude', 'Date'];
             const data = [['No mood logs found', '', '', '', '', '', '', '', '']];
             return [headers, ...data].map(row => row.join(',')).join('\n');
         }
