@@ -1180,6 +1180,11 @@ async function viewDailyTips() {
 
             tips.forEach((tip, index) => {
                 const iconClass = getTipIcon(index);
+                const tipTitle = tip.title || 'Wellness Tip';
+                const tipDescription = tip.description || tip;
+                const tipCategory = tip.category || '';
+                const tipDuration = tip.duration || '';
+
                 content += `
                     <div class="col-md-6">
                         <div class="card h-100 border-0 shadow-sm">
@@ -1191,7 +1196,10 @@ async function viewDailyTips() {
                                         </div>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <p class="mb-0">${tip}</p>
+                                        <h6 class="fw-bold mb-2">${tipTitle}</h6>
+                                        <p class="mb-2">${tipDescription}</p>
+                                        ${tipCategory ? `<small class="text-muted"><i class="fas fa-tag me-1"></i>${tipCategory}</small>` : ''}
+                                        ${tipDuration ? `<br><small class="text-muted"><i class="fas fa-clock me-1"></i>${tipDuration}</small>` : ''}
                                     </div>
                                 </div>
                             </div>
