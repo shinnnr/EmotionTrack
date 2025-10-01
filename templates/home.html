@@ -536,10 +536,6 @@ document.addEventListener('keydown', function(event) {
     align-items: center;
     justify-content: space-between;
     padding: 1.5rem;
-    border-bottom: 1px solid #e9ecef;
-    display: flex;
-    justify-content: between;
-    align-items: center;
     background: var(--clsu-green);
     color: white;
     border-radius: 12px 12px 0 0;
@@ -715,10 +711,17 @@ document.addEventListener('keydown', function(event) {
     }
 }
 
-/* Ensure backdrop click works reliably */
+/* Ensure backdrop cursor behavior is correct */
 .custom-modal-overlay {
-    cursor: pointer !important;
+    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+}
+
+/* Override cursor for desktop where backdrop clicks are disabled */
+@media (min-width: 769px) {
+    .custom-modal-overlay {
+        cursor: default !important;
+    }
 }
 
 /* Prevent modal content clicks from bubbling to backdrop */
