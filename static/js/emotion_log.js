@@ -690,6 +690,20 @@ function debounce(func, wait) {
 // Add emotion log specific styles to the document
 document.head.insertAdjacentHTML('beforeend', emotionLogStyles);
 
+// Daily Tips Modal functionality
+function closeDailyTipsModal() {
+    const modal = document.getElementById('dailyTipsModal');
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    if (backdrop) {
+        backdrop.style.display = 'none';
+    }
+    // Redirect to home after closing modal
+    window.location.href = '/home';
+}
+
 
 
 

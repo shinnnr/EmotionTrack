@@ -360,9 +360,24 @@ def emotion_log():
                 print(f"Error generating alerts for mood log: {e}")
                 # Don't fail the mood log submission if alert generation fails
 
+            # Generate daily tips based on logged emotions and details
+            try:
+                daily_tips = get_user_coping_recommendations(current_user.id, limit=3)
+                motivational_quote = get_user_motivational_quote(current_user.id)
+            except Exception as e:
+                print(f"Error generating daily tips: {e}")
+                daily_tips = []
+                motivational_quote = "Keep moving forward, one step at a time."
+
             flash('Mood log saved successfully!', 'success')
 
-            return redirect(url_for('main.home'))
+            # Render template with tips modal instead of redirecting
+            return render_template('emotion_log.html',
+                                 form=EmotionLogForm(),
+                                 dass21_status=dass21_status,
+                                 show_daily_tips=True,
+                                 daily_tips=daily_tips,
+                                 motivational_quote=motivational_quote)
             
         except ValueError as e:
             db.session.rollback()

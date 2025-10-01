@@ -331,6 +331,82 @@
     </div>
 </div>
 
+<!-- Daily Tips Modal -->
+{% if show_daily_tips %}
+<div id="dailyTipsModal" class="modal fade show" style="display: block;" tabindex="-1" aria-labelledby="dailyTipsModalLabel" aria-hidden="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-clsu-green text-white">
+                <h5 class="modal-title" id="dailyTipsModalLabel">
+                    <i class="fas fa-lightbulb me-2"></i>Daily Wellness Tips
+                </h5>
+                <button type="button" class="btn-close btn-close-white" onclick="closeDailyTipsModal()" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Motivational Quote -->
+                <div class="text-center mb-4">
+                    <blockquote class="blockquote">
+                        <p class="mb-2 fst-italic">"{{ motivational_quote }}"</p>
+                        <footer class="blockquote-footer">Daily Motivation</footer>
+                    </blockquote>
+                </div>
+
+                <!-- Coping Recommendations -->
+                {% if daily_tips %}
+                <h6 class="fw-bold text-clsu-green mb-3">
+                    <i class="fas fa-heart me-2"></i>Personalized Tips for You
+                </h6>
+                <div class="row g-3">
+                    {% for tip in daily_tips %}
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    {% if tip.type == 'breathing' %}
+                                        <i class="fas fa-wind fa-2x text-info"></i>
+                                    {% elif tip.type == 'activity' %}
+                                        <i class="fas fa-running fa-2x text-success"></i>
+                                    {% elif tip.type == 'mindfulness' %}
+                                        <i class="fas fa-brain fa-2x text-primary"></i>
+                                    {% elif tip.type == 'lifestyle' %}
+                                        <i class="fas fa-utensils fa-2x text-warning"></i>
+                                    {% elif tip.type == 'sleep' %}
+                                        <i class="fas fa-moon fa-2x text-secondary"></i>
+                                    {% elif tip.type == 'professional' %}
+                                        <i class="fas fa-user-md fa-2x text-danger"></i>
+                                    {% else %}
+                                        <i class="fas fa-lightbulb fa-2x text-clsu-gold"></i>
+                                    {% endif %}
+                                </div>
+                                <h6 class="card-title fw-bold">{{ tip.title }}</h6>
+                                <p class="card-text small">{{ tip.description }}</p>
+                                <span class="badge bg-clsu-green">{{ tip.category }}</span>
+                                {% if tip.duration %}
+                                <small class="text-muted d-block mt-2">{{ tip.duration }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-smile fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Great job logging your emotions! Keep up the good work.</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-clsu-green" onclick="closeDailyTipsModal()">
+                    <i class="fas fa-check me-1"></i>Got it!
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade show" onclick="closeDailyTipsModal()"></div>
+{% endif %}
+
 <script src="{{ url_for('static', filename='js/emotion_log.js') }}"></script>
 
 <script>
