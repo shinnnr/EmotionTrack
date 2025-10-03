@@ -480,19 +480,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (signupFormContainer) {
         const signupForm = signupFormContainer.querySelector('form');
         if (signupForm) {
-            signupForm.addEventListener('submit', function(e) {
-                // Use reportValidity() to show browser tooltips and check validity
-                if (!this.reportValidity()) {
-                    e.preventDefault();
-                    // Add is-invalid class to invalid fields for persistent red border
-                    const invalidFields = this.querySelectorAll(':invalid');
-                    invalidFields.forEach(field => {
-                        field.classList.add('is-invalid');
-                    });
-                    return false;
-                }
-            });
-
             // Clear validation styling when user starts typing
             const inputs = signupForm.querySelectorAll('input, select');
             inputs.forEach(input => {
@@ -500,6 +487,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (this.checkValidity()) {
                         this.classList.remove('is-invalid');
                     }
+                });
+                // Add red border when field becomes invalid
+                input.addEventListener('invalid', function() {
+                    this.classList.add('is-invalid');
                 });
             });
         }
