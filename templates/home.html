@@ -909,42 +909,7 @@ function loadRecentActivity() {
     });
 }
 
-// Helper functions for activity modal
-function groupLogsByDate(logs) {
-    const groups = {};
-    logs.forEach(log => {
-        const date = new Date(log.log_date).toDateString();
-        if (!groups[date]) {
-            groups[date] = [];
-        }
-        groups[date].push(log);
-    });
-    return groups;
-}
 
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-        return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-        return 'Yesterday';
-    } else {
-        // Manual formatting to ensure consistency
-        const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-        const weekday = weekdays[date.getDay()];
-        const month = months[date.getMonth()];
-        const day = date.getDate();
-        const year = date.getFullYear();
-
-        return `${weekday}, ${month} ${day}, ${year}`;
-    }
-}
 
 function createActivityCard(log) {
     const emotionIcon = getEmotionIcon(log.emotion);
