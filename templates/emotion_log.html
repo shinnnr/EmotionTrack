@@ -269,23 +269,9 @@
                                         <span class="text-muted small">10 - Extremely Intense</span>
                                     </div>
                                     <div class="intensity-input-container">
-                                        <div class="intensity-wrapper">
-                                            <input type="range" class="form-range" id="intensityRange" name="intensity" min="0" max="10" value="0" oninput="updateIntensityDisplay(this.value)" onchange="updateIntensityValue(this.value)">
-                                            <!-- Scale dots positioned to align with slider positions -->
-                                            <div class="scale-dots">
-                                                <span class="scale-dot" data-value="0"></span>
-                                                <span class="scale-dot" data-value="1"></span>
-                                                <span class="scale-dot" data-value="2"></span>
-                                                <span class="scale-dot" data-value="3"></span>
-                                                <span class="scale-dot" data-value="4"></span>
-                                                <span class="scale-dot" data-value="5"></span>
-                                                <span class="scale-dot" data-value="6"></span>
-                                                <span class="scale-dot" data-value="7"></span>
-                                                <span class="scale-dot" data-value="8"></span>
-                                                <span class="scale-dot" data-value="9"></span>
-                                                <span class="scale-dot" data-value="10"></span>
-                                            </div>
-                                        </div>
+                                        <input type="range" class="form-range" id="intensityRange" name="intensity" min="0" max="10" value="0" oninput="updateIntensityDisplay(this.value)" onchange="updateIntensityValue(this.value)">
+                                        <!-- Line underneath the slider -->
+                                        <div class="slider-line"></div>
                                         <div class="intensity-display d-flex justify-content-between align-items-center mt-2">
                                             <div class="intensity-value text-center">
                                                 <div class="intensity-number fw-bold text-clsu-green" id="intensityNumber">5</div>
@@ -714,7 +700,7 @@ body.modal-open {
 .form-range {
     width: 100%;
     height: 8px;
-    background: linear-gradient(to right, #6c757d 0%, #28a745 9.09%, #ffc107 45.45%, #fd7e14 72.72%, #dc3545 100%);
+    background: linear-gradient(to right, #28a745, #ffc107, #fd7e14, #dc3545);
     border-radius: 4px;
     outline: none;
     -webkit-appearance: none;
@@ -778,7 +764,7 @@ body.modal-open {
 
 .intensity-fill {
     height: 100%;
-    background: linear-gradient(90deg, #28a745 0%, #ffc107 45.45%, #fd7e14 72.72%, #dc3545 100%);
+    background: linear-gradient(90deg, #28a745 0%, #ffc107 50%, #fd7e14 75%, #dc3545 100%);
     transition: width 0.3s ease;
     border-radius: 4px;
 }
@@ -788,64 +774,14 @@ body.modal-open {
     margin-top: 0.75rem;
 }
 
-/* Intensity slider wrapper */
-.intensity-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-/* Scale dots positioned to align with slider positions */
-.scale-dots {
-    position: absolute;
+/* Line underneath the slider */
+.slider-line {
     width: 100%;
-    height: 8px;
-    top: 0;
-    left: 0;
-    display: flex;
-    justify-content: space-between;
-    pointer-events: none;
+    height: 2px;
+    background: #e9ecef;
+    margin-top: 2px;
+    border-radius: 1px;
 }
-
-.scale-dot {
-    width: 4px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.7);
-    border: 2px solid #6c757d;
-    border-radius: 50%;
-    position: absolute;
-    top: 2px;
-    transform: translateX(-50%);
-    z-index: 2;
-    pointer-events: auto;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.scale-dot:hover {
-    background: var(--clsu-green);
-    border-color: var(--clsu-green);
-    transform: translateX(-50%) scale(1.2);
-}
-
-.scale-dot.active {
-    background: var(--clsu-green);
-    border-color: var(--clsu-green);
-    transform: translateX(-50%) scale(1.2);
-}
-
-/* Position dots to align with slider values 0-10 */
-.scale-dot:nth-child(1) { left: 0%; }
-.scale-dot:nth-child(2) { left: 9.09%; }
-.scale-dot:nth-child(3) { left: 18.18%; }
-.scale-dot:nth-child(4) { left: 27.27%; }
-.scale-dot:nth-child(5) { left: 36.36%; }
-.scale-dot:nth-child(6) { left: 45.45%; }
-.scale-dot:nth-child(7) { left: 54.54%; }
-.scale-dot:nth-child(8) { left: 63.63%; }
-.scale-dot:nth-child(9) { left: 72.72%; }
-.scale-dot:nth-child(10) { left: 81.81%; }
-.scale-dot:nth-child(11) { left: 90.90%; }
 
 </style>
 {% endblock %}
