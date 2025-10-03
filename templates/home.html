@@ -913,16 +913,18 @@ function loadRecentActivity() {
 function groupLogsByDate(logs) {
     const groups = {};
     logs.forEach(log => {
-        // Backend sends dates as Manila time ISO strings like "2025-10-03T23:17:00+08:00"
-        // Extract the date part directly since it's already in Manila time
-        const datePart = log.log_date.split('T')[0]; // "2025-10-03"
-        const [year, month, day] = datePart.split('-').map(Number);
+        // Parse the Manila timezone ISO string
+        let logDate;
+        try {
+            logDate = new Date(log.log_date);
+        } catch (e) {
+            logDate = new Date();
+        }
 
-        // Create date key as YYYY-MM-DD
-        const dateKey = datePart;
-
+        // Use toDateString() as key for reliable grouping
+        const dateKey = logDate.toDateString();
         if (!groups[dateKey]) {
-            groups[dateKey] = { date: new Date(year, month - 1, day), logs: [] };
+            groups[dateKey] = { date: logDate, logs: [] };
         }
         groups[dateKey].logs.push(log);
     });
@@ -930,23 +932,13 @@ function groupLogsByDate(logs) {
 }
 
 function formatDate(dateObj) {
-    // Get current Manila time
-    const now = new Date();
-    const manilaOffset = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
-    const manilaNow = new Date(now.getTime() + manilaOffset);
-
-    // Create Manila today and yesterday
-    const today = new Date(manilaNow.getFullYear(), manilaNow.getMonth(), manilaNow.getDate());
+    const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    // Create comparison date from the log date
-    const logDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-
-    // Compare dates
-    if (logDate.getTime() === today.getTime()) {
+    if (dateObj.toDateString() === today.toDateString()) {
         return 'Today';
-    } else if (logDate.getTime() === yesterday.getTime()) {
+    } else if (dateObj.toDateString() === yesterday.toDateString()) {
         return 'Yesterday';
     } else {
         return dateObj.toLocaleDateString('en-US', {
