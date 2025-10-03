@@ -269,9 +269,11 @@
                                         <span class="text-muted small">10 - Extremely Intense</span>
                                     </div>
                                     <div class="intensity-input-container">
-                                        <input type="range" class="form-range" id="intensityRange" name="intensity" min="0" max="10" value="0" oninput="updateIntensityDisplay(this.value)" onchange="updateIntensityValue(this.value)">
-                                        <!-- Line underneath the slider -->
-                                        <div class="slider-line"></div>
+                                        <div style="position: relative; width: 100%; display: flex; align-items: center;">
+                                            <input type="range" class="form-range" id="intensityRange" name="intensity" min="0" max="10" value="0" oninput="updateIntensityDisplay(this.value)" onchange="updateIntensityValue(this.value)">
+                                            <!-- Line underneath the slider -->
+                                            <div class="slider-line"></div>
+                                        </div>
                                         <div class="intensity-display d-flex justify-content-between align-items-center mt-2">
                                             <div class="intensity-value text-center">
                                                 <div class="intensity-number fw-bold text-clsu-green" id="intensityNumber">5</div>
@@ -694,6 +696,9 @@ body.modal-open {
 
 .intensity-input-container {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 
@@ -706,6 +711,8 @@ body.modal-open {
     -webkit-appearance: none;
     position: relative;
     z-index: 1;
+    display: flex;
+    align-items: center;
 }
 
 .form-range::-webkit-slider-thumb {
@@ -720,6 +727,8 @@ body.modal-open {
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     position: relative;
     z-index: 3;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .form-range::-moz-range-thumb {
@@ -774,13 +783,15 @@ body.modal-open {
     margin-top: 0.75rem;
 }
 
-/* Line underneath the slider */
+/* Line underneath the slider - centered with slider track */
 .slider-line {
     width: 100%;
     height: 2px;
     background: #e9ecef;
-    margin-top: 2px;
     border-radius: 1px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 </style>
