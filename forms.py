@@ -51,7 +51,7 @@ class RegisterForm(FlaskForm):
 
 class EmotionLogForm(FlaskForm):
     emotions = HiddenField('Selected Emotions', validators=[DataRequired()])
-    intensity = IntegerField('Intensity Rating (1-10)', validators=[DataRequired(), NumberRange(min=0, max=10)])
+    intensity = IntegerField('Intensity Rating (1-10)', validators=[DataRequired(), NumberRange(min=1, max=10)])
     sleep = FloatField('Sleep Hours', validators=[DataRequired(), NumberRange(min=0, max=24)])
     energy = IntegerField('Energy Level (1-10)', validators=[DataRequired(), NumberRange(min=1, max=10)])
     triggers = SelectField('Main Trigger', choices=[

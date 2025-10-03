@@ -109,29 +109,20 @@ function updateIntensityDisplay(value) {
     const intensityDescription = document.getElementById('intensityDescription');
 
     if (intensityNumber) intensityNumber.textContent = value;
-    if (intensityFill) intensityFill.style.width = (value * 9.09) + '%'; /* Adjusted for 0-10 scale (11 positions) */
+    if (intensityFill) intensityFill.style.width = (value * 10) + '%';
 
     // Update label and description based on intensity value
     if (intensityLabel && intensityDescription) {
-        if (value == 0) {
-            intensityLabel.textContent = 'Not set';
-            intensityDescription.textContent = 'Please select an intensity rating for your emotions.';
-        } else {
-            const label = getIntensityLabel(parseInt(value));
-            const description = getIntensityDescription(parseInt(value));
+        const label = getIntensityLabel(parseInt(value));
+        const description = getIntensityDescription(parseInt(value));
 
-            intensityLabel.textContent = label;
-            intensityDescription.textContent = description;
-        }
+        intensityLabel.textContent = label;
+        intensityDescription.textContent = description;
     }
 
     // Update number color based on intensity
     if (intensityNumber) {
-        if (value == 0) {
-            intensityNumber.className = 'intensity-number fw-bold text-muted';
-        } else {
-            intensityNumber.className = 'intensity-number fw-bold ' + getIntensityColor(parseInt(value));
-        }
+        intensityNumber.className = 'intensity-number fw-bold ' + getIntensityColor(parseInt(value));
     }
 }
 
@@ -142,17 +133,16 @@ function updateIntensityValue(value) {
 
 function getIntensityLabel(value) {
     const labels = {
-        0: 'Not Set', 1: 'Very Mild', 2: 'Mild', 3: 'Light',
+        1: 'Very Mild', 2: 'Mild', 3: 'Light',
         4: 'Moderate', 5: 'Medium', 6: 'Strong',
         7: 'Very Strong', 8: 'Intense', 9: 'Very Intense',
         10: 'Extremely Intense'
     };
-    return labels[value] || 'Not Set';
+    return labels[value] || 'Moderate';
 }
 
 function getIntensityDescription(value) {
     const descriptions = {
-        0: 'Please select an intensity rating for your emotions.',
         1: 'Barely noticeable emotions',
         2: 'Subtle emotional experience',
         3: 'Gentle emotional presence',
@@ -168,7 +158,6 @@ function getIntensityDescription(value) {
 }
 
 function getIntensityColor(value) {
-    if (value == 0) return 'text-muted'; // Gray for not set
     if (value <= 3) return 'text-success'; // Green for mild
     if (value <= 5) return 'text-clsu-gold'; // Gold for moderate
     if (value <= 7) return 'text-warning'; // Orange for strong
@@ -872,7 +861,7 @@ function updateSaveButtonState() {
 
     const hasTriggers = triggersInput && triggersInput.value && triggersInput.value !== '' && triggersInput.value !== null;
 
-    // Intensity validation - check if emotions are selected and intensity is set (> 0)
+    // Intensity validation - check if emotions are selected and intensity is set
     const intensityValue = intensityInput ? parseInt(intensityInput.value) : NaN;
     const hasIntensity = hasEmotions && intensityInput && intensityInput.value !== '' && !isNaN(intensityValue) && intensityValue >= 1 && intensityValue <= 10;
     
@@ -900,7 +889,7 @@ function updateSaveButtonState() {
 
 
         console.log('Save button disabled: No emotions selected');
-    } else if (hasEmotions && (!hasIntensity || intensityValue === 0)) {
+    } else if (hasEmotions && !hasIntensity) {
         // Second priority: rate intensity
         submitButton.disabled = true;
         submitButton.classList.add('btn-secondary');
