@@ -802,6 +802,13 @@ function openRecentActivityModal() {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
 
+    // Force modal above everything with maximum z-index
+    modal.style.zIndex = '999999';
+    modal.style.position = 'fixed';
+
+    // Mark body to indicate modal is open
+    document.body.classList.add('modal-open');
+
     // Add background click to close modal
     if (!modal.hasAttribute('data-bg-click-added')) {
         modal.addEventListener('click', function(e) {
