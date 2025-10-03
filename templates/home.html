@@ -910,7 +910,10 @@ async function loadRecentActivity() {
 function groupLogsByDate(logs) {
     const groups = {};
     logs.forEach(log => {
-        const date = new Date(log.log_date).toDateString();
+        // Adjust to Manila time (UTC+8)
+        const manilaTime = new Date(log.log_date);
+        manilaTime.setHours(manilaTime.getHours() + 8);
+        const date = manilaTime.toDateString();
         if (!groups[date]) {
             groups[date] = [];
         }
@@ -921,7 +924,9 @@ function groupLogsByDate(logs) {
 
 function formatDate(dateString) {
     const date = new Date(dateString);
-    const today = new Date();
+    const now = new Date();
+    // Adjust to Manila time (UTC+8)
+    const today = new Date(now.getTime() + (8 * 60 * 60 * 1000));
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
@@ -930,11 +935,11 @@ function formatDate(dateString) {
     } else if (date.toDateString() === yesterday.toDateString()) {
         return 'Yesterday';
     } else {
-        return date.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
     }
 }
