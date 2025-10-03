@@ -113,16 +113,25 @@ function updateIntensityDisplay(value) {
 
     // Update label and description based on intensity value
     if (intensityLabel && intensityDescription) {
-        const label = getIntensityLabel(parseInt(value));
-        const description = getIntensityDescription(parseInt(value));
+        if (value == 0) {
+            intensityLabel.textContent = 'Not set';
+            intensityDescription.textContent = 'Please select an intensity rating for your emotions.';
+        } else {
+            const label = getIntensityLabel(parseInt(value));
+            const description = getIntensityDescription(parseInt(value));
 
-        intensityLabel.textContent = label;
-        intensityDescription.textContent = description;
+            intensityLabel.textContent = label;
+            intensityDescription.textContent = description;
+        }
     }
 
     // Update number color based on intensity
     if (intensityNumber) {
-        intensityNumber.className = 'intensity-number fw-bold ' + getIntensityColor(parseInt(value));
+        if (value == 0) {
+            intensityNumber.className = 'intensity-number fw-bold text-muted';
+        } else {
+            intensityNumber.className = 'intensity-number fw-bold ' + getIntensityColor(parseInt(value));
+        }
     }
 }
 
@@ -861,7 +870,7 @@ function updateSaveButtonState() {
 
     const hasTriggers = triggersInput && triggersInput.value && triggersInput.value !== '' && triggersInput.value !== null;
 
-    // Intensity validation - check if emotions are selected and intensity is set
+    // Intensity validation - check if emotions are selected and intensity is set (> 0)
     const intensityValue = intensityInput ? parseInt(intensityInput.value) : NaN;
     const hasIntensity = hasEmotions && intensityInput && intensityInput.value !== '' && !isNaN(intensityValue) && intensityValue >= 1 && intensityValue <= 10;
     
@@ -886,15 +895,29 @@ function updateSaveButtonState() {
         completionMessage.textContent = 'Please select at least one emotion to continue.';
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
+
+        // Hide intensity message when no emotions selected
+        const intensityMessage = document.getElementById('intensityMessage');
+        if (intensityMessage) {
+            intensityMessage.style.display = 'none';
+        }
+
         console.log('Save button disabled: No emotions selected');
-    } else if (hasEmotions && !hasIntensity) {
+    } else if (hasEmotions && (!hasIntensity || intensityValue === 0)) {
         // Second priority: rate intensity
         submitButton.disabled = true;
         submitButton.classList.add('btn-secondary');
         submitButton.classList.remove('btn-clsu-green');
-        completionMessage.textContent = 'Great! Now please rate the intensity of your emotions.';
+        completionMessage.textContent = 'Great! Now please select intensity rating.';
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
+
+        // Show intensity message
+        const intensityMessage = document.getElementById('intensityMessage');
+        if (intensityMessage) {
+            intensityMessage.style.display = 'block';
+        }
+
         console.log('Save button disabled: Intensity not rated');
     } else if (hasEmotions && hasIntensity && (!hasSleep || !hasEnergy || !hasTriggers)) {
         // Third priority: fill other required fields
@@ -910,6 +933,13 @@ function updateSaveButtonState() {
         completionMessage.textContent = `Excellent! Now please fill in: ${missingFields.join(', ')}.`;
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
+
+        // Hide intensity message when other fields are missing
+        const intensityMessage = document.getElementById('intensityMessage');
+        if (intensityMessage) {
+            intensityMessage.style.display = 'none';
+        }
+
         console.log('Save button disabled: Missing fields:', missingFields);
     } else {
         // All fields completed
@@ -919,6 +949,13 @@ function updateSaveButtonState() {
         completionMessage.textContent = 'Perfect! Ready to save your mood log.';
         completionMessage.classList.add('text-success');
         completionMessage.classList.remove('text-muted');
+
+        // Hide intensity message
+        const intensityMessage = document.getElementById('intensityMessage');
+        if (intensityMessage) {
+            intensityMessage.style.display = 'none';
+        }
+
         console.log('Save button ENABLED: All fields complete');
     }
 }
