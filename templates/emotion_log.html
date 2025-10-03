@@ -270,6 +270,7 @@
                                     </div>
                                     <div class="intensity-input-container">
                                         <div class="intensity-scale-numbers d-flex justify-content-between mb-2">
+                                            <span class="scale-number">0</span>
                                             <span class="scale-number">1</span>
                                             <span class="scale-number">2</span>
                                             <span class="scale-number">3</span>
@@ -282,6 +283,23 @@
                                             <span class="scale-number">10</span>
                                         </div>
                                         <input type="range" class="form-range" id="intensityRange" name="intensity" min="0" max="10" value="0" oninput="updateIntensityDisplay(this.value)" onchange="updateIntensityValue(this.value)">
+                                        <!-- Vertical line with dots below slider -->
+                                        <div class="intensity-ticks mt-1">
+                                            <div class="tick-line"></div>
+                                            <div class="tick-dots d-flex justify-content-between">
+                                                <span class="tick-dot"></span>
+                                                <span class="tick-dot"></span>
+                                                <span class="tick-dot"></span>
+                                                <span class="tick-dot"></span>
+                                                <span class="tick-dot"></span>
+                                                <span class="tick-dot"></span>
+                                                <span class="tick-dot"></span>
+                                                <span class="tick-dot"></span>
+                                                <span class="tick-dot"></span>
+                                                <span class="tick-dot"></span>
+                                                <span class="tick-dot"></span>
+                                            </div>
+                                        </div>
                                         <div class="intensity-display d-flex justify-content-between align-items-center mt-2">
                                             <div class="intensity-value text-center">
                                                 <div class="intensity-number fw-bold text-clsu-green" id="intensityNumber">5</div>
@@ -368,7 +386,6 @@
                             Save My Mood Log
                         </button>
                         <p class="text-muted mt-2" id="completionMessage">Please select your emotions and fill in the required details to save your mood log.</p>
-                        <p class="text-danger mt-1 small" id="intensityMessage" style="display: none;">Please select intensity rating.</p>
                     </div>
                 </form>
             </div>
@@ -734,22 +751,23 @@ body.modal-open {
     top: 0;
 }
 
-/* Position numbers above slider ticks - properly aligned with slider values */
+/* Position numbers above slider ticks - properly aligned with slider values 0-10 */
 .scale-number:nth-child(1) { left: 0%; transform: translateX(-50%); }
-.scale-number:nth-child(2) { left: 10%; transform: translateX(-50%); }
-.scale-number:nth-child(3) { left: 20%; transform: translateX(-50%); }
-.scale-number:nth-child(4) { left: 30%; transform: translateX(-50%); }
-.scale-number:nth-child(5) { left: 40%; transform: translateX(-50%); }
-.scale-number:nth-child(6) { left: 50%; transform: translateX(-50%); }
-.scale-number:nth-child(7) { left: 60%; transform: translateX(-50%); }
-.scale-number:nth-child(8) { left: 70%; transform: translateX(-50%); }
-.scale-number:nth-child(9) { left: 80%; transform: translateX(-50%); }
-.scale-number:nth-child(10) { left: 100%; transform: translateX(-50%); }
+.scale-number:nth-child(2) { left: 9.09%; transform: translateX(-50%); }
+.scale-number:nth-child(3) { left: 18.18%; transform: translateX(-50%); }
+.scale-number:nth-child(4) { left: 27.27%; transform: translateX(-50%); }
+.scale-number:nth-child(5) { left: 36.36%; transform: translateX(-50%); }
+.scale-number:nth-child(6) { left: 45.45%; transform: translateX(-50%); }
+.scale-number:nth-child(7) { left: 54.54%; transform: translateX(-50%); }
+.scale-number:nth-child(8) { left: 63.63%; transform: translateX(-50%); }
+.scale-number:nth-child(9) { left: 72.72%; transform: translateX(-50%); }
+.scale-number:nth-child(10) { left: 81.81%; transform: translateX(-50%); }
+.scale-number:nth-child(11) { left: 90.90%; transform: translateX(-50%); }
 
 .form-range {
     width: 100%;
     height: 8px;
-    background: linear-gradient(to right, #28a745, #ffc107, #fd7e14, #dc3545);
+    background: linear-gradient(to right, #6c757d 0%, #28a745 9.09%, #ffc107 45.45%, #fd7e14 72.72%, #dc3545 100%);
     border-radius: 4px;
     outline: none;
     -webkit-appearance: none;
@@ -813,7 +831,7 @@ body.modal-open {
 
 .intensity-fill {
     height: 100%;
-    background: linear-gradient(90deg, #28a745 0%, #ffc107 50%, #fd7e14 75%, #dc3545 100%);
+    background: linear-gradient(90deg, #28a745 0%, #ffc107 45%, #fd7e14 70%, #dc3545 100%);
     transition: width 0.3s ease;
     border-radius: 4px;
 }
@@ -822,6 +840,47 @@ body.modal-open {
     text-align: center;
     margin-top: 0.75rem;
 }
+
+/* Vertical line with dots below slider */
+.intensity-ticks {
+    position: relative;
+    margin: 0.5rem 0;
+}
+
+.tick-line {
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, #6c757d 0%, #28a745 9.09%, #ffc107 45.45%, #fd7e14 72.72%, #dc3545 100%);
+    border-radius: 1px;
+    margin-bottom: 4px;
+}
+
+.tick-dots {
+    position: relative;
+    padding: 0 12px;
+}
+
+.tick-dot {
+    width: 4px;
+    height: 4px;
+    background: #6c757d;
+    border-radius: 50%;
+    position: absolute;
+    top: -2px;
+}
+
+/* Position dots to align with numbers */
+.tick-dot:nth-child(1) { left: 0%; transform: translateX(-50%); }
+.tick-dot:nth-child(2) { left: 9.09%; transform: translateX(-50%); }
+.tick-dot:nth-child(3) { left: 18.18%; transform: translateX(-50%); }
+.tick-dot:nth-child(4) { left: 27.27%; transform: translateX(-50%); }
+.tick-dot:nth-child(5) { left: 36.36%; transform: translateX(-50%); }
+.tick-dot:nth-child(6) { left: 45.45%; transform: translateX(-50%); }
+.tick-dot:nth-child(7) { left: 54.54%; transform: translateX(-50%); }
+.tick-dot:nth-child(8) { left: 63.63%; transform: translateX(-50%); }
+.tick-dot:nth-child(9) { left: 72.72%; transform: translateX(-50%); }
+.tick-dot:nth-child(10) { left: 81.81%; transform: translateX(-50%); }
+.tick-dot:nth-child(11) { left: 90.90%; transform: translateX(-50%); }
 </style>
 {% endblock %}
 

@@ -109,7 +109,7 @@ function updateIntensityDisplay(value) {
     const intensityDescription = document.getElementById('intensityDescription');
 
     if (intensityNumber) intensityNumber.textContent = value;
-    if (intensityFill) intensityFill.style.width = (value * 10) + '%';
+    if (intensityFill) intensityFill.style.width = (value * 9.09) + '%'; /* Adjusted for 0-10 scale (11 positions) */
 
     // Update label and description based on intensity value
     if (intensityLabel && intensityDescription) {
@@ -142,16 +142,17 @@ function updateIntensityValue(value) {
 
 function getIntensityLabel(value) {
     const labels = {
-        1: 'Very Mild', 2: 'Mild', 3: 'Light',
+        0: 'Not Set', 1: 'Very Mild', 2: 'Mild', 3: 'Light',
         4: 'Moderate', 5: 'Medium', 6: 'Strong',
         7: 'Very Strong', 8: 'Intense', 9: 'Very Intense',
         10: 'Extremely Intense'
     };
-    return labels[value] || 'Moderate';
+    return labels[value] || 'Not Set';
 }
 
 function getIntensityDescription(value) {
     const descriptions = {
+        0: 'Please select an intensity rating for your emotions.',
         1: 'Barely noticeable emotions',
         2: 'Subtle emotional experience',
         3: 'Gentle emotional presence',
@@ -167,6 +168,7 @@ function getIntensityDescription(value) {
 }
 
 function getIntensityColor(value) {
+    if (value == 0) return 'text-muted'; // Gray for not set
     if (value <= 3) return 'text-success'; // Green for mild
     if (value <= 5) return 'text-clsu-gold'; // Gold for moderate
     if (value <= 7) return 'text-warning'; // Orange for strong
@@ -896,11 +898,6 @@ function updateSaveButtonState() {
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
 
-        // Hide intensity message when no emotions selected
-        const intensityMessage = document.getElementById('intensityMessage');
-        if (intensityMessage) {
-            intensityMessage.style.display = 'none';
-        }
 
         console.log('Save button disabled: No emotions selected');
     } else if (hasEmotions && (!hasIntensity || intensityValue === 0)) {
@@ -912,11 +909,6 @@ function updateSaveButtonState() {
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
 
-        // Show intensity message
-        const intensityMessage = document.getElementById('intensityMessage');
-        if (intensityMessage) {
-            intensityMessage.style.display = 'block';
-        }
 
         console.log('Save button disabled: Intensity not rated');
     } else if (hasEmotions && hasIntensity && (!hasSleep || !hasEnergy || !hasTriggers)) {
@@ -934,11 +926,6 @@ function updateSaveButtonState() {
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
 
-        // Hide intensity message when other fields are missing
-        const intensityMessage = document.getElementById('intensityMessage');
-        if (intensityMessage) {
-            intensityMessage.style.display = 'none';
-        }
 
         console.log('Save button disabled: Missing fields:', missingFields);
     } else {
@@ -950,11 +937,6 @@ function updateSaveButtonState() {
         completionMessage.classList.add('text-success');
         completionMessage.classList.remove('text-muted');
 
-        // Hide intensity message
-        const intensityMessage = document.getElementById('intensityMessage');
-        if (intensityMessage) {
-            intensityMessage.style.display = 'none';
-        }
 
         console.log('Save button ENABLED: All fields complete');
     }
