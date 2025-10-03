@@ -878,7 +878,7 @@ function loadRecentActivity() {
                     <div class="journal-date-group mb-4">
                         <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
                             <i class="fas fa-calendar-day me-2"></i>
-                            ${formatDate(date)}
+                            ${formatActivityDate(date)}
                         </h6>
                         <div class="row g-3">
                 `;
@@ -922,7 +922,7 @@ function groupLogsByDate(logs) {
     return groups;
 }
 
-function formatDate(dateString) {
+function formatActivityDate(dateString) {
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);
@@ -933,11 +933,11 @@ function formatDate(dateString) {
     } else if (date.toDateString() === yesterday.toDateString()) {
         return 'Yesterday';
     } else {
-        return date.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
     }
 }
