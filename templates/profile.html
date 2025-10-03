@@ -355,7 +355,7 @@
 
                 <div class="mb-3">
                     <label for="{{ profile_info_form.birthday.id }}" class="form-label">Birthday</label>
-                    {{ profile_info_form.birthday(class="form-control", type="date", value=user.birthday.strftime('%Y-%m-%d') if user.birthday else '', required=True, max="2008-12-31", title="Please enter a valid birth date") }}
+                    {{ profile_info_form.birthday(class="form-control", type="date", value=user.birthday.strftime('%Y-%m-%d') if user.birthday else '', required=True) }}
                     {% if profile_info_form.birthday.errors %}
                         <div class="text-danger small mt-1">
                             {% for error in profile_info_form.birthday.errors %}
