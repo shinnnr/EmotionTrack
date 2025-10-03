@@ -255,6 +255,38 @@
                                 <h6 class="fw-bold text-clsu-green">Selected Emotions:</h6>
                                 <div class="selected-list d-flex flex-wrap gap-2"></div>
                             </div>
+
+                            <!-- Intensity Rating Section -->
+                            <div class="intensity-rating mt-4" id="intensityRating" style="display: none;">
+                                <h6 class="fw-bold text-clsu-green mb-3">
+                                    <i class="fas fa-thermometer-half me-2"></i>
+                                    Intensity Rating
+                                </h6>
+                                <div class="intensity-container">
+                                    <label class="form-label fw-bold">How intense are your selected emotions? (1-10 scale)</label>
+                                    <div class="intensity-scale d-flex justify-content-between align-items-center mb-3">
+                                        <span class="text-muted small">1 - Very Mild</span>
+                                        <span class="text-muted small">10 - Extremely Intense</span>
+                                    </div>
+                                    <div class="intensity-input-container">
+                                        <input type="range" class="form-range" id="intensityRange" name="intensity" min="1" max="10" value="5" oninput="updateIntensityDisplay(this.value)" onchange="updateIntensityValue(this.value)">
+                                        <div class="intensity-display d-flex justify-content-between align-items-center mt-2">
+                                            <div class="intensity-value text-center">
+                                                <div class="intensity-number fw-bold text-clsu-green" id="intensityNumber">5</div>
+                                                <div class="intensity-label text-muted small" id="intensityLabel">Moderate</div>
+                                            </div>
+                                            <div class="intensity-visual">
+                                                <div class="intensity-bar">
+                                                    <div class="intensity-fill" id="intensityFill" style="width: 50%;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="intensity-description mt-2">
+                                        <small class="text-muted" id="intensityDescription">Rate how strongly you are experiencing these emotions right now.</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -642,6 +674,94 @@ body.modal-open {
 .selected-emotions .badge {
     font-size: 0.875rem;
     padding: 0.5rem 1rem;
+}
+
+/* Intensity Rating Styles */
+.intensity-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.intensity-scale {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.intensity-input-container {
+    position: relative;
+}
+
+.form-range {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(to right, #28a745, #ffc107, #fd7e14, #dc3545);
+    border-radius: 4px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--clsu-green);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.form-range::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--clsu-green);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.intensity-display {
+    margin-top: 1rem;
+}
+
+.intensity-number {
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.intensity-label {
+    font-weight: 500;
+}
+
+.intensity-visual {
+    flex: 1;
+    margin-left: 1rem;
+}
+
+.intensity-bar {
+    width: 100%;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.intensity-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745 0%, #ffc107 50%, #fd7e14 75%, #dc3545 100%);
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.intensity-description {
+    text-align: center;
+    margin-top: 0.75rem;
 }
 </style>
 {% endblock %}

@@ -13,25 +13,27 @@ let selectedEmotions = [];
 let emotionsInput;
 let selectedEmotionsContainer;
 let selectedList;
+let intensityRatingContainer;
+let intensityRange;
 
 function updateSelectedEmotions() {
     if (selectedEmotions.length > 0) {
         selectedEmotionsContainer.style.display = 'block';
         // Clear existing content safely
         selectedList.innerHTML = '';
-        
+
         // Create badges using safe DOM methods
         selectedEmotions.forEach(emotion => {
             const badge = document.createElement('span');
             badge.className = 'badge bg-clsu-green me-2 mb-2 p-2';
-            
+
             // Create icon span safely
             const iconSpan = document.createElement('span');
             iconSpan.innerHTML = getEmotionIcon(emotion); // getEmotionIcon returns controlled HTML
-            
-            // Create text node safely 
+
+            // Create text node safely
             const emotionText = document.createTextNode(' ' + emotion);
-            
+
             // Create remove button safely
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
@@ -40,16 +42,20 @@ function updateSelectedEmotions() {
             removeBtn.addEventListener('click', function() {
                 removeEmotion(this.getAttribute('data-emotion'));
             });
-            
+
             // Assemble the badge safely
             badge.appendChild(iconSpan);
             badge.appendChild(emotionText);
             badge.appendChild(removeBtn);
-            
+
             selectedList.appendChild(badge);
         });
+
+        // Show intensity rating when emotions are selected
+        showIntensityRating();
     } else {
         selectedEmotionsContainer.style.display = 'none';
+        hideIntensityRating();
     }
 }
 
@@ -71,11 +77,99 @@ window.removeEmotion = function(emotion) {
     updateSaveButtonState();
 };
 
+// Intensity Rating Functions
+function showIntensityRating() {
+    if (intensityRatingContainer) {
+        intensityRatingContainer.style.display = 'block';
+        // Initialize intensity slider if not already done
+        if (!intensityRange) {
+            initializeIntensitySlider();
+        }
+    }
+}
+
+function hideIntensityRating() {
+    if (intensityRatingContainer) {
+        intensityRatingContainer.style.display = 'none';
+    }
+}
+
+function initializeIntensitySlider() {
+    intensityRange = document.getElementById('intensityRange');
+    if (intensityRange) {
+        // Set initial value and update display
+        updateIntensityDisplay(intensityRange.value);
+    }
+}
+
+function updateIntensityDisplay(value) {
+    const intensityNumber = document.getElementById('intensityNumber');
+    const intensityLabel = document.getElementById('intensityLabel');
+    const intensityFill = document.getElementById('intensityFill');
+    const intensityDescription = document.getElementById('intensityDescription');
+
+    if (intensityNumber) intensityNumber.textContent = value;
+    if (intensityFill) intensityFill.style.width = (value * 10) + '%';
+
+    // Update label and description based on intensity value
+    if (intensityLabel && intensityDescription) {
+        const label = getIntensityLabel(parseInt(value));
+        const description = getIntensityDescription(parseInt(value));
+
+        intensityLabel.textContent = label;
+        intensityDescription.textContent = description;
+    }
+
+    // Update number color based on intensity
+    if (intensityNumber) {
+        intensityNumber.className = 'intensity-number fw-bold ' + getIntensityColor(parseInt(value));
+    }
+}
+
+function updateIntensityValue(value) {
+    updateIntensityDisplay(value);
+    updateSaveButtonState();
+}
+
+function getIntensityLabel(value) {
+    const labels = {
+        1: 'Very Mild', 2: 'Mild', 3: 'Light',
+        4: 'Moderate', 5: 'Medium', 6: 'Strong',
+        7: 'Very Strong', 8: 'Intense', 9: 'Very Intense',
+        10: 'Extremely Intense'
+    };
+    return labels[value] || 'Moderate';
+}
+
+function getIntensityDescription(value) {
+    const descriptions = {
+        1: 'Barely noticeable emotions',
+        2: 'Subtle emotional experience',
+        3: 'Gentle emotional presence',
+        4: 'Noticeable but manageable',
+        5: 'Clear emotional experience',
+        6: 'Strong emotional impact',
+        7: 'Very noticeable intensity',
+        8: 'Powerful emotional experience',
+        9: 'Overwhelming intensity',
+        10: 'Maximum emotional intensity'
+    };
+    return descriptions[value] || 'Rate how strongly you are experiencing these emotions right now.';
+}
+
+function getIntensityColor(value) {
+    if (value <= 3) return 'text-success'; // Green for mild
+    if (value <= 5) return 'text-clsu-gold'; // Gold for moderate
+    if (value <= 7) return 'text-warning'; // Orange for strong
+    return 'text-danger'; // Red for very intense
+}
+
 function initializeEmotionSelection() {
     const emotionItems = document.querySelectorAll('.emotion-item');
     emotionsInput = document.querySelector('input[name="emotions"]');
     selectedEmotionsContainer = document.getElementById('selectedEmotions');
-    
+    intensityRatingContainer = document.getElementById('intensityRating');
+
     if (selectedEmotionsContainer) {
         selectedList = selectedEmotionsContainer.querySelector('.selected-list');
     }
@@ -242,6 +336,7 @@ function setupFormMonitoring() {
     const triggersSelect = form.querySelector('select[name="triggers"]');
     const copingSelect = form.querySelector('select[name="coping"]');
     const gratitudeTextarea = form.querySelector('textarea[name="gratitude"]');
+    const intensityInput = form.querySelector('input[name="intensity"]');
     
     // Add multiple event types to ensure we catch all changes
     const eventTypes = ['input', 'change', 'blur', 'keyup', 'paste'];
@@ -264,6 +359,7 @@ function setupFormMonitoring() {
     addComprehensiveListeners(triggersSelect, 'Triggers select');
     addComprehensiveListeners(copingSelect, 'Coping select');
     addComprehensiveListeners(gratitudeTextarea, 'Gratitude textarea');
+    addComprehensiveListeners(intensityInput, 'Intensity input');
     
     // Also monitor any changes to the form as a whole
     form.addEventListener('input', function(e) {
@@ -751,18 +847,23 @@ function updateSaveButtonState() {
     const sleepInput = form.querySelector('input[name="sleep"]');
     const energyInput = form.querySelector('input[name="energy"]');
     const triggersInput = form.querySelector('select[name="triggers"]');
-    
+    const intensityInput = form.querySelector('input[name="intensity"]');
+
     // Emotion validation - this should be first and most important
     const hasEmotions = selectedEmotions && selectedEmotions.length > 0;
-    
+
     // Other field validations - get current values
     const sleepValue = sleepInput ? parseFloat(sleepInput.value) : NaN;
     const hasSleep = sleepInput && sleepInput.value.trim() !== '' && !isNaN(sleepValue) && sleepValue >= 0 && sleepValue <= 24;
-    
+
     const energyValue = energyInput ? parseInt(energyInput.value) : NaN;
     const hasEnergy = energyInput && energyInput.value.trim() !== '' && !isNaN(energyValue) && energyValue >= 1 && energyValue <= 10;
-    
+
     const hasTriggers = triggersInput && triggersInput.value && triggersInput.value !== '' && triggersInput.value !== null;
+
+    // Intensity validation - check if emotions are selected and intensity is set
+    const intensityValue = intensityInput ? parseInt(intensityInput.value) : NaN;
+    const hasIntensity = hasEmotions && intensityInput && intensityInput.value !== '' && !isNaN(intensityValue) && intensityValue >= 1 && intensityValue <= 10;
     
     // Debug logging to track validation state
     console.log('Validation check:', {
@@ -786,18 +887,27 @@ function updateSaveButtonState() {
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
         console.log('Save button disabled: No emotions selected');
-    } else if (hasEmotions && (!hasSleep || !hasEnergy || !hasTriggers)) {
-        // Second priority: fill other required fields
+    } else if (hasEmotions && !hasIntensity) {
+        // Second priority: rate intensity
         submitButton.disabled = true;
         submitButton.classList.add('btn-secondary');
         submitButton.classList.remove('btn-clsu-green');
-        
+        completionMessage.textContent = 'Great! Now please rate the intensity of your emotions.';
+        completionMessage.classList.add('text-muted');
+        completionMessage.classList.remove('text-success');
+        console.log('Save button disabled: Intensity not rated');
+    } else if (hasEmotions && hasIntensity && (!hasSleep || !hasEnergy || !hasTriggers)) {
+        // Third priority: fill other required fields
+        submitButton.disabled = true;
+        submitButton.classList.add('btn-secondary');
+        submitButton.classList.remove('btn-clsu-green');
+
         let missingFields = [];
         if (!hasSleep) missingFields.push('sleep hours');
         if (!hasEnergy) missingFields.push('energy level');
         if (!hasTriggers) missingFields.push('main trigger');
-        
-        completionMessage.textContent = `Great! Now please fill in: ${missingFields.join(', ')}.`;
+
+        completionMessage.textContent = `Excellent! Now please fill in: ${missingFields.join(', ')}.`;
         completionMessage.classList.add('text-muted');
         completionMessage.classList.remove('text-success');
         console.log('Save button disabled: Missing fields:', missingFields);
