@@ -873,17 +873,17 @@ function loadRecentActivity() {
             const groupedLogs = groupLogsByDate(logs);
 
             let html = '';
-            for (const [date, entries] of Object.entries(groupedLogs)) {
+            for (const group of Object.values(groupedLogs)) {
                 html += `
                     <div class="journal-date-group mb-4">
                         <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
                             <i class="fas fa-calendar-day me-2"></i>
-                            ${formatDate(date)}
+                            ${formatDate(group.date)}
                         </h6>
                         <div class="row g-3">
                 `;
 
-                entries.forEach(log => {
+                group.logs.forEach(log => {
                     html += createActivityCard(log);
                 });
 
@@ -913,31 +913,54 @@ function loadRecentActivity() {
 function groupLogsByDate(logs) {
     const groups = {};
     logs.forEach(log => {
-        const date = new Date(log.log_date).toDateString();
-        if (!groups[date]) {
-            groups[date] = [];
+        // Parse the Manila timezone ISO string correctly
+        // Handle both timezone-aware and naive ISO strings
+        let logDate;
+        try {
+            logDate = new Date(log.log_date);
+            // If the date is invalid, try parsing manually
+            if (isNaN(logDate.getTime())) {
+                // Fallback: assume the string is in Manila time
+                logDate = new Date(log.log_date + (log.log_date.includes('+') ? '' : '+08:00'));
+            }
+        } catch (e) {
+            console.error('Error parsing date:', log.log_date, e);
+            logDate = new Date(); // Fallback to current date
         }
-        groups[date].push(log);
+
+        // Create a date key using the date portion only
+        const dateKey = logDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+        if (!groups[dateKey]) {
+            groups[dateKey] = { date: logDate, logs: [] };
+        }
+        groups[dateKey].logs.push(log);
     });
     return groups;
 }
 
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const today = new Date();
+function formatDate(dateObj) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) {
+    const logDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+
+    // Compare dates by converting to date-only strings for reliable comparison
+    const todayStr = today.toDateString();
+    const yesterdayStr = yesterday.toDateString();
+    const logDateStr = logDate.toDateString();
+
+    if (logDateStr === todayStr) {
         return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (logDateStr === yesterdayStr) {
         return 'Yesterday';
     } else {
-        return date.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        return dateObj.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
     }
 }
