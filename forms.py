@@ -85,6 +85,12 @@ class StudentProfileUpdateForm(FlaskForm):
     grade_level = SelectField('Grade Level', choices=[('11', 'Grade 11'), ('12', 'Grade 12')], validators=[DataRequired()])
     section = StringField('Section', validators=[DataRequired(), Length(max=50)], render_kw={"placeholder": "Example: MARX"})
 
+class StudentProfileInfoUpdateForm(FlaskForm):
+    firstname = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
+    lastname = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50), validate_name_no_numbers])
+    gender = SelectField('Gender', choices=[('Male', 'Male'), ('Female', 'Female')])
+    birthday = DateField('Birthday', validators=[DataRequired(), validate_birthday_not_future])
+
 class FeedbackForm(FlaskForm):
     feedback_type = SelectField('Feedback Type', choices=[
         ('general', 'General Feedback'),

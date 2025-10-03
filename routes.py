@@ -9,7 +9,7 @@ from sqlalchemy import func, desc
 from app import db, csrf
 from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, DailyTips, get_current_time, convert_to_manila_time
 import pytz
-from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm, FeedbackForm
+from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm, StudentProfileInfoUpdateForm, FeedbackForm
 from coping_recommendations import get_user_coping_recommendations, get_user_motivational_quote
 from alert_templates import get_alert_template, get_severity_level
 
@@ -114,7 +114,8 @@ def home():
 @login_required
 def profile():
     profile_form = StudentProfileUpdateForm()
-    return render_template('profile.html', user=current_user, profile_form=profile_form)
+    profile_info_form = StudentProfileInfoUpdateForm()
+    return render_template('profile.html', user=current_user, profile_form=profile_form, profile_info_form=profile_info_form)
 
 @main_bp.route('/profile/update', methods=['POST'])
 @login_required
@@ -147,6 +148,35 @@ def update_student_profile():
             for error in errors:
                 flash(f'{field}: {error}', 'error')
     
+    return redirect(url_for('main.profile'))
+
+@main_bp.route('/profile/update-info', methods=['POST'])
+@login_required
+def update_profile_info():
+    if not current_user.is_student:
+        flash('Access denied. Only students can update their profile information.', 'error')
+        return redirect(url_for('main.profile'))
+
+    form = StudentProfileInfoUpdateForm()
+
+    if form.validate_on_submit():
+        try:
+            # Update profile information fields
+            current_user.firstname = form.firstname.data
+            current_user.lastname = form.lastname.data
+            current_user.gender = form.gender.data
+            current_user.birthday = form.birthday.data
+
+            db.session.commit()
+            flash('Profile information updated successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while updating your profile information. Please try again.', 'error')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{field}: {error}', 'error')
+
     return redirect(url_for('main.profile'))
 
 

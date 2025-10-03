@@ -43,6 +43,11 @@
                                     <label class="fw-bold text-muted small">Gender</label>
                                     <p class="mb-0">{{ user.gender or 'Not specified' }}</p>
                                 </div>
+
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted small">Birthday</label>
+                                    <p class="mb-0">{{ user.birthday.strftime('%B %d, %Y') if user.birthday else 'Not specified' }}</p>
+                                </div>
                             </div>
                         </div>
                         <div class="col-lg-6">
@@ -71,6 +76,10 @@
                                 {% if user.is_student %}
                                 <div class="info-item mt-3">
                                     <label class="fw-bold text-muted small">Profile Updates</label>
+                                    <button class="btn btn-outline-primary btn-sm mb-3" id="updateProfileInfoBtn">
+                                        <i class="fas fa-user-edit me-2"></i>
+                                        Update Profile Info
+                                    </button>
                                     {% if user.can_update_profile() %}
                                         <div class="d-flex align-items-center">
                                             <span class="text-success me-2">
@@ -291,6 +300,81 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Update Profile Info Modal -->
+<div id="updateProfileInfoModal" class="custom-modal">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-user-edit me-2"></i>
+                Update Profile Information
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeModal('updateProfileInfoModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body">
+            <form id="updateProfileInfoForm" method="POST" action="{{ url_for('main.update_profile_info') }}">
+                {{ profile_info_form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label for="{{ profile_info_form.firstname.id }}" class="form-label">First Name</label>
+                    {{ profile_info_form.firstname(class="form-control", value=user.firstname) }}
+                    {% if profile_info_form.firstname.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in profile_info_form.firstname.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ profile_info_form.lastname.id }}" class="form-label">Last Name</label>
+                    {{ profile_info_form.lastname(class="form-control", value=user.lastname) }}
+                    {% if profile_info_form.lastname.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in profile_info_form.lastname.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ profile_info_form.gender.id }}" class="form-label">Gender</label>
+                    {{ profile_info_form.gender(class="form-select", value=user.gender) }}
+                    {% if profile_info_form.gender.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in profile_info_form.gender.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ profile_info_form.birthday.id }}" class="form-label">Birthday</label>
+                    {{ profile_info_form.birthday(class="form-control", type="date", value=user.birthday.strftime('%Y-%m-%d') if user.birthday else '') }}
+                    {% if profile_info_form.birthday.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in profile_info_form.birthday.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('updateProfileInfoModal')">Cancel</button>
+                    <button type="submit" class="btn btn-clsu-green" id="saveProfileInfoBtn">
+                        <i class="fas fa-save me-2"></i>Update Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Change Password Modal -->
 <div id="changePasswordModal" class="custom-modal">
@@ -763,6 +847,12 @@ function initializeProfilePage() {
     const updateProfileBtn = document.getElementById('updateProfileBtn');
     if (updateProfileBtn) {
         updateProfileBtn.addEventListener('click', showUpdateProfileModal);
+    }
+
+    // Update Profile Info Button
+    const updateProfileInfoBtn = document.getElementById('updateProfileInfoBtn');
+    if (updateProfileInfoBtn) {
+        updateProfileInfoBtn.addEventListener('click', showUpdateProfileInfoModal);
     }
     
     // Change Password Form
@@ -1277,6 +1367,10 @@ function showChangePasswordModal() {
 
 function showUpdateProfileModal() {
     showModal('updateProfileModal');
+}
+
+function showUpdateProfileInfoModal() {
+    showModal('updateProfileInfoModal');
 }
 
 // Setup section uppercase conversion for profile update form
