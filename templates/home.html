@@ -378,91 +378,33 @@
     </div>
 </div>
 
-<!-- Custom Modal Container -->
-<div id="customModalContainer"></div>
-
-<script>
-// Modal utility functions
-function showModal(modalId, size = '') {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        if (size) {
-            modal.classList.add(size);
-        }
-        modal.classList.add('show');
-        document.body.style.overflow = 'hidden';
-
-        // Force modal above everything with maximum z-index
-        modal.style.zIndex = '999999';
-        modal.style.position = 'fixed';
-
-        // Mark body to indicate modal is open (but keep sidebar visible)
-        document.body.classList.add('modal-open');
-
-        // Add background click to close modal
-        if (!modal.hasAttribute('data-bg-click-added')) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeModal(modalId);
-                }
-            });
-            modal.setAttribute('data-bg-click-added', 'true');
-        }
-    }
-}
-
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('show');
-        document.body.style.overflow = 'auto';
-
-        // Reset modal styles
-        modal.style.zIndex = '';
-        modal.style.position = '';
-
-        // Remove modal state from body
-        document.body.classList.remove('modal-open');
-    }
-}
-
-function createModal(title, content, size = '') {
-    const modalId = 'dynamicModal_' + Date.now();
-    const modal = document.createElement('div');
-    modal.id = modalId;
-    modal.className = 'custom-modal';
-    modal.style.zIndex = '999999'; // Force above everything
-    modal.style.position = 'fixed';
-
-    modal.innerHTML = `
-        <div class="custom-modal-content ${size}">
-            <div class="custom-modal-header">
-                <h5 class="custom-modal-title">${title}</h5>
-                <button type="button" class="custom-modal-close" onclick="closeModal('${modalId}')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="custom-modal-body">
-                ${content}
+<!-- Custom Recent Activity Modal -->
+<div id="recentActivityModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-overlay" onclick="closeRecentActivityModal()"></div>
+    <div class="custom-modal-content modal-xl">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-clock me-2"></i>
+                My Recent Activity
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeRecentActivityModal()" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body">
+            <div id="recentActivityContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-clsu-green" role="status">
+                        <span class="visually-hidden">Loading activity...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading your recent activity...</p>
+                </div>
             </div>
         </div>
-    `;
+    </div>
+</div>
 
-    document.getElementById('customModalContainer').appendChild(modal);
-    showModal(modalId);
-
-    // Auto-remove modal after closing
-    setTimeout(() => {
-        modal.addEventListener('transitionend', () => {
-            if (!modal.classList.contains('show')) {
-                modal.remove();
-            }
-        });
-    }, 100);
-
-    return modalId;
-}
-
+<script>
 // Custom modal functions
 function openInsightsModal() {
     const modal = document.getElementById('insightsModal');
@@ -856,23 +798,48 @@ function loadDailyTipsForModal() {
 
 // Recent Activity Modal functions
 function openRecentActivityModal() {
-    const loadingContent = `
-        <div class="loading-content">
-            <div class="spinner mb-3"></div>
-            <p class="text-muted">Loading your recent activity...</p>
+    const modal = document.getElementById('recentActivityModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+    // Force modal above everything with maximum z-index
+    modal.style.zIndex = '999999';
+    modal.style.position = 'fixed';
+
+    // Mark body to indicate modal is open
+    document.body.classList.add('modal-open');
+
+    // Add background click to close modal
+    if (!modal.hasAttribute('data-bg-click-added')) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRecentActivityModal();
+            }
+        });
+        modal.setAttribute('data-bg-click-added', 'true');
+    }
+
+    loadRecentActivity();
+}
+
+function closeRecentActivityModal() {
+    const modal = document.getElementById('recentActivityModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = ''; // Restore scrolling
+}
+
+function loadRecentActivity() {
+    // Reset modal content to loading state
+    const content = document.getElementById('recentActivityContent');
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-clsu-green" role="status">
+                <span class="visually-hidden">Loading activity...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading your recent activity...</p>
         </div>
     `;
 
-    const modalId = createModal(
-        '<i class="fas fa-clock me-2"></i>My Recent Activity',
-        loadingContent,
-        'modal-xl'
-    );
-
-    loadRecentActivityForModal(modalId);
-}
-
-function loadRecentActivityForModal(modalId) {
     // Load mood logs
     fetch('/api/mood-logs', {
         method: 'GET',
@@ -890,9 +857,8 @@ function loadRecentActivityForModal(modalId) {
     .then(data => {
         const logs = data.logs || [];
 
-        let content;
         if (logs.length === 0) {
-            content = `
+            content.innerHTML = `
                 <div class="text-center py-5">
                     <i class="fas fa-clock fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">No Activity Yet</h5>
@@ -906,9 +872,9 @@ function loadRecentActivityForModal(modalId) {
             // Group logs by date
             const groupedLogs = groupLogsByDate(logs);
 
-            content = '<div class="journal-entries">';
+            let html = '';
             for (const [date, entries] of Object.entries(groupedLogs)) {
-                content += `
+                html += `
                     <div class="journal-date-group mb-4">
                         <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
                             <i class="fas fa-calendar-day me-2"></i>
@@ -918,22 +884,26 @@ function loadRecentActivityForModal(modalId) {
                 `;
 
                 entries.forEach(log => {
-                    content += createActivityCard(log);
+                    html += createActivityCard(log);
                 });
 
-                content += '</div></div>';
+                html += '</div></div>';
             }
-            content += '</div>';
-        }
 
-        document.querySelector(`#${modalId} .custom-modal-body`).innerHTML = content;
+            content.innerHTML = html;
+        }
     })
     .catch(error => {
         console.error('Error loading recent activity:', error);
-        document.querySelector(`#${modalId} .custom-modal-body`).innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                Unable to load recent activity. Please try again later.
+        content.innerHTML = `
+            <div class="alert alert-warning border-0">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
+                    <div>
+                        <h6 class="alert-heading mb-1">Unable to Load Activity</h6>
+                        <p class="mb-0">There was a problem loading your activity data. Please try again in a moment.</p>
+                    </div>
+                </div>
             </div>
         `;
     });
@@ -1039,14 +1009,10 @@ document.addEventListener('keydown', function(event) {
             closeDailyTipsModal();
         }
 
-        // Close any dynamic modals
-        const dynamicModals = document.querySelectorAll('.custom-modal.show');
-        dynamicModals.forEach(modal => {
-            const modalId = modal.id;
-            if (modalId.startsWith('dynamicModal_')) {
-                closeModal(modalId);
-            }
-        });
+        const recentActivityModal = document.getElementById('recentActivityModal');
+        if (recentActivityModal && recentActivityModal.style.display === 'flex') {
+            closeRecentActivityModal();
+        }
     }
 });
 
