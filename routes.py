@@ -378,6 +378,13 @@ def delete_mood_logs():
             db.session.delete(log)
             deleted_count += 1
 
+        # Check if user has any remaining mood logs
+        remaining_logs = MoodLog.query.filter_by(user_id=current_user.id).count()
+
+        # If no logs remain, delete all daily tips for this user
+        if remaining_logs == 0:
+            DailyTips.query.filter_by(user_id=current_user.id).delete()
+
         db.session.commit()
 
         return jsonify({
