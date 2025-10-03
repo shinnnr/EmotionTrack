@@ -336,6 +336,60 @@ def get_dass21_results():
         return jsonify({'error': str(e)}), 500
 
 
+@main_bp.route('/api/delete-mood-logs', methods=['POST'])
+@login_required
+def delete_mood_logs():
+    """Delete selected mood logs for the current user"""
+    try:
+        data = request.get_json()
+        if not data or 'log_ids' not in data:
+            return jsonify({'success': False, 'message': 'No log IDs provided'}), 400
+
+        log_ids = data['log_ids']
+        if not isinstance(log_ids, list) or not log_ids:
+            return jsonify({'success': False, 'message': 'Invalid log IDs format'}), 400
+
+        # Convert to integers and validate
+        try:
+            log_ids = [int(log_id) for log_id in log_ids]
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'message': 'Invalid log ID format'}), 400
+
+        # Get logs that belong to the current user
+        logs_to_delete = MoodLog.query.filter(
+            MoodLog.log_id.in_(log_ids),
+            MoodLog.user_id == current_user.id
+        ).all()
+
+        # Check if all requested logs were found
+        found_ids = [log.log_id for log in logs_to_delete]
+        not_found_ids = [log_id for log_id in log_ids if log_id not in found_ids]
+
+        if not_found_ids:
+            return jsonify({
+                'success': False,
+                'message': f'Some logs not found or access denied: {not_found_ids}'
+            }), 404
+
+        # Delete the logs
+        deleted_count = 0
+        for log in logs_to_delete:
+            db.session.delete(log)
+            deleted_count += 1
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Successfully deleted {deleted_count} mood log(s)',
+            'deleted_count': deleted_count
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'}), 500
+
+
 @main_bp.route('/emotion-log', methods=['GET', 'POST'])
 @login_required
 def emotion_log():
