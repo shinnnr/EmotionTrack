@@ -320,6 +320,7 @@
                 <div class="mb-3">
                     <label for="{{ profile_info_form.firstname.id }}" class="form-label">First Name</label>
                     {{ profile_info_form.firstname(class="form-control", value=user.firstname) }}
+                    <div id="firstnameError"></div>
                     {% if profile_info_form.firstname.errors %}
                         <div class="text-danger small mt-1">
                             {% for error in profile_info_form.firstname.errors %}
@@ -332,6 +333,7 @@
                 <div class="mb-3">
                     <label for="{{ profile_info_form.lastname.id }}" class="form-label">Last Name</label>
                     {{ profile_info_form.lastname(class="form-control", value=user.lastname) }}
+                    <div id="lastnameError"></div>
                     {% if profile_info_form.lastname.errors %}
                         <div class="text-danger small mt-1">
                             {% for error in profile_info_form.lastname.errors %}
@@ -356,6 +358,7 @@
                 <div class="mb-3">
                     <label for="{{ profile_info_form.birthday.id }}" class="form-label">Birthday</label>
                     {{ profile_info_form.birthday(class="form-control", type="date", value=user.birthday.strftime('%Y-%m-%d') if user.birthday else '') }}
+                    <div id="birthdayError"></div>
                     {% if profile_info_form.birthday.errors %}
                         <div class="text-danger small mt-1">
                             {% for error in profile_info_form.birthday.errors %}
@@ -864,57 +867,94 @@ function initializeProfilePage() {
     // Update Profile Info Form validation
     const updateProfileInfoForm = document.getElementById('updateProfileInfoForm');
     if (updateProfileInfoForm) {
+        // Function to validate individual field
+        function validateField(fieldId, fieldName) {
+            const field = document.getElementById(fieldId);
+            const value = field.value.trim();
+            const errorDiv = document.getElementById(fieldId + 'Error');
+
+            // Clear previous error
+            if (errorDiv) {
+                errorDiv.innerHTML = '';
+            }
+            field.classList.remove('is-invalid');
+
+            let errorMessage = '';
+
+            switch(fieldId) {
+                case 'firstname':
+                case 'lastname':
+                    if (!value) {
+                        errorMessage = fieldName + ' is required';
+                    } else if (value.length < 2) {
+                        errorMessage = fieldName + ' must be at least 2 characters long';
+                    } else if (!/^[a-zA-Z\s]+$/.test(value)) {
+                        errorMessage = fieldName + ' cannot contain numbers or special characters';
+                    }
+                    break;
+                case 'birthday':
+                    if (!value) {
+                        errorMessage = 'Birthday is required';
+                    } else {
+                        const birthDate = new Date(value);
+                        const today = new Date();
+                        if (birthDate > today) {
+                            errorMessage = 'Birthday cannot be in the future';
+                        } else if (birthDate.getFullYear() > today.getFullYear()) {
+                            errorMessage = 'Please enter a valid birth year';
+                        }
+                    }
+                    break;
+            }
+
+            if (errorMessage) {
+                if (errorDiv) {
+                    errorDiv.innerHTML = '<div class="text-danger small mt-1">' + errorMessage + '</div>';
+                }
+                field.classList.add('is-invalid');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Add validation on blur for each field
+        const fields = [
+            {id: 'firstname', name: 'First Name'},
+            {id: 'lastname', name: 'Last Name'},
+            {id: 'birthday', name: 'Birthday'}
+        ];
+
+        fields.forEach(field => {
+            const element = document.getElementById(field.id);
+            if (element) {
+                element.addEventListener('blur', function() {
+                    validateField(field.id, field.name);
+                });
+
+                // Clear errors on input
+                element.addEventListener('input', function() {
+                    const errorDiv = document.getElementById(field.id + 'Error');
+                    if (errorDiv) {
+                        errorDiv.innerHTML = '';
+                    }
+                    element.classList.remove('is-invalid');
+                });
+            }
+        });
+
+        // Form submission validation
         updateProfileInfoForm.addEventListener('submit', function(e) {
-            const firstname = document.getElementById('firstname').value.trim();
-            const lastname = document.getElementById('lastname').value.trim();
-            const birthday = document.getElementById('birthday').value;
-
             let hasErrors = false;
-            let errorMessages = [];
 
-            // Validate First Name
-            if (!firstname) {
-                errorMessages.push('First Name is required');
-                hasErrors = true;
-            } else if (firstname.length < 2) {
-                errorMessages.push('First Name must be at least 2 characters long');
-                hasErrors = true;
-            } else if (!/^[a-zA-Z\s]+$/.test(firstname)) {
-                errorMessages.push('First Name cannot contain numbers or special characters');
-                hasErrors = true;
-            }
-
-            // Validate Last Name
-            if (!lastname) {
-                errorMessages.push('Last Name is required');
-                hasErrors = true;
-            } else if (lastname.length < 2) {
-                errorMessages.push('Last Name must be at least 2 characters long');
-                hasErrors = true;
-            } else if (!/^[a-zA-Z\s]+$/.test(lastname)) {
-                errorMessages.push('Last Name cannot contain numbers or special characters');
-                hasErrors = true;
-            }
-
-            // Validate Birthday
-            if (!birthday) {
-                errorMessages.push('Birthday is required');
-                hasErrors = true;
-            } else {
-                const birthDate = new Date(birthday);
-                const today = new Date();
-                if (birthDate > today) {
-                    errorMessages.push('Birthday cannot be in the future');
-                    hasErrors = true;
-                } else if (birthDate.getFullYear() > today.getFullYear()) {
-                    errorMessages.push('Please enter a valid birth year');
+            fields.forEach(field => {
+                if (!validateField(field.id, field.name)) {
                     hasErrors = true;
                 }
-            }
+            });
 
             if (hasErrors) {
                 e.preventDefault();
-                showAlert(errorMessages.join('<br>'), 'warning');
                 return false;
             }
         });
