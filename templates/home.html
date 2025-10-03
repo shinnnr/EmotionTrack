@@ -221,7 +221,7 @@
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <h6 class="mb-1 fw-bold">{{ log.emotion }}</h6>
-                                                    <small class="text-muted">
+                                                    <small class="text-muted recent-log-date" data-log-date="{{ log.log_date | manila_time | strftime('%Y-%m-%dT%H:%M:%S') }}">
                                                         {{ log.log_date | manila_time | strftime('%B %d, %Y at %I:%M %p') }}
                                                     </small>
                                                 </div>
@@ -1042,7 +1042,48 @@ document.addEventListener('keydown', function(event) {
 // Load daily tips when page loads
 document.addEventListener('DOMContentLoaded', function() {
     loadDailyTipsForHome();
+    formatRecentLogDates();
 });
+
+// Format recent log dates relatively
+function formatRecentLogDates() {
+    const dateElements = document.querySelectorAll('.recent-log-date');
+    dateElements.forEach(element => {
+        const dateStr = element.getAttribute('data-log-date');
+        if (dateStr) {
+            const logDate = new Date(dateStr);
+            const formattedDate = formatLogDate(logDate);
+            element.textContent = formattedDate;
+        }
+    });
+}
+
+function formatLogDate(dateObj) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const logDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+
+    // Compare dates by converting to date-only strings for reliable comparison
+    const todayStr = today.toDateString();
+    const yesterdayStr = yesterday.toDateString();
+    const logDateStr = logDate.toDateString();
+
+    if (logDateStr === todayStr) {
+        return 'Today at ' + dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    } else if (logDateStr === yesterdayStr) {
+        return 'Yesterday at ' + dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    } else {
+        return dateObj.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }) + ' at ' + dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+}
 </script>
 {% endblock %}
 
