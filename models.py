@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
-from sqlalchemy import Enum
 import pytz
 
 manila_tz = pytz.timezone('Asia/Manila')
@@ -36,8 +35,7 @@ class User(UserMixin, db.Model):
     section = db.Column(db.String(50))
     # Keep both old and new columns during migration
     is_admin = db.Column(db.Boolean, default=False)
-    role = db.Column(Enum('student', 'guidance_admin', 'faculty_admin', name='user_roles'), 
-                     default='student', nullable=True)  # Make nullable during migration
+    role = db.Column(db.String(20), default='student', nullable=True)  # Make nullable during migration
     created_at = db.Column(db.DateTime, default=get_current_time)
     last_profile_update = db.Column(db.DateTime, nullable=True)  # Track last time student updated profile info
     
