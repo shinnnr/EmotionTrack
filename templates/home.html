@@ -222,7 +222,16 @@
                                                 <div class="flex-grow-1">
                                                     <h6 class="mb-1 fw-bold">{{ log.emotion }}</h6>
                                                     <small class="text-muted">
-                                                        {{ log.log_date | manila_time | strftime('%B %d, %Y at %I:%M %p') }}
+                                                        {% set log_time = log.log_date | manila_time %}
+                                                        {% set today = get_current_time() | manila_time %}
+                                                        {% set yesterday = (get_current_time() - timedelta(days=1)) | manila_time %}
+                                                        {% if log_time.date() == today.date() %}
+                                                            Today at {{ log_time | strftime('%I:%M %p') }}
+                                                        {% elif log_time.date() == yesterday.date() %}
+                                                            Yesterday at {{ log_time | strftime('%I:%M %p') }}
+                                                        {% else %}
+                                                            {{ log_time | strftime('%A, %B %d at %I:%M %p') }}
+                                                        {% endif %}
                                                     </small>
                                                 </div>
                                             </div>
