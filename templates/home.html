@@ -199,7 +199,7 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4 panel-header">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <h5 class="card-title fw-bold mb-0">
                             <i class="fas fa-clock text-clsu-green me-2"></i>
                             Recent Activity
@@ -248,7 +248,7 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4 panel-header">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <h5 class="card-title fw-bold mb-0">
                             <i class="fas fa-lightbulb text-clsu-gold me-2"></i>
                             Daily Wellness Tips
@@ -408,19 +408,8 @@
 // Custom modal functions
 function openInsightsModal() {
     const modal = document.getElementById('insightsModal');
-    const button = document.querySelector('button[onclick="openInsightsModal()"]');
-
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
-
-    // Position modal below the button on narrow devices
-    if (window.innerWidth <= 768 && button) {
-        const rect = button.getBoundingClientRect();
-        modal.style.top = rect.bottom + 'px';
-        modal.style.left = '10px';
-        modal.style.width = 'calc(100vw - 20px)';
-        modal.style.maxHeight = 'calc(100vh - ' + rect.bottom + 'px)';
-    }
 
     // Add background click to close modal (matching profile modal behavior)
     if (!modal.hasAttribute('data-bg-click-added')) {
@@ -439,11 +428,6 @@ function closeInsightsModal() {
     const modal = document.getElementById('insightsModal');
     modal.style.display = 'none';
     document.body.style.overflow = ''; // Restore scrolling
-    // Reset positioning styles
-    modal.style.top = '';
-    modal.style.left = '';
-    modal.style.width = '';
-    modal.style.maxHeight = '';
 }
 
 function loadInsights() {
@@ -658,19 +642,8 @@ function getTipIcon(index) {
 // Daily Tips Modal functions - matching insights modal functionality
 function openDailyTipsModal() {
     const modal = document.getElementById('dailyTipsModal');
-    const button = document.querySelector('button[onclick="openDailyTipsModal()"]');
-
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
-
-    // Position modal below the button on narrow devices
-    if (window.innerWidth <= 768 && button) {
-        const rect = button.getBoundingClientRect();
-        modal.style.top = rect.bottom + 'px';
-        modal.style.left = '10px';
-        modal.style.width = 'calc(100vw - 20px)';
-        modal.style.maxHeight = 'calc(100vh - ' + rect.bottom + 'px)';
-    }
 
     // Add background click to close modal (matching insights modal behavior)
     if (!modal.hasAttribute('data-bg-click-added')) {
@@ -689,11 +662,6 @@ function closeDailyTipsModal() {
     const modal = document.getElementById('dailyTipsModal');
     modal.style.display = 'none';
     document.body.style.overflow = ''; // Restore scrolling
-    // Reset positioning styles
-    modal.style.top = '';
-    modal.style.left = '';
-    modal.style.width = '';
-    modal.style.maxHeight = '';
 }
 
 function loadDailyTipsForModal() {
@@ -831,23 +799,12 @@ function loadDailyTipsForModal() {
 // Recent Activity Modal functions
 function openRecentActivityModal() {
     const modal = document.getElementById('recentActivityModal');
-    const button = document.querySelector('button[onclick="openRecentActivityModal()"]');
-
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
 
     // Force modal above everything with maximum z-index
     modal.style.zIndex = '999999';
     modal.style.position = 'fixed';
-
-    // Position modal below the button on narrow devices
-    if (window.innerWidth <= 768 && button) {
-        const rect = button.getBoundingClientRect();
-        modal.style.top = rect.bottom + 'px';
-        modal.style.left = '10px';
-        modal.style.width = 'calc(100vw - 20px)';
-        modal.style.maxHeight = 'calc(100vh - ' + rect.bottom + 'px)';
-    }
 
     // Mark body to indicate modal is open
     document.body.classList.add('modal-open');
@@ -869,11 +826,6 @@ function closeRecentActivityModal() {
     const modal = document.getElementById('recentActivityModal');
     modal.style.display = 'none';
     document.body.style.overflow = ''; // Restore scrolling
-    // Reset positioning styles
-    modal.style.top = '';
-    modal.style.left = '';
-    modal.style.width = '';
-    modal.style.maxHeight = '';
 }
 
 function loadRecentActivity() {
@@ -1254,9 +1206,13 @@ document.addEventListener('DOMContentLoaded', function() {
 @media (max-width: 480px) {
     /* Extra small devices (phones < 480px) */
     .custom-modal {
-        padding: 0 10px 10px 10px;
+        padding: 0 10px 10px 10px; /* Remove top padding to eliminate undimmed space */
         align-items: flex-start;
         justify-content: center;
+    }
+
+    .custom-modal-content {
+        margin-top: 60px; /* Account for navigation bar with margin instead of padding */
     }
 
     .custom-modal-content {
@@ -1264,8 +1220,6 @@ document.addEventListener('DOMContentLoaded', function() {
         width: 95vw;
         max-width: 95vw;
         max-height: 90vh;
-        border-radius: 0.5rem;
-        animation: slideIn 0.2s ease-out;
     }
 
     .custom-modal-header {
@@ -1281,8 +1235,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     .custom-modal-overlay {
-        cursor: pointer;
-        pointer-events: auto;
+        cursor: default !important;
+        pointer-events: none;
     }
 }
 
@@ -1361,19 +1315,6 @@ document.addEventListener('DOMContentLoaded', function() {
         display: flex;
         align-items: center;
         justify-content: center;
-    }
-
-    .panel-header {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-    }
-
-    .panel-header .card-title {
-        margin-bottom: 0.5rem !important;
-    }
-
-    .panel-header .btn {
-        align-self: flex-start;
     }
 }
 
