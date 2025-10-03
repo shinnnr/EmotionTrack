@@ -481,8 +481,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const signupForm = signupFormContainer.querySelector('form');
         if (signupForm) {
             signupForm.addEventListener('submit', function(e) {
-                // Let browser handle validation, but ensure invalid fields stay red
-                if (!this.checkValidity()) {
+                // Use reportValidity() to show browser tooltips and check validity
+                if (!this.reportValidity()) {
                     e.preventDefault();
                     // Add is-invalid class to invalid fields for persistent red border
                     const invalidFields = this.querySelectorAll(':invalid');
