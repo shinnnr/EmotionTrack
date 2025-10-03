@@ -1614,8 +1614,8 @@ async function deleteMoodLog(logId) {
 
         if (result.success) {
             alert('Mood log entry deleted successfully!');
-            // Reload the journal entries modal
-            viewJournalEntries();
+            // Reload the current journal entries modal content instead of opening a new one
+            reloadJournalEntriesModal();
         } else {
             alert('Error: ' + result.message);
         }
@@ -1710,8 +1710,8 @@ function initializeJournalLogSelection() {
         .then(data => {
             if (data.success) {
                 alert('Entries deleted successfully!');
-                // Reload the journal entries modal
-                viewJournalEntries();
+                // Reload the current journal entries modal content instead of opening a new one
+                reloadJournalEntriesModal();
             } else {
                 alert('Error: ' + data.message);
             }
@@ -1751,6 +1751,101 @@ function updateJournalLogSelection() {
 
     selectAllCheckbox.checked = allChecked;
     selectAllCheckbox.indeterminate = someChecked && !allChecked;
+}
+
+async function reloadJournalEntriesModal() {
+    // Find the existing journal entries modal
+    const existingModal = document.querySelector('.custom-modal .custom-modal-title');
+    if (!existingModal || !existingModal.textContent.includes('My Journal Entries')) {
+        // If no existing modal found, create a new one
+        viewJournalEntries();
+        return;
+    }
+
+    const modalBody = existingModal.closest('.custom-modal').querySelector('.custom-modal-body');
+
+    try {
+        const response = await apiCall('/api/mood-logs');
+        const logs = response.logs || [];
+
+        let content;
+        if (logs.length === 0) {
+            content = `
+                <div class="text-center py-5">
+                    <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Logged Emotions Yet</h5>
+                    <p class="text-muted">Start logging your emotions to see them here!</p>
+                    <a href="/emotion-log" class="btn btn-clsu-green">
+                        <i class="fas fa-plus me-2"></i>Log Your First Entry
+                    </a>
+                </div>
+            `;
+        } else {
+            // Add select all header
+            content = `
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="selection-controls">
+                                        <div class="form-check d-inline-block me-3">
+                                            <input class="form-check-input" type="checkbox" id="selectAllJournalLogs">
+                                            <label class="form-check-label fw-bold" for="selectAllJournalLogs">
+                                                Select All Entries
+                                            </label>
+                                        </div>
+                                        <span class="text-muted" id="journalLogSelectionCount">0 entries selected</span>
+                                    </div>
+                                    <div class="action-controls">
+                                        <button class="btn btn-danger" id="deleteSelectedJournalLogsBtn" disabled>
+                                            <i class="fas fa-trash me-2"></i>Delete Selected
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="journal-entries">
+            `;
+
+            // Group logs by date
+            const groupedLogs = groupLogsByDate(logs);
+
+            for (const [date, entries] of Object.entries(groupedLogs)) {
+                content += `
+                    <div class="journal-date-group mb-4">
+                        <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            ${formatActivityDate(date)}
+                        </h6>
+                        <div class="row g-3">
+                `;
+
+                entries.forEach(log => {
+                    content += createJournalCard(log);
+                });
+
+                content += '</div></div>';
+            }
+
+            content += '</div>';
+
+            // Initialize selection controls after content is loaded
+            setTimeout(() => initializeJournalLogSelection(), 100);
+        }
+
+        modalBody.innerHTML = content;
+
+    } catch (error) {
+        modalBody.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Unable to reload journal entries. Please try again later.
+            </div>
+        `;
+    }
 }
 
 function showAlert(message, type = 'info') {
