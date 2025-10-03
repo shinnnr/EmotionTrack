@@ -860,6 +860,65 @@ function initializeProfilePage() {
     if (changePasswordForm) {
         changePasswordForm.addEventListener('submit', handlePasswordChange);
     }
+
+    // Update Profile Info Form validation
+    const updateProfileInfoForm = document.getElementById('updateProfileInfoForm');
+    if (updateProfileInfoForm) {
+        updateProfileInfoForm.addEventListener('submit', function(e) {
+            const firstname = document.getElementById('firstname').value.trim();
+            const lastname = document.getElementById('lastname').value.trim();
+            const birthday = document.getElementById('birthday').value;
+
+            let hasErrors = false;
+            let errorMessages = [];
+
+            // Validate First Name
+            if (!firstname) {
+                errorMessages.push('First Name is required');
+                hasErrors = true;
+            } else if (firstname.length < 2) {
+                errorMessages.push('First Name must be at least 2 characters long');
+                hasErrors = true;
+            } else if (!/^[a-zA-Z\s]+$/.test(firstname)) {
+                errorMessages.push('First Name cannot contain numbers or special characters');
+                hasErrors = true;
+            }
+
+            // Validate Last Name
+            if (!lastname) {
+                errorMessages.push('Last Name is required');
+                hasErrors = true;
+            } else if (lastname.length < 2) {
+                errorMessages.push('Last Name must be at least 2 characters long');
+                hasErrors = true;
+            } else if (!/^[a-zA-Z\s]+$/.test(lastname)) {
+                errorMessages.push('Last Name cannot contain numbers or special characters');
+                hasErrors = true;
+            }
+
+            // Validate Birthday
+            if (!birthday) {
+                errorMessages.push('Birthday is required');
+                hasErrors = true;
+            } else {
+                const birthDate = new Date(birthday);
+                const today = new Date();
+                if (birthDate > today) {
+                    errorMessages.push('Birthday cannot be in the future');
+                    hasErrors = true;
+                } else if (birthDate.getFullYear() > today.getFullYear()) {
+                    errorMessages.push('Please enter a valid birth year');
+                    hasErrors = true;
+                }
+            }
+
+            if (hasErrors) {
+                e.preventDefault();
+                showAlert(errorMessages.join('<br>'), 'warning');
+                return false;
+            }
+        });
+    }
 }
 
 // Modal utility functions
