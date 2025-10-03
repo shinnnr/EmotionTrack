@@ -873,17 +873,17 @@ function loadRecentActivity() {
             const groupedLogs = groupLogsByDate(logs);
 
             let html = '';
-            for (const [date, entries] of Object.entries(groupedLogs)) {
+            for (const [dateKey, group] of Object.entries(groupedLogs)) {
                 html += `
                     <div class="journal-date-group mb-4">
                         <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
                             <i class="fas fa-calendar-day me-2"></i>
-                            ${formatDate(date)}
+                            ${formatDate(group.date)}
                         </h6>
                         <div class="row g-3">
                 `;
 
-                entries.forEach(log => {
+                group.logs.forEach(log => {
                     html += createActivityCard(log);
                 });
 
@@ -913,17 +913,17 @@ function loadRecentActivity() {
 function groupLogsByDate(logs) {
     const groups = {};
     logs.forEach(log => {
-        const date = new Date(log.log_date).toDateString();
-        if (!groups[date]) {
-            groups[date] = [];
+        const date = new Date(log.log_date);
+        const dateKey = date.toDateString();
+        if (!groups[dateKey]) {
+            groups[dateKey] = { date: date, logs: [] };
         }
-        groups[date].push(log);
+        groups[dateKey].logs.push(log);
     });
     return groups;
 }
 
-function formatDate(dateString) {
-    const date = new Date(dateString);
+function formatDate(date) {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -933,11 +933,11 @@ function formatDate(dateString) {
     } else if (date.toDateString() === yesterday.toDateString()) {
         return 'Yesterday';
     } else {
-        return date.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
     }
 }
