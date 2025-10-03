@@ -1319,6 +1319,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
+/* Stack title and View All button vertically on very small screens */
+@media (max-width: 430px) {
+    .d-flex.justify-content-between.align-items-center.mb-4 {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .d-flex.justify-content-between.align-items-center.mb-4 .btn {
+        align-self: stretch;
+        text-align: center;
+    }
+}
+
 /* Journal entry cards */
 .journal-entry-card {
     cursor: pointer;
