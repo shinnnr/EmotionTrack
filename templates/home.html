@@ -928,9 +928,17 @@ function formatDate(date) {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) {
+    const isToday = date.getFullYear() === today.getFullYear() &&
+                    date.getMonth() === today.getMonth() &&
+                    date.getDate() === today.getDate();
+
+    const isYesterday = date.getFullYear() === yesterday.getFullYear() &&
+                        date.getMonth() === yesterday.getMonth() &&
+                        date.getDate() === yesterday.getDate();
+
+    if (isToday) {
         return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (isYesterday) {
         return 'Yesterday';
     } else {
         return date.toLocaleDateString('en-US', {
