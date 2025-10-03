@@ -930,18 +930,24 @@ function groupLogsByDate(logs) {
 }
 
 function formatDate(dateObj) {
-    // Get current Manila time
+    // Get current Manila time components
     const now = new Date();
     const manilaOffset = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
     const manilaNow = new Date(now.getTime() + manilaOffset);
 
-    // Create Manila today and yesterday
-    const today = new Date(manilaNow.getFullYear(), manilaNow.getMonth(), manilaNow.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    const manilaYear = manilaNow.getFullYear();
+    const manilaMonth = manilaNow.getMonth();
+    const manilaDay = manilaNow.getDate();
 
-    // Create comparison date from the log date
-    const logDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    // Create Manila today and yesterday dates
+    const today = new Date(manilaYear, manilaMonth, manilaDay);
+    const yesterday = new Date(manilaYear, manilaMonth, manilaDay - 1);
+
+    // Get log date components (already in Manila time from backend)
+    const logYear = dateObj.getFullYear();
+    const logMonth = dateObj.getMonth();
+    const logDay = dateObj.getDate();
+    const logDate = new Date(logYear, logMonth, logDay);
 
     // Compare dates
     if (logDate.getTime() === today.getTime()) {
@@ -959,10 +965,6 @@ function formatDate(dateObj) {
 }
 function createActivityCard(log) {
     const emotionIcon = getEmotionIcon(log.emotion);
-    const timeString = new Date(log.log_date).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
 
     return `
         <div class="col-md-6">
@@ -974,7 +976,6 @@ function createActivityCard(log) {
                         </div>
                         <div class="flex-grow-1">
                             <h6 class="mb-1 fw-bold">${log.emotion}</h6>
-                            <small class="text-muted">${timeString}</small>
                         </div>
                     </div>
                     <div class="entry-meta">

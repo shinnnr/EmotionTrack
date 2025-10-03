@@ -3173,7 +3173,7 @@ def get_recent_mood_logs():
                 'sleep': log.sleep,
                 'energy': log.energy,
                 'triggers': log.triggers,
-                'log_date': convert_to_manila_time(log.log_date).strftime('%B %d, %Y at %I:%M %p') if log.log_date else ''
+                'log_date': convert_to_manila_time(log.log_date).isoformat() if log.log_date else None
             } for log in logs_paginated.items],
             'pagination': {
                 'page': logs_paginated.page,
