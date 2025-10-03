@@ -69,17 +69,33 @@ def home():
     current_time_manila = convert_to_manila_time(get_current_time())
     yesterday_manila = current_time_manila - timedelta(days=1)
 
+    # Create formatted logs list
+    formatted_recent_logs = []
     for log in recent_logs:
+        formatted_log = {
+            'log_id': log.log_id,
+            'emotion': log.emotion,
+            'intensity': log.intensity,
+            'energy': log.energy,
+            'sleep': log.sleep,
+            'triggers': log.triggers,
+            'coping': log.coping,
+            'gratitude': log.gratitude,
+            'log_date': log.log_date
+        }
+
         if log.log_date:
             log_time = convert_to_manila_time(log.log_date)
             if log_time.date() == current_time_manila.date():
-                log.formatted_date = f"Today at {log_time.strftime('%I:%M %p')}"
+                formatted_log['formatted_date'] = f"Today at {log_time.strftime('%I:%M %p')}"
             elif log_time.date() == yesterday_manila.date():
-                log.formatted_date = f"Yesterday at {log_time.strftime('%I:%M %p')}"
+                formatted_log['formatted_date'] = f"Yesterday at {log_time.strftime('%I:%M %p')}"
             else:
-                log.formatted_date = log_time.strftime('%A, %B %d at %I:%M %p')
+                formatted_log['formatted_date'] = log_time.strftime('%A, %B %d at %I:%M %p')
         else:
-            log.formatted_date = "Unknown date"
+            formatted_log['formatted_date'] = "Unknown date"
+
+        formatted_recent_logs.append(formatted_log)
     
     # Get latest DASS-21 result
     latest_dass = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).first()
@@ -121,11 +137,10 @@ def home():
     }
     
     return render_template('home.html',
-                          recent_logs=recent_logs,
+                          recent_logs=formatted_recent_logs,
                           latest_dass=latest_dass,
                           dass21_status=dass21_status,
-                          notifications=notifications,
-                          current_time=get_current_time())
+                          notifications=notifications)
 
 @main_bp.route('/profile')
 @login_required
