@@ -923,13 +923,18 @@ function closeModal(modalId) {
     if (modal) {
         modal.classList.remove('show');
         document.body.style.overflow = 'auto';
-        
+
         // Reset modal styles
         modal.style.zIndex = '';
         modal.style.position = '';
-        
+
         // Remove modal state from body
         document.body.classList.remove('modal-open');
+
+        // Clear the journal modal ID if this is the journal modal
+        if (modalId === currentJournalModalId) {
+            currentJournalModalId = null;
+        }
     }
 }
 
@@ -990,6 +995,9 @@ async function apiCall(endpoint) {
     }
 }
 
+// Global variable to store the current journal modal ID
+let currentJournalModalId = null;
+
 // Journal Entries functionality
 async function viewJournalEntries() {
     const loadingContent = `
@@ -998,12 +1006,15 @@ async function viewJournalEntries() {
             <p class="text-muted">Loading your journal entries...</p>
         </div>
     `;
-    
+
     const modalId = createModal(
-        '<i class="fas fa-book-open me-2"></i>My Journal Entries', 
-        loadingContent, 
+        '<i class="fas fa-book-open me-2"></i>My Journal Entries',
+        loadingContent,
         'modal-xl'
     );
+
+    // Store the modal ID for later reloading
+    currentJournalModalId = modalId;
     
     try {
         const response = await apiCall('/api/mood-logs');
@@ -1613,11 +1624,12 @@ async function deleteMoodLog(logId) {
         const result = await response.json();
 
         if (result.success) {
-            alert('Mood log entry deleted successfully!');
-            // Reload the current journal entries modal content instead of opening a new one
-            reloadJournalEntriesModal();
+            // Show success message and reload the modal
+            showAlert('Mood log entry deleted successfully!', 'success');
+            // Use setTimeout to ensure the alert doesn't interfere with modal reloading
+            setTimeout(() => reloadJournalEntriesModal(), 100);
         } else {
-            alert('Error: ' + result.message);
+            showAlert('Error: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error deleting mood log:', error);
@@ -1709,11 +1721,12 @@ function initializeJournalLogSelection() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Entries deleted successfully!');
-                // Reload the current journal entries modal content instead of opening a new one
-                reloadJournalEntriesModal();
+                // Show success message and reload the modal
+                showAlert('Entries deleted successfully!', 'success');
+                // Use setTimeout to ensure the alert doesn't interfere with modal reloading
+                setTimeout(() => reloadJournalEntriesModal(), 100);
             } else {
-                alert('Error: ' + data.message);
+                showAlert('Error: ' + data.message, 'error');
             }
         })
         .catch(error => {
@@ -1754,15 +1767,29 @@ function updateJournalLogSelection() {
 }
 
 async function reloadJournalEntriesModal() {
-    // Find the existing journal entries modal
-    const existingModal = document.querySelector('.custom-modal .custom-modal-title');
-    if (!existingModal || !existingModal.textContent.includes('My Journal Entries')) {
-        // If no existing modal found, create a new one
+    // Use the stored modal ID to find the existing journal modal
+    let journalModal = null;
+    if (currentJournalModalId) {
+        journalModal = document.getElementById(currentJournalModalId);
+    }
+
+    if (!journalModal) {
+        // If no existing journal modal found, create a new one
         viewJournalEntries();
         return;
     }
 
-    const modalBody = existingModal.closest('.custom-modal').querySelector('.custom-modal-body');
+    const modalBody = journalModal.querySelector('.custom-modal-body');
+
+    // Reset modal content to loading state
+    modalBody.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-clsu-green" role="status">
+                <span class="visually-hidden">Loading entries...</span>
+            </div>
+            <p class="mt-2 text-muted">Reloading your journal entries...</p>
+        </div>
+    `;
 
     try {
         const response = await apiCall('/api/mood-logs');
