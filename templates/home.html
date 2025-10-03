@@ -384,7 +384,7 @@
     <div class="custom-modal-content modal-xl">
         <div class="custom-modal-header">
             <h5 class="custom-modal-title">
-                <i class="fas fa-book-open me-2"></i>
+                <i class="fas fa-clock me-2"></i>
                 My Recent Activity
             </h5>
             <button type="button" class="custom-modal-close" onclick="closeRecentActivityModal()" aria-label="Close">
@@ -394,8 +394,10 @@
         <div class="custom-modal-body">
             <div id="recentActivityContent">
                 <div class="text-center py-4">
-                    <div class="spinner mb-3"></div>
-                    <p class="text-muted">Loading your recent activity...</p>
+                    <div class="spinner-border text-clsu-green" role="status">
+                        <span class="visually-hidden">Loading activity...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading your recent activity...</p>
                 </div>
             </div>
         </div>
@@ -830,88 +832,81 @@ function loadRecentActivity() {
     // Reset modal content to loading state
     const content = document.getElementById('recentActivityContent');
     content.innerHTML = `
-        <div class="loading-content">
-            <div class="spinner mb-3"></div>
-            <p class="text-muted">Loading your recent activity...</p>
+        <div class="text-center py-4">
+            <div class="spinner-border text-clsu-green" role="status">
+                <span class="visually-hidden">Loading activity...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading your recent activity...</p>
         </div>
     `;
 
-    try {
-        // Load mood logs
-        fetch('/api/mood-logs', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const logs = data.logs || [];
+    // Load mood logs
+    fetch('/api/mood-logs', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        const logs = data.logs || [];
 
-            let contentHtml;
-            if (logs.length === 0) {
-                contentHtml = `
-                    <div class="text-center py-5">
-                        <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No Logged Emotions Yet</h5>
-                        <p class="text-muted">Start logging your emotions to see them here!</p>
-                        <a href="/emotion-log" class="btn btn-clsu-green">
-                            <i class="fas fa-plus me-2"></i>Log Your First Entry
-                        </a>
-                    </div>
-                `;
-            } else {
-                contentHtml = '<div class="journal-entries">';
-
-                // Group logs by date
-                const groupedLogs = groupLogsByDate(logs);
-
-                for (const [date, entries] of Object.entries(groupedLogs)) {
-                    contentHtml += `
-                        <div class="journal-date-group mb-4">
-                            <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
-                                <i class="fas fa-calendar-day me-2"></i>
-                                ${formatDate(date)}
-                            </h6>
-                            <div class="row g-3">
-                    `;
-
-                    entries.forEach(log => {
-                        contentHtml += createJournalCard(log);
-                    });
-
-                    contentHtml += '</div></div>';
-                }
-
-                contentHtml += '</div>';
-            }
-
-            content.innerHTML = contentHtml;
-        })
-        .catch(error => {
-            console.error('Error loading recent activity:', error);
+        if (logs.length === 0) {
             content.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    Unable to load recent activity. Please try again later.
+                <div class="text-center py-5">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Activity Yet</h5>
+                    <p class="text-muted">Start logging your emotions to see your activity here!</p>
+                    <a href="/emotion-log" class="btn btn-clsu-green">
+                        <i class="fas fa-plus me-2"></i>Log Your First Entry
+                    </a>
                 </div>
             `;
-        });
+        } else {
+            // Group logs by date
+            const groupedLogs = groupLogsByDate(logs);
 
-    } catch (error) {
+            let html = '';
+            for (const [date, entries] of Object.entries(groupedLogs)) {
+                html += `
+                    <div class="journal-date-group mb-4">
+                        <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            ${formatDate(date)}
+                        </h6>
+                        <div class="row g-3">
+                `;
+
+                entries.forEach(log => {
+                    html += createActivityCard(log);
+                });
+
+                html += '</div></div>';
+            }
+
+            content.innerHTML = html;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading recent activity:', error);
         content.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                Unable to load recent activity. Please try again later.
+            <div class="alert alert-warning border-0">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
+                    <div>
+                        <h6 class="alert-heading mb-1">Unable to Load Activity</h6>
+                        <p class="mb-0">There was a problem loading your activity data. Please try again in a moment.</p>
+                    </div>
+                </div>
             </div>
         `;
-    }
+    });
 }
 
 // Helper functions for activity modal
@@ -938,15 +933,15 @@ function formatDate(dateString) {
     } else if (date.toDateString() === yesterday.toDateString()) {
         return 'Yesterday';
     } else {
-        return date.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
         });
     }
 }
-function createJournalCard(log) {
+function createActivityCard(log) {
     const emotionIcon = getEmotionIcon(log.emotion);
     const timeString = new Date(log.log_date).toLocaleTimeString('en-US', {
         hour: '2-digit',
