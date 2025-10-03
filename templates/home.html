@@ -199,7 +199,7 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 panel-header">
                         <h5 class="card-title fw-bold mb-0">
                             <i class="fas fa-clock text-clsu-green me-2"></i>
                             Recent Activity
@@ -248,7 +248,7 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 panel-header">
                         <h5 class="card-title fw-bold mb-0">
                             <i class="fas fa-lightbulb text-clsu-gold me-2"></i>
                             Daily Wellness Tips
@@ -1187,6 +1187,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 .severity-Normal { background-color: #28a745; }
 .severity-Mild { background-color: #ffc107; color: #000; }
 .severity-Moderate { background-color: #fd7e14; }
@@ -1204,22 +1215,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Responsive design for all devices */
 @media (max-width: 480px) {
-    /* Extra small devices (phones < 480px) */
+    /* Extra small devices (phones < 480px) - Bottom sheet modal */
     .custom-modal {
-        padding: 0 10px 10px 10px; /* Remove top padding to eliminate undimmed space */
-        align-items: flex-start;
+        padding: 0;
+        align-items: flex-end;
         justify-content: center;
     }
 
     .custom-modal-content {
-        margin-top: 60px; /* Account for navigation bar with margin instead of padding */
-    }
-
-    .custom-modal-content {
-        margin: 0.5rem auto;
-        width: 95vw;
-        max-width: 95vw;
-        max-height: 90vh;
+        margin: 0;
+        width: 100vw;
+        max-width: 100vw;
+        max-height: 80vh;
+        border-radius: 1rem 1rem 0 0;
+        animation: slideUp 0.3s ease-out;
     }
 
     .custom-modal-header {
@@ -1235,8 +1244,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     .custom-modal-overlay {
-        cursor: default !important;
-        pointer-events: none;
+        cursor: pointer;
+        pointer-events: auto;
     }
 }
 
@@ -1315,6 +1324,19 @@ document.addEventListener('DOMContentLoaded', function() {
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    .panel-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+
+    .panel-header .card-title {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .panel-header .btn {
+        align-self: flex-start;
     }
 }
 
