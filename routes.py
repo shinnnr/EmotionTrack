@@ -1939,7 +1939,7 @@ def view_alerts():
 
     # Get pagination parameters
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
+    per_page = 10  # Fixed to 10 items per page
     status_filter = request.args.get('status_filter', 'all')  # 'all', 'active', 'resolved'
 
     # Get accessible student IDs
@@ -2038,7 +2038,7 @@ def manage_feedback():
 
     # Get pagination parameters
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
+    per_page = 10  # Fixed to 10 items per page
     type_filter = request.args.get('type_filter', 'all')
 
     # Build query
