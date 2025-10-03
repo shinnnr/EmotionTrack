@@ -873,17 +873,17 @@ function loadRecentActivity() {
             const groupedLogs = groupLogsByDate(logs);
 
             let html = '';
-            for (const [dateKey, group] of Object.entries(groupedLogs)) {
+            for (const [date, entries] of Object.entries(groupedLogs)) {
                 html += `
                     <div class="journal-date-group mb-4">
                         <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
                             <i class="fas fa-calendar-day me-2"></i>
-                            ${formatDate(group.date)}
+                            ${formatDate(date)}
                         </h6>
                         <div class="row g-3">
                 `;
 
-                group.logs.forEach(log => {
+                entries.forEach(log => {
                     html += createActivityCard(log);
                 });
 
@@ -913,32 +913,24 @@ function loadRecentActivity() {
 function groupLogsByDate(logs) {
     const groups = {};
     logs.forEach(log => {
-        const date = new Date(log.log_date);
-        const dateKey = date.toDateString();
-        if (!groups[dateKey]) {
-            groups[dateKey] = { date: date, logs: [] };
+        const date = new Date(log.log_date).toDateString();
+        if (!groups[date]) {
+            groups[date] = [];
         }
-        groups[dateKey].logs.push(log);
+        groups[date].push(log);
     });
     return groups;
 }
 
-function formatDate(date) {
+function formatDate(dateString) {
+    const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const isToday = date.getFullYear() === today.getFullYear() &&
-                    date.getMonth() === today.getMonth() &&
-                    date.getDate() === today.getDate();
-
-    const isYesterday = date.getFullYear() === yesterday.getFullYear() &&
-                        date.getMonth() === yesterday.getMonth() &&
-                        date.getDate() === yesterday.getDate();
-
-    if (isToday) {
+    if (date.toDateString() === today.toDateString()) {
         return 'Today';
-    } else if (isYesterday) {
+    } else if (date.toDateString() === yesterday.toDateString()) {
         return 'Yesterday';
     } else {
         return date.toLocaleDateString('en-US', {
