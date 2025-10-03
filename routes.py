@@ -64,6 +64,22 @@ def home():
     
     # Get recent mood logs for user
     recent_logs = MoodLog.query.filter_by(user_id=current_user.id).order_by(desc(MoodLog.log_date)).limit(5).all()
+
+    # Format dates for recent logs
+    current_time_manila = convert_to_manila_time(get_current_time())
+    yesterday_manila = current_time_manila - timedelta(days=1)
+
+    for log in recent_logs:
+        if log.log_date:
+            log_time = convert_to_manila_time(log.log_date)
+            if log_time.date() == current_time_manila.date():
+                log.formatted_date = f"Today at {log_time.strftime('%I:%M %p')}"
+            elif log_time.date() == yesterday_manila.date():
+                log.formatted_date = f"Yesterday at {log_time.strftime('%I:%M %p')}"
+            else:
+                log.formatted_date = log_time.strftime('%A, %B %d at %I:%M %p')
+        else:
+            log.formatted_date = "Unknown date"
     
     # Get latest DASS-21 result
     latest_dass = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).first()
