@@ -874,11 +874,12 @@ function loadRecentActivity() {
 
             let html = '';
             for (const group of Object.values(groupedLogs)) {
+                const firstLogTime = new Date(group.logs[0].log_date);
                 html += `
                     <div class="journal-date-group mb-4">
                         <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
                             <i class="fas fa-calendar-day me-2"></i>
-                            ${formatDate(group.date)}
+                            ${formatDate(group.date, firstLogTime)}
                         </h6>
                         <div class="row g-3">
                 `;
@@ -930,22 +931,22 @@ function groupLogsByDate(logs) {
     return groups;
 }
 
-function formatDate(dateObj) {
+function formatDate(dateObj, timeObj) {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (dateObj.toDateString() === today.toDateString()) {
-        return 'Today';
+        return 'Today' + (timeObj ? ' at ' + timeObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '');
     } else if (dateObj.toDateString() === yesterday.toDateString()) {
-        return 'Yesterday';
+        return 'Yesterday' + (timeObj ? ' at ' + timeObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '');
     } else {
         return dateObj.toLocaleDateString('en-US', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
             day: 'numeric'
-        });
+        }) + (timeObj ? ' at ' + timeObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '');
     }
 }
 function createActivityCard(log) {
