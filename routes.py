@@ -3138,6 +3138,7 @@ def get_recent_mood_logs():
             'data': [{
                 'user_name': log.user.full_name,
                 'emotion': log.emotion,
+                'intensity': log.intensity,
                 'sleep': log.sleep,
                 'energy': log.energy,
                 'triggers': log.triggers,

@@ -701,6 +701,9 @@ function generateProfileHTML(data) {
                                         <div class="col-md-2">
                                             <span class="badge bg-light text-dark">Energy: ${escapeHtml(log.energy)}/10</span>
                                         </div>
+                                        <div class="col-md-2">
+                                            <span class="badge bg-light text-dark">Intensity: ${escapeHtml(log.intensity)}/10</span>
+                                        </div>
                                         <div class="col-md-5">
                                             ${log.triggers ? `<small><strong>Triggers:</strong> ${escapeHtml(log.triggers)}</small><br>` : ''}
                                             ${log.coping ? `<small><strong>Coping:</strong> ${escapeHtml(log.coping)}</small>` : ''}
@@ -2532,6 +2535,7 @@ function displayMoodLogsData(logs, pagination) {
                         <div class="activity-meta">
                             <span class="badge bg-light text-dark">Sleep: ${log.sleep}h</span>
                             <span class="badge bg-light text-dark">Energy: ${log.energy}/10</span>
+                            <span class="badge bg-light text-dark">Intensity: ${log.intensity}/10</span>
                         </div>
                     </div>
                 `).join('') :
@@ -2885,6 +2889,7 @@ async function loadRecentActivityPage(page) {
                         <div class="activity-meta">
                             <span class="badge bg-light text-dark">Sleep: ${escapeHtml(log.sleep)}h</span>
                             <span class="badge bg-light text-dark">Energy: ${escapeHtml(log.energy)}/10</span>
+                            <span class="badge bg-light text-dark">Intensity: ${escapeHtml(log.intensity)}/10</span>
                         </div>
                     </div>
                 `).join('');
