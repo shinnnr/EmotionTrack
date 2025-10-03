@@ -1069,55 +1069,57 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Custom Modal Styles */
 .custom-modal {
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999999 !important;
-    animation: fadeIn 0.3s ease;
-    padding: 60px 20px 20px 20px; /* Account for top navigation */
-    align-items: flex-start;
+    z-index: 1050;
     justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.15s ease-out;
 }
 
-.custom-modal.show {
-    display: flex;
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    z-index: 1049;
 }
 
 .custom-modal-content {
-    background: white;
-    border-radius: 12px;
+    position: relative;
+    background: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    width: 90%;
     max-width: 70vw;
-    width: 100%;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
-    animation: slideIn 0.3s ease;
-    position: relative;
-    z-index: 9999999 !important;
-    margin-left: auto;
-    margin-right: 2rem;
+    z-index: 1051;
+    animation: slideIn 0.2s ease-out;
 }
 
 .custom-modal-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid #e9ecef;
     display: flex;
-    justify-content: between;
     align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
     background: var(--clsu-green);
     color: white;
-    border-radius: 12px 12px 0 0;
+    border-radius: 0.5rem 0.5rem 0 0;
     flex-shrink: 0;
 }
 
 .custom-modal-title {
     margin: 0;
+    font-size: 1.25rem;
     font-weight: 600;
-    flex-grow: 1;
 }
 
 .custom-modal-close {
@@ -1141,154 +1143,12 @@ document.addEventListener('DOMContentLoaded', function() {
     flex: 1;
 }
 
-.modal-lg .custom-modal-content {
-    max-width: 600px;
-}
-
-.modal-xl .custom-modal-content {
-    max-width: 800px;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideIn {
-    from { 
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* Loading state */
-.loading-content {
-    text-align: center;
-    padding: 3rem 1rem;
-}
-
-.spinner {
-    display: inline-block;
-    width: 2rem;
-    height: 2rem;
-    border: 0.25rem solid #f3f3f3;
-    border-top: 0.25rem solid var(--clsu-green);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Journal entry cards */
-.journal-entry-card {
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 1px solid #e9ecef;
-}
-
-.journal-entry-card:hover {
-    border-color: var(--clsu-green);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.emotion-badge {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--clsu-gold);
+.custom-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    color: white;
-}
-
-/* Modal state for body */
-body.modal-open {
-    overflow: hidden !important;
-}
-
-/* Force modal above everything */
-.custom-modal.show {
-    z-index: 999999 !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-}
-
-/* Desktop modal positioning */
-@media (min-width: 992px) {
-    .custom-modal-content {
-        max-width: 60vw;
-        margin-left: 280px;
-        margin-right: 2rem;
-    }
-    
-    .modal-lg .custom-modal-content {
-        max-width: 50vw;
-        margin-left: 280px;
-    }
-    
-    .modal-xl .custom-modal-content {
-        max-width: 65vw;
-        margin-left: 280px;
-    }
-}
-
-/* Tablet modal positioning */
-@media (min-width: 769px) and (max-width: 991px) {
-    .custom-modal-content {
-        max-width: 75vw;
-        margin-left: 1rem;
-        margin-right: 1rem;
-    }
-}
-
-/* Mobile responsive design */
-@media (max-width: 768px) {
-    .custom-modal-content {
-        margin: 1rem auto;
-        max-width: calc(100vw - 2rem);
-    }
-
-    .action-card {
-        height: 130px;
-        padding: 1.25rem 1rem;
-    }
-
-    .action-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-    }
-
-    .action-arrow {
-        width: 16px;
-        font-size: 0.75rem;
-    }
-}
-
-/* Tablet and smaller desktop responsive design */
-@media (max-width: 1200px) {
-    .action-card {
-        height: 140px;
-        padding: 1.25rem 1rem;
-    }
-    
-    .action-arrow {
-        width: 18px;
-        font-size: 0.8rem;
-    }
+    justify-content: flex-end;
+    gap: 0.5rem;
 }
 
 /* Insights cards styling */
