@@ -99,7 +99,37 @@ function initializeIntensitySlider() {
     if (intensityRange) {
         // Set initial value and update display
         updateIntensityDisplay(intensityRange.value);
+
+        // Initialize scale dots
+        initializeScaleDots();
     }
+}
+
+function initializeScaleDots() {
+    const scaleDots = document.querySelectorAll('.scale-dot');
+    scaleDots.forEach((dot, index) => {
+        dot.addEventListener('click', function() {
+            const value = parseInt(this.getAttribute('data-value'));
+            intensityRange.value = value;
+            updateIntensityDisplay(value);
+            updateSaveButtonState();
+
+            // Update active state of dots
+            updateScaleDotsActiveState(value);
+        });
+    });
+}
+
+function updateScaleDotsActiveState(activeValue) {
+    const scaleDots = document.querySelectorAll('.scale-dot');
+    scaleDots.forEach(dot => {
+        const dotValue = parseInt(dot.getAttribute('data-value'));
+        if (dotValue === activeValue) {
+            dot.classList.add('active');
+        } else {
+            dot.classList.remove('active');
+        }
+    });
 }
 
 function updateIntensityDisplay(value) {
@@ -113,7 +143,7 @@ function updateIntensityDisplay(value) {
         if (value == 0) {
             intensityFill.style.width = '0%';
         } else {
-            intensityFill.style.width = (value * 10) + '%';
+            intensityFill.style.width = (value * 9.09) + '%'; /* Adjusted for 0-10 scale */
         }
     }
 
@@ -139,6 +169,9 @@ function updateIntensityDisplay(value) {
             intensityNumber.className = 'intensity-number fw-bold ' + getIntensityColor(parseInt(value));
         }
     }
+
+    // Update active state of scale dots
+    updateScaleDotsActiveState(parseInt(value));
 }
 
 function updateIntensityValue(value) {
