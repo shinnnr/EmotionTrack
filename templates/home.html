@@ -1051,15 +1051,16 @@ async function deleteMoodLog(logId) {
         const result = await response.json();
 
         if (result.success) {
-            alert('Mood log entry deleted successfully!');
-            // Reload the recent activity modal
-            loadRecentActivity();
+            // Show success message and reload the modal
+            showAlert('Mood log entry deleted successfully!', 'success');
+            // Use setTimeout to ensure the alert doesn't interfere with modal reloading
+            setTimeout(() => loadRecentActivity(), 100);
         } else {
-            alert('Error: ' + result.message);
+            showAlert('Error: ' + result.message, 'error');
         }
     } catch (error) {
         console.error('Error deleting mood log:', error);
-        alert('Failed to delete mood log entry. Please try again.');
+        showAlert('Failed to delete mood log entry. Please try again.', 'error');
     }
 }
 
@@ -1147,11 +1148,12 @@ function initializeLogSelection() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Entries deleted successfully!');
-                // Reload the recent activity modal
-                loadRecentActivity();
+                // Show success message and reload the modal
+                showAlert('Entries deleted successfully!', 'success');
+                // Use setTimeout to ensure the alert doesn't interfere with modal reloading
+                setTimeout(() => loadRecentActivity(), 100);
             } else {
-                alert('Error: ' + data.message);
+                showAlert('Error: ' + data.message, 'error');
             }
         })
         .catch(error => {
@@ -1189,6 +1191,48 @@ function updateLogSelection() {
 
     selectAllCheckbox.checked = allChecked;
     selectAllCheckbox.indeterminate = someChecked && !allChecked;
+}
+
+function showAlert(message, type = 'info') {
+    const alertColors = {
+        success: 'var(--clsu-green)',
+        error: '#dc3545',
+        warning: '#ffc107',
+        info: '#0dcaf0'
+    };
+
+    const alert = document.createElement('div');
+    alert.className = 'position-fixed top-0 end-0 m-3';
+    alert.style.zIndex = '9999999';
+
+    // Create alert container safely
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    alertDiv.setAttribute('role', 'alert');
+
+    // Create icon element
+    const icon = document.createElement('i');
+    icon.className = `fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2`;
+    alertDiv.appendChild(icon);
+
+    // Safely add message text
+    const messageText = document.createTextNode(message);
+    alertDiv.appendChild(messageText);
+
+    // Create close button safely
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'alert');
+    alertDiv.appendChild(closeButton);
+
+    alert.appendChild(alertDiv);
+
+    document.body.appendChild(alert);
+
+    setTimeout(() => {
+        alert.remove();
+    }, 5023);
 }
 
 // Close modal when pressing Escape key
