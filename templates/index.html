@@ -84,7 +84,7 @@
                             
                             <div class="mb-3">
                                 <label class="form-label">First Name</label>
-                                {{ register_form.firstname(class="form-control") }}
+                                {{ register_form.firstname(class="form-control", required=True, pattern="[A-Za-z\s]+", title="First name cannot contain numbers or special characters") }}
                                 {% if register_form.firstname.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.firstname.errors %}
@@ -95,7 +95,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Last Name</label>
-                                {{ register_form.lastname(class="form-control") }}
+                                {{ register_form.lastname(class="form-control", required=True, pattern="[A-Za-z\s]+", title="Last name cannot contain numbers or special characters") }}
                                 {% if register_form.lastname.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.lastname.errors %}
@@ -104,10 +104,10 @@
                                     </div>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label class="form-label">LRN</label>
-                                {{ register_form.username(class="form-control", pattern="^\d{12}$", title="LRN must be exactly 12 digits", inputmode="numeric") }}
+                                {{ register_form.username(class="form-control", pattern="^\d{12}$", title="LRN must be exactly 12 digits", inputmode="numeric", required=True) }}
                                 {% if register_form.username.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.username.errors %}
@@ -116,10 +116,10 @@
                                     </div>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label class="form-label">Birthday</label>
-                                {{ register_form.birthday(class="form-control") }}
+                                {{ register_form.birthday(class="form-control", type="date", required=True, max="2008-12-31", title="Please enter a valid birth date") }}
                                 {% if register_form.birthday.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.birthday.errors %}
@@ -474,6 +474,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Setup section uppercase conversion
     setupSectionUppercase();
+
+    // Setup form validation styling for signup form
+    const signupFormContainer = document.getElementById('registerForm');
+    if (signupFormContainer) {
+        const signupForm = signupFormContainer.querySelector('form');
+        if (signupForm) {
+            signupForm.addEventListener('submit', function(e) {
+                // Let browser handle validation, but ensure invalid fields stay red
+                if (!this.checkValidity()) {
+                    e.preventDefault();
+                    // Add is-invalid class to invalid fields for persistent red border
+                    const invalidFields = this.querySelectorAll(':invalid');
+                    invalidFields.forEach(field => {
+                        field.classList.add('is-invalid');
+                    });
+                    return false;
+                }
+            });
+
+            // Clear validation styling when user starts typing
+            const inputs = signupForm.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    if (this.checkValidity()) {
+                        this.classList.remove('is-invalid');
+                    }
+                });
+            });
+        }
+    }
 });
 
 function acceptTerms() {
