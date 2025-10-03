@@ -1534,8 +1534,8 @@ def delete_alerts():
 @login_required
 def delete_feedback():
     """Delete selected feedback"""
-    if not current_user.is_admin:
-        return jsonify({'success': False, 'message': 'Access denied.'})
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Access denied. Only the main admin can delete feedback.'})
 
     try:
         # Get feedback IDs from form data
@@ -2094,8 +2094,8 @@ def submit_feedback():
 @admin_bp.route('/feedback')
 @login_required
 def manage_feedback():
-    if not current_user.is_admin:
-        flash('Access denied. Admin privileges required.', 'error')
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
+        flash('Access denied. Only the main admin can access the feedback page.', 'error')
         return redirect(url_for('main.home'))
 
     # Get pagination parameters
@@ -2122,8 +2122,8 @@ def manage_feedback():
 @admin_bp.route('/api/feedback/<int:feedback_id>')
 @login_required
 def get_feedback_details(feedback_id):
-    if not current_user.is_admin:
-        return jsonify({'success': False, 'message': 'Access denied'})
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Access denied. Only the main admin can access feedback.'})
 
     feedback = StudentFeedback.query.get_or_404(feedback_id)
 
