@@ -408,8 +408,19 @@
 // Custom modal functions
 function openInsightsModal() {
     const modal = document.getElementById('insightsModal');
+    const button = document.querySelector('button[onclick="openInsightsModal()"]');
+
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+    // Position modal below the button on narrow devices
+    if (window.innerWidth <= 768 && button) {
+        const rect = button.getBoundingClientRect();
+        modal.style.top = rect.bottom + 'px';
+        modal.style.left = '10px';
+        modal.style.width = 'calc(100vw - 20px)';
+        modal.style.maxHeight = 'calc(100vh - ' + rect.bottom + 'px)';
+    }
 
     // Add background click to close modal (matching profile modal behavior)
     if (!modal.hasAttribute('data-bg-click-added')) {
@@ -428,6 +439,11 @@ function closeInsightsModal() {
     const modal = document.getElementById('insightsModal');
     modal.style.display = 'none';
     document.body.style.overflow = ''; // Restore scrolling
+    // Reset positioning styles
+    modal.style.top = '';
+    modal.style.left = '';
+    modal.style.width = '';
+    modal.style.maxHeight = '';
 }
 
 function loadInsights() {
@@ -650,10 +666,10 @@ function openDailyTipsModal() {
     // Position modal below the button on narrow devices
     if (window.innerWidth <= 768 && button) {
         const rect = button.getBoundingClientRect();
-        modal.style.top = (rect.bottom + 5) + 'px';
+        modal.style.top = rect.bottom + 'px';
         modal.style.left = '10px';
         modal.style.width = 'calc(100vw - 20px)';
-        modal.style.maxHeight = 'calc(100vh - ' + (rect.bottom + 5) + 'px)';
+        modal.style.maxHeight = 'calc(100vh - ' + rect.bottom + 'px)';
     }
 
     // Add background click to close modal (matching insights modal behavior)
@@ -827,10 +843,10 @@ function openRecentActivityModal() {
     // Position modal below the button on narrow devices
     if (window.innerWidth <= 768 && button) {
         const rect = button.getBoundingClientRect();
-        modal.style.top = (rect.bottom + 5) + 'px';
+        modal.style.top = rect.bottom + 'px';
         modal.style.left = '10px';
         modal.style.width = 'calc(100vw - 20px)';
-        modal.style.maxHeight = 'calc(100vh - ' + (rect.bottom + 5) + 'px)';
+        modal.style.maxHeight = 'calc(100vh - ' + rect.bottom + 'px)';
     }
 
     // Mark body to indicate modal is open
