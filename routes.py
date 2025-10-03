@@ -104,11 +104,12 @@ def home():
         'has_notifications': dass21_status['can_take'] or unread_admin_responses > 0
     }
     
-    return render_template('home.html', 
-                         recent_logs=recent_logs, 
-                         latest_dass=latest_dass, 
-                         dass21_status=dass21_status,
-                         notifications=notifications)
+    return render_template('home.html',
+                          recent_logs=recent_logs,
+                          latest_dass=latest_dass,
+                          dass21_status=dass21_status,
+                          notifications=notifications,
+                          current_time=get_current_time())
 
 @main_bp.route('/profile')
 @login_required
