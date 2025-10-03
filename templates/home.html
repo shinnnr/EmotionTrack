@@ -913,16 +913,15 @@ function loadRecentActivity() {
 function groupLogsByDate(logs) {
     const groups = {};
     logs.forEach(log => {
-        // Parse the Manila timezone ISO string
-        let logDate;
-        try {
-            logDate = new Date(log.log_date);
-        } catch (e) {
-            logDate = new Date();
-        }
-
-        // Use toDateString() as key for reliable grouping
+        // Extract date part manually from Manila timezone ISO string
+        // Format: "2025-10-03T23:17:00+08:00"
+        const datePart = log.log_date.split('T')[0]; // "2025-10-03"
+        const [year, month, day] = datePart.split('-').map(Number);
+        
+        // Create date at midnight for consistent comparison
+        const logDate = new Date(year, month - 1, day);
         const dateKey = logDate.toDateString();
+        
         if (!groups[dateKey]) {
             groups[dateKey] = { date: logDate, logs: [] };
         }
