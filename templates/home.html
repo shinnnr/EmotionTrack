@@ -1105,13 +1105,6 @@ document.addEventListener('DOMContentLoaded', function() {
     animation: slideIn 0.2s ease-out;
 }
 
-/* Mobile bottom sheet animation */
-@media (max-width: 768px) {
-    .custom-modal-content {
-        animation: slideInMobile 0.2s ease-out;
-    }
-}
-
 .custom-modal-header {
     display: flex;
     align-items: center;
@@ -1194,17 +1187,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-@keyframes slideInMobile {
-    from {
-        transform: scale(0.9) translateY(100px);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-    }
-}
-
 .severity-Normal { background-color: #28a745; }
 .severity-Mild { background-color: #ffc107; color: #000; }
 .severity-Moderate { background-color: #fd7e14; }
@@ -1224,17 +1206,20 @@ document.addEventListener('DOMContentLoaded', function() {
 @media (max-width: 480px) {
     /* Extra small devices (phones < 480px) */
     .custom-modal {
-        padding: 0; /* Remove padding for bottom sheet */
-        align-items: flex-end; /* Position modal at bottom */
+        padding: 0 10px 10px 10px; /* Remove top padding to eliminate undimmed space */
+        align-items: flex-start;
         justify-content: center;
     }
 
     .custom-modal-content {
-        margin: 0;
-        width: 100vw;
-        max-width: 100vw;
-        max-height: 80vh;
-        border-radius: 12px 12px 0 0; /* Rounded top corners for bottom sheet */
+        margin-top: 60px; /* Account for navigation bar with margin instead of padding */
+    }
+
+    .custom-modal-content {
+        margin: 0.5rem auto;
+        width: 95vw;
+        max-width: 95vw;
+        max-height: 90vh;
     }
 
     .custom-modal-header {
@@ -1258,17 +1243,16 @@ document.addEventListener('DOMContentLoaded', function() {
 @media (min-width: 481px) and (max-width: 768px) {
     /* Small devices (phones 481px - 768px) */
     .custom-modal {
-        padding: 0;
-        align-items: flex-end; /* Position modal at bottom */
+        padding-top: 80px;
+        align-items: flex-start;
         justify-content: center;
     }
 
     .custom-modal-content {
-        margin: 0;
-        width: 100vw;
-        max-width: 100vw;
-        max-height: 80vh;
-        border-radius: 12px 12px 0 0; /* Rounded top corners for bottom sheet */
+        margin: 1rem auto;
+        width: 90vw;
+        max-width: 90vw;
+        max-height: 85vh;
     }
 
     .custom-modal-overlay {
