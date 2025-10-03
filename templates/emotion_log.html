@@ -269,6 +269,18 @@
                                         <span class="text-muted small">10 - Extremely Intense</span>
                                     </div>
                                     <div class="intensity-input-container">
+                                        <div class="intensity-scale-numbers d-flex justify-content-between mb-2">
+                                            <span class="scale-number">1</span>
+                                            <span class="scale-number">2</span>
+                                            <span class="scale-number">3</span>
+                                            <span class="scale-number">4</span>
+                                            <span class="scale-number">5</span>
+                                            <span class="scale-number">6</span>
+                                            <span class="scale-number">7</span>
+                                            <span class="scale-number">8</span>
+                                            <span class="scale-number">9</span>
+                                            <span class="scale-number">10</span>
+                                        </div>
                                         <input type="range" class="form-range" id="intensityRange" name="intensity" min="1" max="10" value="5" oninput="updateIntensityDisplay(this.value)" onchange="updateIntensityValue(this.value)">
                                         <div class="intensity-display d-flex justify-content-between align-items-center mt-2">
                                             <div class="intensity-value text-center">
@@ -601,6 +613,14 @@ document.addEventListener('DOMContentLoaded', function() {
         margin: 1rem auto;
         max-width: calc(100vw - 2rem);
     }
+
+    .scale-number {
+        font-size: 0.7rem;
+    }
+
+    .intensity-scale-numbers {
+        padding: 0 8px;
+    }
 }
 
 /* Modal state for body */
@@ -692,6 +712,36 @@ body.modal-open {
 .intensity-input-container {
     position: relative;
 }
+
+.intensity-scale-numbers {
+    position: relative;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 12px;
+}
+
+.scale-number {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6c757d;
+    position: absolute;
+    z-index: 2;
+    background: white;
+    padding: 0 2px;
+}
+
+/* Position numbers above slider ticks */
+.scale-number:nth-child(1) { left: 0%; transform: translateX(-50%); }
+.scale-number:nth-child(2) { left: 11.11%; transform: translateX(-50%); }
+.scale-number:nth-child(3) { left: 22.22%; transform: translateX(-50%); }
+.scale-number:nth-child(4) { left: 33.33%; transform: translateX(-50%); }
+.scale-number:nth-child(5) { left: 44.44%; transform: translateX(-50%); }
+.scale-number:nth-child(6) { left: 55.55%; transform: translateX(-50%); }
+.scale-number:nth-child(7) { left: 66.66%; transform: translateX(-50%); }
+.scale-number:nth-child(8) { left: 77.77%; transform: translateX(-50%); }
+.scale-number:nth-child(9) { left: 88.88%; transform: translateX(-50%); }
+.scale-number:nth-child(10) { left: 100%; transform: translateX(-50%); }
 
 .form-range {
     width: 100%;
