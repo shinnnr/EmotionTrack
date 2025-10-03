@@ -199,10 +199,15 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <h5 class="card-title fw-bold mb-4">
-                        <i class="fas fa-clock text-clsu-green me-2"></i>
-                        Recent Activity
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title fw-bold mb-0">
+                            <i class="fas fa-clock text-clsu-green me-2"></i>
+                            Recent Activity
+                        </h5>
+                        <button class="btn btn-outline-clsu-green btn-sm" onclick="openRecentActivityModal()">
+                            <i class="fas fa-external-link-alt me-1"></i>View All
+                        </button>
+                    </div>
                     
                     {% if recent_logs %}
                         <div class="recent-logs">
@@ -367,6 +372,32 @@
                         <span class="visually-hidden">Loading insights...</span>
                     </div>
                     <p class="mt-2 text-muted">Analyzing your wellness data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Recent Activity Modal -->
+<div id="recentActivityModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-overlay" onclick="closeRecentActivityModal()"></div>
+    <div class="custom-modal-content modal-xl">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-clock me-2"></i>
+                My Recent Activity
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeRecentActivityModal()" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body">
+            <div id="recentActivityContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-clsu-green" role="status">
+                        <span class="visually-hidden">Loading activity...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading your recent activity...</p>
                 </div>
             </div>
         </div>
@@ -765,6 +796,200 @@ function loadDailyTipsForModal() {
     });
 }
 
+// Recent Activity Modal functions
+function openRecentActivityModal() {
+    const modal = document.getElementById('recentActivityModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+    // Add background click to close modal
+    if (!modal.hasAttribute('data-bg-click-added')) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRecentActivityModal();
+            }
+        });
+        modal.setAttribute('data-bg-click-added', 'true');
+    }
+
+    loadRecentActivity();
+}
+
+function closeRecentActivityModal() {
+    const modal = document.getElementById('recentActivityModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = ''; // Restore scrolling
+}
+
+function loadRecentActivity() {
+    // Reset modal content to loading state
+    const content = document.getElementById('recentActivityContent');
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-clsu-green" role="status">
+                <span class="visually-hidden">Loading activity...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading your recent activity...</p>
+        </div>
+    `;
+
+    // Load mood logs
+    fetch('/api/mood-logs', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        const logs = data.logs || [];
+
+        if (logs.length === 0) {
+            content.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Activity Yet</h5>
+                    <p class="text-muted">Start logging your emotions to see your activity here!</p>
+                    <a href="/emotion-log" class="btn btn-clsu-green">
+                        <i class="fas fa-plus me-2"></i>Log Your First Entry
+                    </a>
+                </div>
+            `;
+        } else {
+            // Group logs by date
+            const groupedLogs = groupLogsByDate(logs);
+
+            let html = '';
+            for (const [date, entries] of Object.entries(groupedLogs)) {
+                html += `
+                    <div class="journal-date-group mb-4">
+                        <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            ${formatDate(date)}
+                        </h6>
+                        <div class="row g-3">
+                `;
+
+                entries.forEach(log => {
+                    html += createActivityCard(log);
+                });
+
+                html += '</div></div>';
+            }
+
+            content.innerHTML = html;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading recent activity:', error);
+        content.innerHTML = `
+            <div class="alert alert-warning border-0">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
+                    <div>
+                        <h6 class="alert-heading mb-1">Unable to Load Activity</h6>
+                        <p class="mb-0">There was a problem loading your activity data. Please try again in a moment.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// Helper functions for activity modal
+function groupLogsByDate(logs) {
+    const groups = {};
+    logs.forEach(log => {
+        const date = new Date(log.log_date).toDateString();
+        if (!groups[date]) {
+            groups[date] = [];
+        }
+        groups[date].push(log);
+    });
+    return groups;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+        return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+    } else {
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+}
+
+function createActivityCard(log) {
+    const emotionIcon = getEmotionIcon(log.emotion);
+    const timeString = new Date(log.log_date).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    return `
+        <div class="col-md-6">
+            <div class="journal-entry-card card h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="emotion-badge me-3">
+                            ${emotionIcon}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">${log.emotion}</h6>
+                            <small class="text-muted">${timeString}</small>
+                        </div>
+                    </div>
+                    <div class="entry-meta">
+                        <small class="text-muted d-block">
+                            <i class="fas fa-bed me-1"></i>${log.sleep}h sleep
+                        </small>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-battery-three-quarters me-1"></i>${log.energy}/10 energy
+                        </small>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-chart-line me-1"></i>${log.intensity}/10 intensity
+                        </small>
+                        ${log.triggers ? `<small class="text-muted d-block"><i class="fas fa-exclamation-triangle me-1"></i>${log.triggers}</small>` : ''}
+                    </div>
+                    ${log.gratitude ? `<div class="mt-2 p-2 bg-light rounded"><small class="text-muted">"${log.gratitude}"</small></div>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getEmotionIcon(emotion) {
+    const icons = {
+        'Happy': '😊',
+        'Sad': '😢',
+        'Angry': '😠',
+        'Anxious': '😰',
+        'Excited': '🤩',
+        'Calm': '😌',
+        'Frustrated': '😤',
+        'Content': '😊',
+        'Worried': '😟',
+        'Grateful': '🙏'
+    };
+    return icons[emotion] || '😊';
+}
+
 // Close modal when pressing Escape key
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
@@ -776,6 +1001,11 @@ document.addEventListener('keydown', function(event) {
         const dailyTipsModal = document.getElementById('dailyTipsModal');
         if (dailyTipsModal && dailyTipsModal.style.display === 'flex') {
             closeDailyTipsModal();
+        }
+
+        const recentActivityModal = document.getElementById('recentActivityModal');
+        if (recentActivityModal && recentActivityModal.style.display === 'flex') {
+            closeRecentActivityModal();
         }
     }
 });
@@ -1080,6 +1310,35 @@ document.addEventListener('DOMContentLoaded', function() {
         align-items: center;
         justify-content: center;
     }
+}
+
+/* Journal entry cards */
+.journal-entry-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.journal-entry-card:hover {
+    border-color: var(--clsu-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.emotion-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--clsu-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.journal-date-group {
+    margin-bottom: 2rem;
 }
 </style>
 {% endblock %}
