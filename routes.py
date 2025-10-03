@@ -164,6 +164,7 @@ def get_mood_logs():
             'logs': [{
                 'log_id': log.log_id,
                 'emotion': log.emotion,
+                'intensity': log.intensity,
                 'energy': log.energy,
                 'sleep': log.sleep,
                 'triggers': log.triggers,

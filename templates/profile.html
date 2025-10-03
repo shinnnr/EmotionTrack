@@ -1409,6 +1409,9 @@ function createJournalCard(log) {
                         <small class="text-muted d-block">
                             <i class="fas fa-battery-three-quarters me-1"></i>${log.energy}/10 energy
                         </small>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-chart-line me-1"></i>${log.intensity}/10 intensity
+                        </small>
                         ${log.triggers ? `<small class="text-muted d-block"><i class="fas fa-exclamation-triangle me-1"></i>${log.triggers}</small>` : ''}
                     </div>
                     ${log.gratitude ? `<div class="mt-2 p-2 bg-light rounded"><small class="text-muted">"${log.gratitude}"</small></div>` : ''}
