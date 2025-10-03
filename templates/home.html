@@ -872,15 +872,7 @@ function loadRecentActivity() {
             // Group logs by date
             const groupedLogs = groupLogsByDate(logs);
 
-            let html = `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <button id="deleteSelectedBtn" class="btn btn-outline-danger btn-sm" onclick="deleteSelectedLogs()" disabled>
-                        <i class="fas fa-trash me-1"></i>Delete Selected
-                    </button>
-                    <small class="text-muted">Select logs to delete</small>
-                </div>
-            `;
-
+            let html = '';
             for (const [date, entries] of Object.entries(groupedLogs)) {
                 html += `
                     <div class="journal-date-group mb-4">
@@ -960,35 +952,28 @@ function createActivityCard(log) {
         <div class="col-md-6">
             <div class="journal-entry-card card h-100">
                 <div class="card-body p-3">
-                    <div class="d-flex align-items-start mb-2">
-                        <div class="form-check me-3">
-                            <input class="form-check-input log-checkbox" type="checkbox" value="${log.log_id}" id="log_${log.log_id}">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="emotion-badge me-3">
+                            ${emotionIcon}
                         </div>
                         <div class="flex-grow-1">
-                            <div class="d-flex align-items-center mb-2">
-                                <div class="emotion-badge me-3">
-                                    ${emotionIcon}
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1 fw-bold">${log.emotion}</h6>
-                                    <small class="text-muted">${timeString}</small>
-                                </div>
-                            </div>
-                            <div class="entry-meta">
-                                <small class="text-muted d-block">
-                                    <i class="fas fa-bed me-1"></i>${log.sleep}h sleep
-                                </small>
-                                <small class="text-muted d-block">
-                                    <i class="fas fa-battery-three-quarters me-1"></i>${log.energy}/10 energy
-                                </small>
-                                <small class="text-muted d-block">
-                                    <i class="fas fa-chart-line me-1"></i>${log.intensity}/10 intensity
-                                </small>
-                                ${log.triggers ? `<small class="text-muted d-block"><i class="fas fa-exclamation-triangle me-1"></i>${log.triggers}</small>` : ''}
-                            </div>
-                            ${log.gratitude ? `<div class="mt-2 p-2 bg-light rounded"><small class="text-muted">"${log.gratitude}"</small></div>` : ''}
+                            <h6 class="mb-1 fw-bold">${log.emotion}</h6>
+                            <small class="text-muted">${timeString}</small>
                         </div>
                     </div>
+                    <div class="entry-meta">
+                        <small class="text-muted d-block">
+                            <i class="fas fa-bed me-1"></i>${log.sleep}h sleep
+                        </small>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-battery-three-quarters me-1"></i>${log.energy}/10 energy
+                        </small>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-chart-line me-1"></i>${log.intensity}/10 intensity
+                        </small>
+                        ${log.triggers ? `<small class="text-muted d-block"><i class="fas fa-exclamation-triangle me-1"></i>${log.triggers}</small>` : ''}
+                    </div>
+                    ${log.gratitude ? `<div class="mt-2 p-2 bg-light rounded"><small class="text-muted">"${log.gratitude}"</small></div>` : ''}
                 </div>
             </div>
         </div>
@@ -1009,113 +994,6 @@ function getEmotionIcon(emotion) {
         'Grateful': '🙏'
     };
     return icons[emotion] || '😊';
-}
-
-// Delete selected logs functionality
-function deleteSelectedLogs() {
-    const selectedCheckboxes = document.querySelectorAll('#recentActivityModal .log-checkbox:checked');
-    if (selectedCheckboxes.length === 0) {
-        alert('Please select at least one log to delete.');
-        return;
-    }
-
-    const logIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
-
-    if (!confirm(`Are you sure you want to delete ${logIds.length} selected mood log(s)? This action cannot be undone.`)) {
-        return;
-    }
-
-    // Disable button during deletion
-    const deleteBtn = document.getElementById('deleteSelectedBtn');
-    const originalText = deleteBtn.innerHTML;
-    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting...';
-    deleteBtn.disabled = true;
-
-    fetch('/api/delete-mood-logs', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ log_ids: logIds })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Reload the activity modal content
-            loadRecentActivity();
-            // Show success message
-            showAlert(`Successfully deleted ${data.deleted_count} mood log(s).`, 'success');
-        } else {
-            showAlert(data.message || 'Failed to delete logs.', 'error');
-            deleteBtn.innerHTML = originalText;
-            deleteBtn.disabled = false;
-        }
-    })
-    .catch(error => {
-        console.error('Error deleting logs:', error);
-        showAlert('An error occurred while deleting logs.', 'error');
-        deleteBtn.innerHTML = originalText;
-        deleteBtn.disabled = false;
-    });
-}
-
-// Update delete button state based on checkbox selection
-function updateDeleteButtonState() {
-    const selectedCheckboxes = document.querySelectorAll('#recentActivityModal .log-checkbox:checked');
-    const deleteBtn = document.getElementById('deleteSelectedBtn');
-    if (deleteBtn) {
-        deleteBtn.disabled = selectedCheckboxes.length === 0;
-    }
-}
-
-// Add event listeners for checkboxes when modal content is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Use event delegation for dynamically loaded content
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('log-checkbox') && e.target.closest('#recentActivityModal')) {
-            updateDeleteButtonState();
-        }
-    });
-});
-
-// Simple alert function for notifications
-function showAlert(message, type = 'info') {
-    const alertColors = {
-        success: '#28a745',
-        error: '#dc3545',
-        warning: '#ffc107',
-        info: '#17a2b8'
-    };
-
-    const alert = document.createElement('div');
-    alert.className = 'position-fixed top-0 end-0 m-3';
-    alert.style.zIndex = '9999999';
-
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
-    alertDiv.setAttribute('role', 'alert');
-
-    const icon = document.createElement('i');
-    icon.className = `fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2`;
-    alertDiv.appendChild(icon);
-
-    const messageText = document.createTextNode(message);
-    alertDiv.appendChild(messageText);
-
-    const closeButton = document.createElement('button');
-    closeButton.type = 'button';
-    closeButton.className = 'btn-close';
-    closeButton.setAttribute('data-bs-dismiss', 'alert');
-    alertDiv.appendChild(closeButton);
-
-    alert.appendChild(alertDiv);
-
-    document.body.appendChild(alert);
-
-    setTimeout(() => {
-        alert.remove();
-    }, 5000);
 }
 
 // Close modal when pressing Escape key
