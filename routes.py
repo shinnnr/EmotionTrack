@@ -2461,6 +2461,7 @@ def get_student_profile(user_id):
             } for result in dass21_results],
             'mood_logs': [{
                 'emotion': log.emotion,
+                'intensity': log.intensity,
                 'sleep': log.sleep,
                 'energy': log.energy,
                 'triggers': log.triggers,
