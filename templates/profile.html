@@ -1580,110 +1580,40 @@ function showAlert(message, type = 'info') {
         warning: '#ffc107',
         info: '#0dcaf0'
     };
-
+    
     const alert = document.createElement('div');
     alert.className = 'position-fixed top-0 end-0 m-3';
     alert.style.zIndex = '9999999';
-
+    
     // Create alert container safely
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
     alertDiv.setAttribute('role', 'alert');
-
+    
     // Create icon element
     const icon = document.createElement('i');
     icon.className = `fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2`;
     alertDiv.appendChild(icon);
-
+    
     // Safely add message text
     const messageText = document.createTextNode(message);
     alertDiv.appendChild(messageText);
-
+    
     // Create close button safely
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
     closeButton.className = 'btn-close';
     closeButton.setAttribute('data-bs-dismiss', 'alert');
     alertDiv.appendChild(closeButton);
-
+    
     alert.appendChild(alertDiv);
-
+    
     document.body.appendChild(alert);
-
+    
     setTimeout(() => {
         alert.remove();
     }, 5023);
 }
-
-// Delete selected journal logs functionality
-function deleteSelectedJournalLogs() {
-    const selectedCheckboxes = document.querySelectorAll('.journal-log-checkbox:checked');
-    if (selectedCheckboxes.length === 0) {
-        alert('Please select at least one log to delete.');
-        return;
-    }
-
-    const logIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
-
-    if (!confirm(`Are you sure you want to delete ${logIds.length} selected mood log(s)? This action cannot be undone.`)) {
-        return;
-    }
-
-    // Disable button during deletion
-    const deleteBtn = document.getElementById('deleteSelectedJournalBtn');
-    const originalText = deleteBtn.innerHTML;
-    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting...';
-    deleteBtn.disabled = true;
-
-    fetch('/api/delete-mood-logs', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ log_ids: logIds })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Reload the journal entries modal content
-            // Find the modal and reload
-            const modalId = Object.keys(window).find(key => key.startsWith('dynamicModal_') && document.getElementById(key));
-            if (modalId) {
-                // Re-run the viewJournalEntries function to reload content
-                viewJournalEntries();
-            }
-            // Show success message
-            showAlert(`Successfully deleted ${data.deleted_count} mood log(s).`, 'success');
-        } else {
-            showAlert(data.message || 'Failed to delete logs.', 'error');
-            deleteBtn.innerHTML = originalText;
-            deleteBtn.disabled = false;
-        }
-    })
-    .catch(error => {
-        console.error('Error deleting logs:', error);
-        showAlert('An error occurred while deleting logs.', 'error');
-        deleteBtn.innerHTML = originalText;
-        deleteBtn.disabled = false;
-    });
-}
-
-// Update delete button state for journal entries
-function updateJournalDeleteButtonState() {
-    const selectedCheckboxes = document.querySelectorAll('.journal-log-checkbox:checked');
-    const deleteBtn = document.getElementById('deleteSelectedJournalBtn');
-    if (deleteBtn) {
-        deleteBtn.disabled = selectedCheckboxes.length === 0;
-    }
-}
-
-// Add event listeners for journal checkboxes
-document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('journal-log-checkbox')) {
-        updateJournalDeleteButtonState();
-    }
-});
 
 function togglePassword(fieldId, button) {
     const passwordField = document.getElementById(fieldId);
