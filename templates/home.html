@@ -913,31 +913,16 @@ function loadRecentActivity() {
 function groupLogsByDate(logs) {
     const groups = {};
     logs.forEach(log => {
-        // Parse the Manila timezone ISO string correctly
-        let logDate;
-        try {
-            // The backend sends dates as ISO strings in Manila timezone
-            // e.g., "2025-10-03T23:17:00+08:00"
-            logDate = new Date(log.log_date);
-            if (isNaN(logDate.getTime())) {
-                // Fallback parsing if timezone is not supported
-                const dateStr = log.log_date.replace('+08:00', '').replace('+00:00', '');
-                logDate = new Date(dateStr + '+08:00');
-                if (isNaN(logDate.getTime())) {
-                    logDate = new Date(dateStr);
-                }
-            }
-        } catch (e) {
-            console.error('Error parsing date:', log.log_date, e);
-            logDate = new Date();
-        }
+        // Backend sends dates as Manila time ISO strings like "2025-10-03T23:17:00+08:00"
+        // Extract the date part directly since it's already in Manila time
+        const datePart = log.log_date.split('T')[0]; // "2025-10-03"
+        const [year, month, day] = datePart.split('-').map(Number);
 
-        // Create a date key using Manila date (YYYY-MM-DD)
-        const manilaDate = new Date(logDate.getTime() - (logDate.getTimezoneOffset() * 60000));
-        const dateKey = manilaDate.toISOString().split('T')[0];
+        // Create date key as YYYY-MM-DD
+        const dateKey = datePart;
 
         if (!groups[dateKey]) {
-            groups[dateKey] = { date: manilaDate, logs: [] };
+            groups[dateKey] = { date: new Date(year, month - 1, day), logs: [] };
         }
         groups[dateKey].logs.push(log);
     });
@@ -945,18 +930,20 @@ function groupLogsByDate(logs) {
 }
 
 function formatDate(dateObj) {
-    // Ensure we're working with Manila time dates
+    // Get current Manila time
     const now = new Date();
-    // Create today and yesterday in Manila time
-    const manilaNow = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // Add 8 hours for Manila
+    const manilaOffset = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+    const manilaNow = new Date(now.getTime() + manilaOffset);
+
+    // Create Manila today and yesterday
     const today = new Date(manilaNow.getFullYear(), manilaNow.getMonth(), manilaNow.getDate());
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    // Create log date for comparison
+    // Create comparison date from the log date
     const logDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
 
-    // Compare by date values
+    // Compare dates
     if (logDate.getTime() === today.getTime()) {
         return 'Today';
     } else if (logDate.getTime() === yesterday.getTime()) {
@@ -1057,37 +1044,40 @@ function formatRecentLogDates() {
     dateElements.forEach(element => {
         const dateStr = element.getAttribute('data-log-date');
         if (dateStr) {
-            const logDate = new Date(dateStr);
-            const formattedDate = formatLogDate(logDate);
+            // Parse Manila time ISO string
+            const logDateTime = new Date(dateStr);
+            const datePart = dateStr.split('T')[0]; // "2025-10-03"
+            const [year, month, day] = datePart.split('-').map(Number);
+            const logDate = new Date(year, month - 1, day);
+            const formattedDate = formatLogDate(logDate, logDateTime);
             element.textContent = formattedDate;
         }
     });
 }
 
-function formatLogDate(dateObj) {
+function formatLogDate(dateObj, fullDateTime) {
+    // Get current Manila time
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const manilaOffset = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+    const manilaNow = new Date(now.getTime() + manilaOffset);
+
+    // Create Manila today and yesterday
+    const today = new Date(manilaNow.getFullYear(), manilaNow.getMonth(), manilaNow.getDate());
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const logDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-
-    // Compare dates by converting to date-only strings for reliable comparison
-    const todayStr = today.toDateString();
-    const yesterdayStr = yesterday.toDateString();
-    const logDateStr = logDate.toDateString();
-
-    if (logDateStr === todayStr) {
-        return 'Today at ' + dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    } else if (logDateStr === yesterdayStr) {
-        return 'Yesterday at ' + dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    // Compare dates
+    if (dateObj.getTime() === today.getTime()) {
+        return 'Today at ' + fullDateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    } else if (dateObj.getTime() === yesterday.getTime()) {
+        return 'Yesterday at ' + fullDateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     } else {
         return dateObj.toLocaleDateString('en-US', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
             day: 'numeric'
-        }) + ' at ' + dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }) + ' at ' + fullDateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
 }
 </script>
