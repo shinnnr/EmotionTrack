@@ -831,6 +831,8 @@ function closeRecentActivityModal() {
 function loadRecentActivity() {
     // Reset modal content to loading state
     const content = document.getElementById('recentActivityContent');
+
+    // Show loading state in the body only
     content.innerHTML = `
         <div class="text-center py-4">
             <div class="spinner-border text-clsu-green" role="status">
@@ -857,8 +859,9 @@ function loadRecentActivity() {
     .then(data => {
         const logs = data.logs || [];
 
+        let html;
         if (logs.length === 0) {
-            content.innerHTML = `
+            html = `
                 <div class="text-center py-5">
                     <i class="fas fa-clock fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">No Activity Yet</h5>
@@ -873,7 +876,7 @@ function loadRecentActivity() {
             const groupedLogs = groupLogsByDate(logs);
 
             // Add select all header
-            let html = `
+            html = `
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="card border-0 shadow-sm">
@@ -916,10 +919,12 @@ function loadRecentActivity() {
 
                 html += '</div></div>';
             }
+        }
 
-            content.innerHTML = html;
+        content.innerHTML = html;
 
-            // Initialize selection controls after content is loaded
+        // Initialize selection controls after content is loaded
+        if (logs.length > 0) {
             initializeLogSelection();
         }
     })
