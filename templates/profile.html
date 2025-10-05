@@ -30,22 +30,22 @@
                         <div class="col-lg-6">
                             <div class="profile-info">
                                 <div class="info-item mb-3">
-                                    <label class="fw-bold text-muted small">Full Name</label>
+                                    <div class="fw-bold text-muted small">Full Name</div>
                                     <p class="mb-0 h6">{{ user.firstname }} {{ user.lastname }}</p>
                                 </div>
                                 
                                 <div class="info-item mb-3">
-                                    <label class="fw-bold text-muted small">{% if user.is_student %}LRN{% else %}Employee ID{% endif %}</label>
+                                    <div class="fw-bold text-muted small">{% if user.is_student %}LRN{% else %}Employee ID{% endif %}</div>
                                     <p class="mb-0">{{ user.username }}</p>
                                 </div>
                                 
                                 <div class="info-item mb-3">
-                                    <label class="fw-bold text-muted small">Gender</label>
+                                    <div class="fw-bold text-muted small">Gender</div>
                                     <p class="mb-0">{{ user.gender or 'Not specified' }}</p>
                                 </div>
 
                                 <div class="info-item mb-3">
-                                    <label class="fw-bold text-muted small">Birthday</label>
+                                    <div class="fw-bold text-muted small">Birthday</div>
                                     <p class="mb-0">{{ user.birthday.strftime('%B %d, %Y') if user.birthday else 'Not specified' }}</p>
                                 </div>
                             </div>
@@ -53,7 +53,7 @@
                         <div class="col-lg-6">
                             <div class="profile-info">
                                 <div class="info-item mb-3">
-                                    <label class="fw-bold text-muted small">Academic Information</label>
+                                    <div class="fw-bold text-muted small">Academic Information</div>
                                     <p class="mb-0">
                                         Grade {{ user.grade_level or 'N/A' }} - {{ user.strand or 'N/A' }}<br>
                                         <small class="text-muted">Section: {{ user.section or 'N/A' }}</small>
@@ -61,7 +61,7 @@
                                 </div>
                                 
                                 <div class="info-item mb-3">
-                                    <label class="fw-bold text-muted small">Member Since</label>
+                                    <div class="fw-bold text-muted small">Member Since</div>
                                     <p class="mb-0">{{ user.created_at | manila_time | strftime('%B %d, %Y') }}</p>
                                 </div>
                                 
@@ -75,7 +75,7 @@
                                 
                                 {% if user.is_student %}
                                 <div class="info-item mt-3">
-                                    <label class="fw-bold text-muted small">Profile Updates</label>
+                                    <div class="fw-bold text-muted small">Profile Updates</div>
                                     <button class="btn btn-outline-primary btn-sm mb-3" id="updateProfileInfoBtn">
                                         <i class="fas fa-user-edit me-2"></i>
                                         Update Profile Info
@@ -396,34 +396,31 @@
                     <input type="text" class="form-control" id="changeUsername" value="{{ user.username }}" readonly autocomplete="username">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Current Password
+                    <label class="form-label" for="currentPassword">Current Password</label>
                     <div class="password-input-group">
                         <input type="password" class="form-control password-field" id="currentPassword" name="current_password" placeholder=" " required autocomplete="current-password">
                         <button type="button" class="password-toggle-btn" onclick="togglePassword('currentPassword', this)">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
-                    </label>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">New Password
+                    <label class="form-label" for="newPassword">New Password</label>
                     <div class="password-input-group">
                         <input type="password" class="form-control password-field" id="newPassword" name="new_password" placeholder=" " required minlength="6" autocomplete="new-password">
                         <button type="button" class="password-toggle-btn" onclick="togglePassword('newPassword', this)">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
-                    </label>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Confirm New Password
+                    <label class="form-label" for="confirmPassword">Confirm New Password</label>
                     <div class="password-input-group">
                         <input type="password" class="form-control password-field" id="confirmPassword" name="confirm_password" placeholder=" " required minlength="6" autocomplete="new-password">
                         <button type="button" class="password-toggle-btn" onclick="togglePassword('confirmPassword', this)">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
-                    </label>
                 </div>
                 <div class="d-flex justify-content-end gap-2">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('changePasswordModal')">Cancel</button>
