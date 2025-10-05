@@ -27,7 +27,7 @@
                             <label for="{{ form.feedback_type.id }}" class="form-label fw-bold">
                                 <i class="fas fa-list me-2"></i>Feedback Type
                             </label>
-                            {{ form.feedback_type(class="form-select", required=True) }}
+                            {{ form.feedback_type(class="form-select", required=True, id="feedback_type") }}
                             {% if form.feedback_type.errors %}
                                 <div class="text-danger small mt-1">
                                     {% for error in form.feedback_type.errors %}
@@ -41,7 +41,7 @@
                             <label for="{{ form.subject.id }}" class="form-label fw-bold">
                                 <i class="fas fa-heading me-2"></i>Subject
                             </label>
-                            {{ form.subject(class="form-control", placeholder="Brief summary of your feedback", required=True) }}
+                            {{ form.subject(class="form-control", placeholder="Brief summary of your feedback", required=True, id="subject") }}
                             {% if form.subject.errors %}
                                 <div class="text-danger small mt-1">
                                     {% for error in form.subject.errors %}
@@ -55,7 +55,7 @@
                             <label for="{{ form.message.id }}" class="form-label fw-bold">
                                 <i class="fas fa-comment-dots me-2"></i>Message
                             </label>
-                            {{ form.message(class="form-control", rows=6, placeholder="Please provide detailed feedback...", required=True) }}
+                            {{ form.message(class="form-control", rows=6, placeholder="Please provide detailed feedback...", required=True, id="message") }}
                             {% if form.message.errors %}
                                 <div class="text-danger small mt-1">
                                     {% for error in form.message.errors %}
@@ -77,7 +77,7 @@
                                     </label>
                                 {% endfor %}
                             </div>
-                            {{ form.rating(class="d-none") }}
+                            {{ form.rating(class="d-none", id="rating") }}
                             {% if form.rating.errors %}
                                 <div class="text-danger small mt-1">
                                     {% for error in form.rating.errors %}
@@ -89,7 +89,7 @@
 
                         <div class="mb-4">
                             <div class="form-check">
-                                {{ form.is_anonymous(class="form-check-input") }}
+                                {{ form.is_anonymous(class="form-check-input", id="is_anonymous") }}
                                 <label class="form-check-label" for="{{ form.is_anonymous.id }}">
                                     Submit anonymously
                                 </label>

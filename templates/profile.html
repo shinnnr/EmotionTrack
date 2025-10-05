@@ -255,7 +255,7 @@
                     
                     <div class="mb-3">
                         <label for="{{ profile_form.grade_level.id }}" class="form-label">Grade Level</label>
-                        {{ profile_form.grade_level(class="form-select", value=user.grade_level) }}
+                        {{ profile_form.grade_level(class="form-select", value=user.grade_level, id="grade_level") }}
                         {% if profile_form.grade_level.errors %}
                             <div class="text-danger small mt-1">
                                 {% for error in profile_form.grade_level.errors %}
@@ -267,7 +267,7 @@
                     
                     <div class="mb-3">
                         <label for="{{ profile_form.section.id }}" class="form-label">Section</label>
-                        {{ profile_form.section(class="form-control", value=user.section) }}
+                        {{ profile_form.section(class="form-control", value=user.section, id="section") }}
                         {% if profile_form.section.errors %}
                             <div class="text-danger small mt-1">
                                 {% for error in profile_form.section.errors %}
@@ -319,7 +319,7 @@
 
                 <div class="mb-3">
                     <label for="{{ profile_info_form.firstname.id }}" class="form-label">First Name</label>
-                    {{ profile_info_form.firstname(class="form-control", value=user.firstname, required=True, pattern="[A-Za-z\s]+", title="First name cannot contain numbers or special characters") }}
+                    {{ profile_info_form.firstname(class="form-control", value=user.firstname, required=True, pattern="[A-Za-z\s]+", title="First name cannot contain numbers or special characters", id="firstname") }}
                     {% if profile_info_form.firstname.errors %}
                         <div class="text-danger small mt-1">
                             {% for error in profile_info_form.firstname.errors %}
@@ -331,7 +331,7 @@
 
                 <div class="mb-3">
                     <label for="{{ profile_info_form.lastname.id }}" class="form-label">Last Name</label>
-                    {{ profile_info_form.lastname(class="form-control", value=user.lastname, required=True, pattern="[A-Za-z\s]+", title="Last name cannot contain numbers or special characters") }}
+                    {{ profile_info_form.lastname(class="form-control", value=user.lastname, required=True, pattern="[A-Za-z\s]+", title="Last name cannot contain numbers or special characters", id="lastname") }}
                     {% if profile_info_form.lastname.errors %}
                         <div class="text-danger small mt-1">
                             {% for error in profile_info_form.lastname.errors %}
@@ -343,7 +343,7 @@
 
                 <div class="mb-3">
                     <label for="{{ profile_info_form.gender.id }}" class="form-label">Gender</label>
-                    {{ profile_info_form.gender(class="form-select", value=user.gender) }}
+                    {{ profile_info_form.gender(class="form-select", value=user.gender, id="gender") }}
                     {% if profile_info_form.gender.errors %}
                         <div class="text-danger small mt-1">
                             {% for error in profile_info_form.gender.errors %}
@@ -355,7 +355,7 @@
 
                 <div class="mb-3">
                     <label for="{{ profile_info_form.birthday.id }}" class="form-label">Birthday</label>
-                    {{ profile_info_form.birthday(class="form-control", type="date", value=user.birthday.strftime('%Y-%m-%d') if user.birthday else '', required=True, max="2008-12-31", title="Please enter a valid birth date") }}
+                    {{ profile_info_form.birthday(class="form-control", type="date", value=user.birthday.strftime('%Y-%m-%d') if user.birthday else '', required=True, max="2008-12-31", title="Please enter a valid birth date", id="birthday") }}
                     {% if profile_info_form.birthday.errors %}
                         <div class="text-danger small mt-1">
                             {% for error in profile_info_form.birthday.errors %}

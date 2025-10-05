@@ -18,7 +18,7 @@
 
                 <form method="POST" action="{{ url_for('main.emotion_log') }}" id="emotionForm">
                     {{ form.hidden_tag() }}
-                    {{ form.emotions() }}
+                    {{ form.emotions(id="emotions") }}
                     
                     <!-- DASS-21 Assessment Notification -->
                     {% if dass21_status.can_take %}
@@ -240,6 +240,7 @@
                                                 <span class="input-group-text">
                                                     <i class="fas fa-edit"></i>
                                                 </span>
+                                                <label for="customEmotion" class="visually-hidden">Custom Emotion</label>
                                                 <input type="text" class="form-control" id="customEmotion" placeholder="Type your current emotion..." maxlength="50">
                                                 <button type="button" class="btn btn-clsu-green" id="addCustomEmotion">
                                                     <i class="fas fa-plus"></i> Add
@@ -263,7 +264,7 @@
                                     Intensity Rating
                                 </h6>
                                 <div class="intensity-container">
-                                    <label class="form-label fw-bold">How intense are your selected emotions? (1-10 scale)</label>
+                                    <label for="intensityRange" class="form-label fw-bold">How intense are your selected emotions? (1-10 scale)</label>
                                     <div class="intensity-scale d-flex justify-content-between align-items-center mb-3">
                                         <span class="text-muted small">1 - Very Mild</span>
                                         <span class="text-muted small">10 - Extremely Intense</span>
@@ -303,7 +304,7 @@
                                     <label for="{{ form.sleep.id }}" class="form-label fw-bold">
                                         <i class="fas fa-bed me-2"></i>Hours of Sleep Last Night
                                     </label>
-                                    {{ form.sleep(class="form-control", step="0.5", min="0", max="24") }}
+                                    {{ form.sleep(class="form-control", step="0.5", min="0", max="24", id="sleep") }}
                                     <small class="form-text text-muted">Enter the number of hours you slept</small>
                                 </div>
                                 
@@ -311,7 +312,7 @@
                                     <label for="{{ form.energy.id }}" class="form-label fw-bold">
                                         <i class="fas fa-battery-three-quarters me-2"></i>Energy Level (1-10)
                                     </label>
-                                    {{ form.energy(class="form-control", min="1", max="10") }}
+                                    {{ form.energy(class="form-control", min="1", max="10", id="energy") }}
                                     <small class="form-text text-muted">1 = Very low energy, 10 = Very high energy</small>
                                 </div>
                                 
@@ -321,7 +322,8 @@
                                     </label>
                                     {{ form.triggers(class="form-select", id="triggersSelect") }}
                                     <div id="customTriggerDiv" class="mt-2" style="display: none;">
-                                        {{ form.custom_trigger(class="form-control", placeholder="Please specify your trigger/stressor...") }}
+                                        <label for="custom_trigger" class="visually-hidden">Specify Other Trigger</label>
+                                        {{ form.custom_trigger(class="form-control", placeholder="Please specify your trigger/stressor...", id="custom_trigger") }}
                                         <small class="form-text text-muted">Describe what caused stress or triggered your emotions</small>
                                     </div>
                                 </div>
@@ -332,7 +334,8 @@
                                     </label>
                                     {{ form.coping(class="form-select", id="copingSelect") }}
                                     <div id="customCopingDiv" class="mt-2" style="display: none;">
-                                        {{ form.custom_coping(class="form-control", placeholder="Please specify your coping strategy...") }}
+                                        <label for="custom_coping" class="visually-hidden">Specify Other Coping Strategy</label>
+                                        {{ form.custom_coping(class="form-control", placeholder="Please specify your coping strategy...", id="custom_coping") }}
                                         <small class="form-text text-muted">Describe how you handled or coped with your emotions</small>
                                     </div>
                                 </div>
@@ -341,7 +344,7 @@
                                     <label for="{{ form.gratitude.id }}" class="form-label fw-bold">
                                         <i class="fas fa-sun me-2"></i>Gratitude Note (Optional)
                                     </label>
-                                    {{ form.gratitude(class="form-control", rows="3", placeholder="What are you grateful for today?") }}
+                                    {{ form.gratitude(class="form-control", rows="3", placeholder="What are you grateful for today?", id="gratitude") }}
                                     <small class="form-text text-muted">Share something positive from your day</small>
                                 </div>
                             </div>
