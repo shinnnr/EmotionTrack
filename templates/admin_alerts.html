@@ -737,11 +737,9 @@ function initializeAlertManagement() {
         const pagination = document.querySelector('nav[aria-label="Alert pagination"]');
         if (pagination) {
             if (searchTerm && visibleCount <= 10) {
-                pagination.style.pointerEvents = 'none';
-                pagination.style.opacity = '0.5';
+                pagination.style.display = 'none';
             } else {
-                pagination.style.pointerEvents = '';
-                pagination.style.opacity = '';
+                pagination.style.display = 'block';
             }
         }
     });
