@@ -234,6 +234,23 @@ function showAlert(message, type = 'info') {
     closeButton.type = 'button';
     closeButton.className = 'btn-close';
     closeButton.setAttribute('data-bs-dismiss', 'alert');
+    alertDiv.appendChild(closeButton);
+
+    alert.appendChild(alertDiv);
+
+    document.body.appendChild(alert);
+
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+</script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}
+
+
+
+
 {% block extra_css %}
 <style>
 .admin-header {
@@ -254,19 +271,3 @@ function showAlert(message, type = 'info') {
     }
 </style>
 {% endblock %}
-    alertDiv.appendChild(closeButton);
-
-    alert.appendChild(alertDiv);
-
-    document.body.appendChild(alert);
-
-    setTimeout(() => {
-        alert.remove();
-    }, 5000);
-}
-</script>
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
-{% endblock %}
-
-
-
