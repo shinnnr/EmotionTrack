@@ -250,9 +250,8 @@
 </div>
 
 <!-- Alert Details Modal -->
-<div id="alertModal" class="custom-modal" style="display: none;">
-    <div class="custom-modal-overlay" onclick="closeAlertModal()"></div>
-    <div class="custom-modal-content modal-lg">
+<div class="custom-modal-overlay" id="alertModal" style="display: none;" onclick="closeAlertModal()">
+    <div class="custom-modal" onclick="event.stopPropagation()">
         <div class="custom-modal-header">
             <h5 class="custom-modal-title">
                 <i class="fas fa-exclamation-triangle me-2"></i>Alert Details
@@ -284,16 +283,6 @@
 }
 
 /* Custom Modal Styles */
-.custom-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 999999;
-    display: none;
-}
-
 .custom-modal-overlay {
     position: fixed;
     top: 0;
@@ -301,22 +290,28 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 1;
-    cursor: pointer;
+    z-index: 1070;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px 20px 300px; /* Account for sidebar width and top navigation */
 }
 
-.custom-modal-content {
-    position: relative;
+/* Modal open state - disable body scroll */
+body.modal-open {
+    overflow: hidden;
+}
+
+.custom-modal {
     background: white;
     border-radius: 10px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     width: 100%;
-    max-width: 60vw;
+    max-width: calc(100vw - 350px);
     max-height: 90vh;
     overflow: hidden;
+    position: relative;
     animation: modalSlideIn 0.3s ease;
-    z-index: 2;
-    margin: 5vh auto;
 }
 
 @keyframes modalSlideIn {
@@ -333,7 +328,7 @@
 .custom-modal-header {
     background: var(--clsu-green);
     color: white;
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -369,86 +364,15 @@
     overflow-x: hidden;
 }
 
-/* Modal open state - disable body scroll */
-body.modal-open {
-    overflow: hidden !important;
-}
-
-/* Force modal above everything */
-.custom-modal.show {
-    z-index: 999999 !important;
-}
-
-/* Desktop modal positioning - matching profile modal responsiveness */
-@media (min-width: 992px) {
-    .custom-modal-content {
-        max-width: 60vw;
-    }
-
-    .modal-lg .custom-modal-content {
-        max-width: 50vw;
-    }
-
-    .modal-xl .custom-modal-content {
-        max-width: 65vw;
-    }
-}
-
-/* Tablet modal positioning */
-@media (min-width: 769px) and (max-width: 991px) {
-    .custom-modal-content {
-        max-width: 75vw;
-    }
-}
-
-/* Extra small devices (phones < 480px) */
-@media (max-width: 480px) {
-    .custom-modal {
-        padding: 0 10px 10px 10px; /* Remove top padding to eliminate undimmed space */
-    }
-
-    .custom-modal-content {
-        margin-top: 60px; /* Account for navigation bar with margin instead of padding */
-    }
-
-    .custom-modal-content {
-        margin: 0.5rem auto;
-    }
-
-    .custom-modal-header {
-        padding: 1rem;
-    }
-
-    .custom-modal-body {
-        padding: 1rem;
-    }
-}
-
-/* Small devices (phones 481px - 768px) */
-@media (min-width: 481px) and (max-width: 768px) {
-    .custom-modal {
-        padding-top: 80px;
-    }
-
-    .custom-modal-content {
-        margin: 1rem auto;
-    }
-}
-
-/* Ensure backdrop cursor behavior is correct */
-.custom-modal-overlay {
-    cursor: pointer;
-}
-
-@media (min-width: 769px) {
+/* Mobile responsive adjustments */
+@media (max-width: 991px) {
     .custom-modal-overlay {
-        cursor: default !important;
+        padding-left: 20px;
     }
-}
 
-/* Prevent modal content clicks from bubbling to backdrop */
-.custom-modal-content {
-    pointer-events: auto;
+    .custom-modal {
+        max-width: calc(100vw - 40px);
+    }
 }
 
 /* Mobile table responsiveness */
