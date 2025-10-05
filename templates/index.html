@@ -84,7 +84,7 @@
                             
                             <div class="mb-3">
                                 <label class="form-label">First Name</label>
-                                {{ register_form.firstname(class="form-control") }}
+                                {{ register_form.firstname(class="form-control", required=True) }}
                                 {% if register_form.firstname.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.firstname.errors %}
@@ -95,7 +95,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Last Name</label>
-                                {{ register_form.lastname(class="form-control") }}
+                                {{ register_form.lastname(class="form-control", required=True) }}
                                 {% if register_form.lastname.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.lastname.errors %}
@@ -107,7 +107,7 @@
                             
                             <div class="mb-3">
                                 <label class="form-label">LRN</label>
-                                {{ register_form.username(class="form-control", pattern="^\d{12}$", title="LRN must be exactly 12 digits", inputmode="numeric") }}
+                                {{ register_form.username(class="form-control", title="LRN must be exactly 12 digits", inputmode="numeric") }}
                                 {% if register_form.username.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.username.errors %}
@@ -119,7 +119,7 @@
                             
                             <div class="mb-3">
                                 <label class="form-label">Birthday</label>
-                                {{ register_form.birthday(class="form-control") }}
+                                {{ register_form.birthday(class="form-control", required=True) }}
                                 {% if register_form.birthday.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.birthday.errors %}
