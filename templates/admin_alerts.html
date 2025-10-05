@@ -734,18 +734,12 @@ function initializeAlertManagement() {
         }
 
         // Update pagination visibility
-        console.log('Search term:', searchTerm);
-        console.log('Visible count:', visibleCount);
         const pagination = document.querySelector('nav[aria-label="Alert pagination"]');
-        console.log('Pagination element:', pagination);
         if (pagination) {
-            console.log('Current display:', pagination.style.display);
-            if (searchTerm && visibleCount <= 10) {
+            if (searchTerm) {
                 pagination.style.display = 'none';
-                console.log('Hiding pagination');
             } else {
                 pagination.style.display = 'block';
-                console.log('Showing pagination');
             }
         }
     });
