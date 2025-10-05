@@ -213,7 +213,7 @@ body {
     }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 993px) {
     .main-content.with-sidebar {
         margin-left: 0;
     }
@@ -258,7 +258,7 @@ body {
 }
 
 /* Fix modal z-index issues on desktop - ensure modals appear above sidebar */
-@media (min-width: 992px) {
+@media (min-width: 993px) {
     .modal {
         z-index: 1100 !important;
     }

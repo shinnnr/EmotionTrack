@@ -254,7 +254,7 @@
     }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 993px) {
     .sidebar {
         transform: translateX(0) !important;
         overflow-y: hidden;
