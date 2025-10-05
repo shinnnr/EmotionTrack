@@ -66,9 +66,9 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-bold">
+                            <div class="form-label fw-bold">
                                 <i class="fas fa-star me-2"></i>Overall Rating (1-5)
-                            </label>
+                            </div>
                             <div class="rating-stars">
                                 {% for i in range(1, 6) %}
                                     <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" class="d-none">
