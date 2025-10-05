@@ -227,16 +227,21 @@ async function sendResponse() {
     font-weight: 600;
 }
 
-/* Desktop - ensure normal table behavior */
+/* Desktop - make rows clickable */
 @media (min-width: 769px) {
     .table tbody tr {
-        cursor: default !important;
+        cursor: pointer !important;
+        transition: background-color 0.2s ease !important;
     }
-    
+
+    .table tbody tr:hover {
+        background-color: var(--clsu-gold-light, #f8f9fa) !important;
+    }
+
     .table tbody tr td:first-child::after {
         display: none !important;
     }
-    
+
     .mobile-details-panel {
         display: none !important;
     }
@@ -404,6 +409,23 @@ async function sendResponse() {
             gap: 1rem;
         }
     }
+
+    /* Desktop styles for Student Details modal */
+    @media (min-width: 769px) {
+        .custom-modal-overlay {
+            padding-left: 0;
+            padding: 20px;
+        }
+
+        .custom-modal {
+            max-width: 500px;
+            max-height: 80vh;
+        }
+
+        .custom-modal-body {
+            max-height: calc(80vh - 120px);
+        }
+    }
 }
 </style>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
@@ -549,10 +571,10 @@ async function loadMessages(page = 1, showLoading = true) {
                 const latestMessage = conversation.latest_message;
                 
                 tableHTML += `
-                    <tr class="${hasUnread ? 'table-warning' : ''}" onclick="showMobileDetails(this)" 
+                    <tr class="${hasUnread ? 'table-warning' : ''}" onclick="showStudentDetails(this)"
                         data-user-id="${user.id}"
                         data-user-name="${user.full_name}"
-                        data-user-email="${user.username}" 
+                        data-user-email="${user.username}"
                         data-user-strand="${user.strand || 'N/A'}"
                         data-user-grade="${user.grade_level || 'N/A'}"
                         data-user-firstname="${user.firstname || ''}"
@@ -681,9 +703,8 @@ function generatePagination(pagination) {
 }
 
 
-function showMobileDetails(row) {
-    // Only handle clicks on mobile (768px and below)
-    if (window.innerWidth > 768) return;
+function showStudentDetails(row) {
+    // Handle clicks on all devices
 
     // Get data from row attributes
     const userId = row.dataset.userId;
