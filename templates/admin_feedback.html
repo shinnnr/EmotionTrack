@@ -107,7 +107,7 @@
                                 {% for feedback in feedback_items %}
                                 <tr>
                                     <td><input type="checkbox" class="feedback-checkbox" value="{{ feedback.id }}" id="feedback_checkbox_{{ feedback.id }}" onchange="updateFeedbackDeletePanel()"></td>
-                                    <td class="student-cell" onclick="viewFeedback({{ feedback.id }})">
+                                    <td class="student-cell feedback-row" data-feedback-id="{{ feedback.id }}">
                                         {% if feedback.is_anonymous %}
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-3">
@@ -162,7 +162,7 @@
                                         </small>
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="viewFeedback({{ feedback.id }})">
+                                        <button class="btn btn-sm btn-outline-primary view-feedback-btn" data-feedback-id="{{ feedback.id }}">
                                             <i class="fas fa-eye me-1"></i>View
                                         </button>
                                     </td>
@@ -433,6 +433,22 @@ body.modal-open {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     initializeFeedbackManagement();
+
+    // Bind click events for feedback rows
+    document.querySelectorAll('.feedback-row').forEach(cell => {
+        cell.addEventListener('click', function() {
+            const feedbackId = this.dataset.feedbackId;
+            viewFeedback(feedbackId);
+        });
+    });
+
+    // Bind click events for view feedback buttons
+    document.querySelectorAll('.view-feedback-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const feedbackId = this.dataset.feedbackId;
+            viewFeedback(feedbackId);
+        });
+    });
 });
 
 function initializeFeedbackManagement() {
