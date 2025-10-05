@@ -53,7 +53,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">
+                                <label class="form-label" for="login_password">
                                     <i class="fas fa-lock me-2"></i>Password
                                 </label>
                                 <div class="password-input-group">
@@ -130,7 +130,7 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Password</label>
+                                <label class="form-label" for="register_password">Password</label>
                                 <div class="password-input-group">
                                     {{ register_form.password(id="register_password", class="form-control password-field", placeholder=" ", autocomplete="new-password") }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('register_password', this)">
@@ -146,7 +146,7 @@
                                 {% endif %}
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Confirm Password</label>
+                                <label class="form-label" for="register_confirm_password">Confirm Password</label>
                                 <div class="password-input-group">
                                     {{ register_form.confirm_password(id="register_confirm_password", class="form-control password-field", placeholder=" ", autocomplete="new-password") }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('register_confirm_password', this)">
