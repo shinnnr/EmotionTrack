@@ -883,7 +883,8 @@ function generateSuggestionsHTML(suggestions) {
                                             ` : ''}
                                         </div>
                                         <button class="btn btn-outline-primary btn-sm ms-3"
-                                                onclick="copySuggestion(${JSON.stringify(suggestion.text).replace(/`/g, '\\`')})">
+                                                data-text="${encodeURIComponent(suggestion.text)}"
+                                                onclick="copySuggestion(decodeURIComponent(this.dataset.text))">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                     </div>
