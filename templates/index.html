@@ -43,22 +43,22 @@
                     <div class="auth-form active" id="loginForm" {% if register_form and register_form.errors %}style="display: none;"{% endif %}>
                         <h3 class="text-center mb-4 text-clsu-green">Welcome Back</h3>
                         <form method="POST" action="{{ url_for('auth.login') }}">
-                            {{ login_form.hidden_tag() }}
-                            
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" id="login_csrf_token"/>
+
                             <div class="mb-3">
-                                <label for="{{ login_form.username.id }}" class="form-label">
+                                <label for="login_username" class="form-label">
                                     <i class="fas fa-id-card me-2"></i>LRN / Employee ID
                                 </label>
-                                {{ login_form.username(class="form-control", placeholder="") }}
+                                {{ login_form.username(id="login_username", class="form-control", placeholder="") }}
                             </div>
-                            
+
                             <div class="mb-3">
-                                <label for="{{ login_form.password.id }}" class="form-label">
+                                <label for="login_password" class="form-label">
                                     <i class="fas fa-lock me-2"></i>Password
                                 </label>
                                 <div class="password-input-group">
-                                    {{ login_form.password(class="form-control password-field", placeholder=" ") }}
-                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ login_form.password.id }}', this)">
+                                    {{ login_form.password(id="login_password", class="form-control password-field", placeholder=" ") }}
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('login_password', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -80,8 +80,8 @@
                     <div class="auth-form" id="registerForm" {% if register_form and register_form.errors %}style="display: block;"{% else %}style="display: none;"{% endif %}>
                         <h3 class="text-center mb-4 text-clsu-green">Create Account</h3>
                         <form method="POST" action="{{ url_for('auth.register') }}">
-                            {{ register_form.hidden_tag() }}
-                            
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" id="register_csrf_token"/>
+
                             <div class="mb-3">
                                 <label class="form-label">First Name</label>
                                 {{ register_form.firstname(class="form-control") }}
@@ -104,10 +104,10 @@
                                     </div>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label class="form-label">LRN</label>
-                                {{ register_form.username(class="form-control", pattern="^\d{12}$", title="LRN must be exactly 12 digits", inputmode="numeric") }}
+                                {{ register_form.username(id="register_username", class="form-control", pattern="^\d{12}$", title="LRN must be exactly 12 digits", inputmode="numeric") }}
                                 {% if register_form.username.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.username.errors %}
@@ -132,8 +132,8 @@
                             <div class="mb-3">
                                 <label class="form-label">Password</label>
                                 <div class="password-input-group">
-                                    {{ register_form.password(class="form-control password-field", placeholder=" ") }}
-                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.password.id }}', this)">
+                                    {{ register_form.password(id="register_password", class="form-control password-field", placeholder=" ") }}
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('register_password', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -148,8 +148,8 @@
                             <div class="mb-3">
                                 <label class="form-label">Confirm Password</label>
                                 <div class="password-input-group">
-                                    {{ register_form.confirm_password(class="form-control password-field", placeholder=" ") }}
-                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ register_form.confirm_password.id }}', this)">
+                                    {{ register_form.confirm_password(id="register_confirm_password", class="form-control password-field", placeholder=" ") }}
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('register_confirm_password', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -421,9 +421,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Find password and confirm password fields
         passwordFields.forEach(field => {
-            if (field.name === 'password' || field.id === 'password') {
+            if (field.name === 'password') {
                 passwordField = field;
-            } else if (field.name === 'confirm_password' || field.id === 'confirm_password') {
+            } else if (field.name === 'confirm_password') {
                 confirmPasswordField = field;
             }
         });
