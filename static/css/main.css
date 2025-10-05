@@ -684,3 +684,14 @@ body {
         border: 1px solid #000 !important;
     }
 }
+
+@media (max-width: 542px) {
+    .selection-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .selection-controls .form-check {
+        margin-bottom: 0.5rem;
+    }
+}
