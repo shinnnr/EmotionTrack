@@ -24,7 +24,7 @@
                         {{ form.hidden_tag() }}
 
                         <div class="mb-4">
-                            <label for="{{ form.feedback_type.id }}" class="form-label fw-bold">
+                            <label for="feedback_type" class="form-label fw-bold">
                                 <i class="fas fa-list me-2"></i>Feedback Type
                             </label>
                             {{ form.feedback_type(class="form-select", required=True, id="feedback_type") }}
@@ -38,7 +38,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="{{ form.subject.id }}" class="form-label fw-bold">
+                            <label for="subject" class="form-label fw-bold">
                                 <i class="fas fa-heading me-2"></i>Subject
                             </label>
                             {{ form.subject(class="form-control", placeholder="Brief summary of your feedback", required=True, id="subject") }}
@@ -52,7 +52,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="{{ form.message.id }}" class="form-label fw-bold">
+                            <label for="message" class="form-label fw-bold">
                                 <i class="fas fa-comment-dots me-2"></i>Message
                             </label>
                             {{ form.message(class="form-control", rows=6, placeholder="Please provide detailed feedback...", required=True, id="message") }}
@@ -66,7 +66,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="rating" class="form-label fw-bold">
+                            <label class="form-label fw-bold">
                                 <i class="fas fa-star me-2"></i>Overall Rating (1-5)
                             </label>
                             <div class="rating-stars">
