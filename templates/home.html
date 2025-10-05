@@ -277,10 +277,15 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <h5 class="card-title fw-bold mb-4">
-                        <i class="fas fa-brain text-clsu-green me-2"></i>
-                        Latest DASS-21 Assessment Results
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title fw-bold mb-0">
+                            <i class="fas fa-brain text-clsu-green me-2"></i>
+                            Latest DASS-21 Assessment Results
+                        </h5>
+                        <button class="btn btn-outline-clsu-green btn-sm" onclick="openDass21ResultsModal()">
+                            <i class="fas fa-external-link-alt me-1"></i>View All
+                        </button>
+                    </div>
                     
                     <div class="row g-3">
                         <div class="col-md-4">
@@ -398,6 +403,32 @@
                         <span class="visually-hidden">Loading activity...</span>
                     </div>
                     <p class="mt-2 text-muted">Loading your recent activity...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom DASS-21 Results Modal -->
+<div id="dass21ResultsModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-overlay" onclick="closeDass21ResultsModal()"></div>
+    <div class="custom-modal-content modal-xl">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title">
+                <i class="fas fa-brain me-2"></i>
+                My DASS-21 Assessment Results
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeDass21ResultsModal()" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="custom-modal-body">
+            <div id="dass21ResultsContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-clsu-green" role="status">
+                        <span class="visually-hidden">Loading results...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading your DASS-21 assessment results...</p>
                 </div>
             </div>
         </div>
@@ -1248,6 +1279,202 @@ function showAlert(message, type = 'info') {
     }, 5023);
 }
 
+// DASS-21 Results Modal functions
+function openDass21ResultsModal() {
+    const modal = document.getElementById('dass21ResultsModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+    // Force modal above everything with maximum z-index
+    modal.style.zIndex = '999999';
+    modal.style.position = 'fixed';
+
+    // Mark body to indicate modal is open
+    document.body.classList.add('modal-open');
+
+    // Add background click to close modal
+    if (!modal.hasAttribute('data-bg-click-added')) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDass21ResultsModal();
+            }
+        });
+        modal.setAttribute('data-bg-click-added', 'true');
+    }
+
+    loadDass21Results();
+}
+
+function closeDass21ResultsModal() {
+    const modal = document.getElementById('dass21ResultsModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = ''; // Restore scrolling
+}
+
+function loadDass21Results() {
+    // Reset modal content to loading state
+    const content = document.getElementById('dass21ResultsContent');
+
+    // Show loading state in the body only
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-clsu-green" role="status">
+                <span class="visually-hidden">Loading results...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading your DASS-21 assessment results...</p>
+        </div>
+    `;
+
+    // Load DASS-21 results
+    fetch('/api/dass21-results?per_page=1000', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        const results = data.results || [];
+
+        let html;
+        if (results.length === 0) {
+            html = `
+                <div class="text-center py-5">
+                    <i class="fas fa-brain fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Assessment Results</h5>
+                    <p class="text-muted">You haven't completed any DASS-21 assessments yet.</p>
+                    <a href="/dass21-quiz" class="btn btn-clsu-green">
+                        <i class="fas fa-plus me-2"></i>Take Your First Assessment
+                    </a>
+                </div>
+            `;
+        } else {
+            // Group results by date
+            const groupedResults = groupDass21ResultsByDate(results);
+
+            html = '<div class="row g-3">';
+
+            for (const [date, assessments] of Object.entries(groupedResults)) {
+                html += `
+                    <div class="col-12">
+                        <div class="dass21-date-group mb-4">
+                            <h6 class="fw-bold text-clsu-green border-bottom pb-2 mb-3">
+                                <i class="fas fa-calendar-day me-2"></i>
+                                ${formatDass21Date(date)}
+                            </h6>
+                            <div class="row g-3">
+                `;
+
+                assessments.forEach(result => {
+                    html += createDass21ResultCard(result);
+                });
+
+                html += '</div></div></div>';
+            }
+            html += '</div>';
+        }
+
+        content.innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Error loading DASS-21 results:', error);
+        content.innerHTML = `
+            <div class="alert alert-warning border-0">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
+                <div>
+                    <h6 class="alert-heading mb-1">Unable to Load Results</h6>
+                    <p class="mb-0">There was a problem loading your assessment results. Please try again in a moment.</p>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// Helper functions for DASS-21 modal
+function groupDass21ResultsByDate(results) {
+    const groups = {};
+    results.forEach(result => {
+        const date = new Date(result.created_at).toDateString();
+        if (!groups[date]) {
+            groups[date] = [];
+        }
+        groups[date].push(result);
+    });
+    return groups;
+}
+
+function formatDass21Date(dateString) {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+        return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+    } else {
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+}
+
+function createDass21ResultCard(result) {
+    const timeString = new Date(result.created_at).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    return `
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="fw-bold text-clsu-green mb-1">DASS-21 Assessment</h6>
+                            <small class="text-muted">${timeString}</small>
+                        </div>
+                        <span class="badge bg-clsu-green">Completed</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="text-center p-2 rounded bg-light">
+                                <div class="small text-muted">Depression</div>
+                                <div class="fw-bold text-clsu-green">${result.depression_score}</div>
+                                <div class="small badge severity-${result.depression_severity.replace(' ', '')}">${result.depression_severity}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center p-2 rounded bg-light">
+                                <div class="small text-muted">Anxiety</div>
+                                <div class="fw-bold text-clsu-green">${result.anxiety_score}</div>
+                                <div class="small badge severity-${result.anxiety_severity.replace(' ', '')}">${result.anxiety_severity}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center p-2 rounded bg-light">
+                                <div class="small text-muted">Stress</div>
+                                <div class="fw-bold text-clsu-green">${result.stress_score}</div>
+                                <div class="small badge severity-${result.stress_severity.replace(' ', '')}">${result.stress_severity}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 // Close modal when pressing Escape key
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
@@ -1264,6 +1491,11 @@ document.addEventListener('keydown', function(event) {
         const recentActivityModal = document.getElementById('recentActivityModal');
         if (recentActivityModal && recentActivityModal.style.display === 'flex') {
             closeRecentActivityModal();
+        }
+
+        const dass21ResultsModal = document.getElementById('dass21ResultsModal');
+        if (dass21ResultsModal && dass21ResultsModal.style.display === 'flex') {
+            closeDass21ResultsModal();
         }
     }
 });
