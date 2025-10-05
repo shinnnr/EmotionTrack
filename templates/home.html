@@ -438,12 +438,12 @@ function loadInsights() {
             <div class="spinner-border text-clsu-green" role="status">
                 <span class="visually-hidden">Loading insights...</span>
             </div>
-            <p class="mt-2 text-muted">Analyzing your wellness patterns...</p>
+            <p class="mt-2 text-muted">Analyzing your wellness data...</p>
         </div>
     `;
-
-    // Load wellness insights
-    fetch('/api/wellness-insights', {
+    
+    // Load weekly insights
+    fetch('/api/weekly-insights', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -456,8 +456,8 @@ function loadInsights() {
         }
         return response.json();
     })
-    .then(insights => {
-        if (!insights.has_data) {
+    .then(data => {
+        if (!data.has_data) {
             content.innerHTML = `
                 <div class="text-center py-5">
                     <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
@@ -472,50 +472,50 @@ function loadInsights() {
             content.innerHTML = `
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <div class="card bg-light text-center h-100">
-                            <div class="card-body">
-                                <i class="fas fa-smile fa-3x text-clsu-green mb-3"></i>
-                                <h4 class="text-clsu-green">${insights.most_common_emotion}</h4>
-                                <p class="mb-0">Most Common Emotion</p>
-                            </div>
+                        <div class="insights-card">
+                            <h6 class="fw-bold text-clsu-green">
+                                <i class="fas fa-smile me-2"></i>Most Common Emotion
+                            </h6>
+                            <p class="h5 mb-1">${data.emotion}</p>
+                            <small class="text-muted">Based on your recent entries</small>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card bg-light text-center h-100">
-                            <div class="card-body">
-                                <i class="fas fa-battery-three-quarters fa-3x text-clsu-green mb-3"></i>
-                                <h4 class="text-clsu-green">${insights.avg_energy.toFixed(1)}/10</h4>
-                                <p class="mb-0">Average Energy Level</p>
-                            </div>
+                        <div class="insights-card">
+                            <h6 class="fw-bold text-clsu-green">
+                                <i class="fas fa-bed me-2"></i>Average Sleep
+                            </h6>
+                            <p class="h5 mb-1">${data.average_sleep} hours</p>
+                            <small class="text-muted">${data.sleep_advice}</small>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card bg-light text-center h-100">
-                            <div class="card-body">
-                                <i class="fas fa-bed fa-3x text-clsu-green mb-3"></i>
-                                <h4 class="text-clsu-green">${insights.avg_sleep.toFixed(1)} hrs</h4>
-                                <p class="mb-0">Average Sleep</p>
-                            </div>
+                        <div class="insights-card">
+                            <h6 class="fw-bold text-clsu-green">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Main Trigger
+                            </h6>
+                            <p class="h5 mb-1">${data.trigger}</p>
+                            <small class="text-muted">Most frequent stressor</small>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card bg-light text-center h-100">
-                            <div class="card-body">
-                                <i class="fas fa-exclamation-triangle fa-3x text-clsu-green mb-3"></i>
-                                <h4 class="text-clsu-green">${insights.main_trigger}</h4>
-                                <p class="mb-0">Main Trigger</p>
-                            </div>
+                        <div class="insights-card">
+                            <h6 class="fw-bold text-clsu-green">
+                                <i class="fas fa-heart me-2"></i>Coping Strategy
+                            </h6>
+                            <p class="h5 mb-1">${data.coping}</p>
+                            <small class="text-muted">Your go-to method</small>
                         </div>
                     </div>
-                </div>
-                <div class="mt-4 p-3 bg-light rounded">
-                    <h6 class="fw-bold text-clsu-green mb-2">
-                        <i class="fas fa-lightbulb me-2"></i>Wellness Recommendations
-                    </h6>
-                    <p class="mb-0 text-muted">
-                        Continue tracking your emotions regularly to maintain awareness of your mental health patterns.
-                        Consider speaking with a counselor if you notice concerning trends.
-                    </p>
+                    <div class="col-12">
+                        <div class="insights-card">
+                            <h6 class="fw-bold text-clsu-green">
+                                <i class="fas fa-gratitude me-2"></i>Latest Gratitude
+                            </h6>
+                            <p class="fst-italic mb-1">"${data.gratitude}"</p>
+                            <small class="text-muted">Keep focusing on the positive!</small>
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -523,9 +523,14 @@ function loadInsights() {
     .catch(error => {
         console.error('Error loading insights:', error);
         content.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                Unable to load wellness insights. Please try again later.
+            <div class="alert alert-warning border-0">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
+                    <div>
+                        <h6 class="alert-heading mb-1">Unable to Load Insights</h6>
+                        <p class="mb-0">There was a problem loading your wellness data. Please try again in a moment.</p>
+                    </div>
+                </div>
             </div>
         `;
     });
