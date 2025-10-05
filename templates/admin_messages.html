@@ -29,6 +29,7 @@
                         <div class="col-12">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <label for="messageSearchInput" class="visually-hidden">Search Students</label>
                                 <input type="text" class="form-control" id="messageSearchInput" placeholder="Search students by Name or LRN">
                                 <button class="btn btn-outline-secondary" type="button" id="messageClearSearchBtn" title="Clear search">
                                     <i class="fas fa-times"></i>
@@ -83,7 +84,7 @@
                 </div>
 
                 <div class="mb-3" id="responseSection">
-                    <label class="form-label fw-bold">Your Response:</label>
+                    <label for="responseText" class="form-label fw-bold">Your Response:</label>
                     <div id="existingResponse" class="p-3 bg-success bg-opacity-10 rounded mb-3" style="display: none;">
                         <small class="text-muted">Existing Response:</small>
                         <div id="existingResponseText"></div>

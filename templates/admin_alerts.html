@@ -116,7 +116,7 @@
                             <tbody>
                                 {% for alert in alerts %}
                                 <tr class="{{ 'table-warning' if not alert.is_resolved else '' }}" onclick="viewAlert({{ alert.id }})">
-                                    <td><input type="checkbox" class="alert-checkbox" value="{{ alert.id }}" onchange="updateDeletePanel()" onclick="event.stopPropagation()"></td>
+                                    <td><input type="checkbox" class="alert-checkbox" value="{{ alert.id }}" id="alert_checkbox_{{ alert.id }}" onchange="updateDeletePanel()" onclick="event.stopPropagation()"></td>
                                     <td class="student-cell">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-sm me-3">

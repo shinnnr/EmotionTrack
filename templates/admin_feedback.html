@@ -104,7 +104,7 @@
                             <tbody>
                                 {% for feedback in feedback_items %}
                                 <tr>
-                                    <td><input type="checkbox" class="feedback-checkbox" value="{{ feedback.id }}" onchange="updateFeedbackDeletePanel()"></td>
+                                    <td><input type="checkbox" class="feedback-checkbox" value="{{ feedback.id }}" id="feedback_checkbox_{{ feedback.id }}" onchange="updateFeedbackDeletePanel()"></td>
                                     <td class="student-cell" onclick="viewFeedback({{ feedback.id }})">
                                         {% if feedback.is_anonymous %}
                                             <div class="d-flex align-items-center">
