@@ -84,7 +84,7 @@
                             
                             <div class="mb-3">
                                 <label class="form-label">First Name</label>
-                                {{ register_form.firstname(class="form-control", required=True, pattern="^[a-zA-Z\s]+$", title="First name cannot contain numbers and is required") }}
+                                {{ register_form.firstname(class="form-control") }}
                                 {% if register_form.firstname.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.firstname.errors %}
