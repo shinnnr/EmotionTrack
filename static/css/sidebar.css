@@ -44,11 +44,12 @@
 
 /* Sidebar Logo */
 .sidebar-logo {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
     background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    overflow: hidden;
 }
 
 .sidebar-header h5 {
