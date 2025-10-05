@@ -83,7 +83,7 @@
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" id="register_csrf_token"/>
 
                             <div class="mb-3">
-                                <label class="form-label">First Name</label>
+                                <label for="firstname" class="form-label">First Name</label>
                                 {{ register_form.firstname(class="form-control") }}
                                 {% if register_form.firstname.errors %}
                                     <div class="text-danger small mt-1">
@@ -94,7 +94,7 @@
                                 {% endif %}
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Last Name</label>
+                                <label for="lastname" class="form-label">Last Name</label>
                                 {{ register_form.lastname(class="form-control") }}
                                 {% if register_form.lastname.errors %}
                                     <div class="text-danger small mt-1">
@@ -106,7 +106,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">LRN</label>
+                                <label for="register_username" class="form-label">LRN</label>
                                 {{ register_form.username(id="register_username", class="form-control", pattern="^\d{12}$", title="LRN must be exactly 12 digits", inputmode="numeric", autocomplete="username") }}
                                 {% if register_form.username.errors %}
                                     <div class="text-danger small mt-1">
@@ -118,7 +118,7 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Birthday</label>
+                                <label for="birthday" class="form-label">Birthday</label>
                                 {{ register_form.birthday(class="form-control") }}
                                 {% if register_form.birthday.errors %}
                                     <div class="text-danger small mt-1">
@@ -130,7 +130,7 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Password</label>
+                                <label for="register_password" class="form-label">Password</label>
                                 <div class="password-input-group">
                                     {{ register_form.password(id="register_password", class="form-control password-field", placeholder=" ", autocomplete="new-password") }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('register_password', this)">
@@ -146,7 +146,7 @@
                                 {% endif %}
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Confirm Password</label>
+                                <label for="register_confirm_password" class="form-label">Confirm Password</label>
                                 <div class="password-input-group">
                                     {{ register_form.confirm_password(id="register_confirm_password", class="form-control password-field", placeholder=" ", autocomplete="new-password") }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('register_confirm_password', this)">
@@ -163,20 +163,20 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Gender</label>
+                                <label for="gender" class="form-label">Gender</label>
                                 {{ register_form.gender(class="form-select") }}
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Strand</label>
+                                <label for="strand" class="form-label">Strand</label>
                                 {{ register_form.strand(class="form-select") }}
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Grade</label>
+                                <label for="grade_level" class="form-label">Grade</label>
                                 {{ register_form.grade_level(class="form-select") }}
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Section</label>
+                                <label for="section" class="form-label">Section</label>
                                 {{ register_form.section(class="form-control") }}
                                 {% if register_form.section.errors %}
                                     <div class="text-danger small mt-1">
@@ -190,13 +190,13 @@
                             <!-- Privacy Agreement -->
                             <div class="mb-3">
                                 <div class="form-check">
-                                    {{ register_form.privacy_agreement(class="form-check-input") }}
-                                    <label class="form-check-label text-muted" for="{{ register_form.privacy_agreement.id }}">
-                                        <small>
-                                            <i class="fas fa-shield-alt me-1"></i>
-                                            I agree to the <a href="#" class="text-clsu-green fw-bold" data-bs-toggle="modal" data-bs-target="#termsModal" onclick="event.preventDefault();">Terms and Conditions</a> and acknowledge that my data will be handled securely.
-                                        </small>
-                                    </label>
+                                {{ register_form.privacy_agreement(class="form-check-input") }}
+                                <label class="form-check-label text-muted" for="privacy_agreement">
+                                <small>
+                                <i class="fas fa-shield-alt me-1"></i>
+                                I agree to the <a href="#" class="text-clsu-green fw-bold" data-bs-toggle="modal" data-bs-target="#termsModal" onclick="event.preventDefault();">Terms and Conditions</a> and acknowledge that my data will be handled securely.
+                                </small>
+                                </label>
                                 </div>
                                 {% if register_form.privacy_agreement.errors %}
                                     <div class="text-danger small mt-1">
