@@ -1,4 +1,3 @@
-{# jinja2 #}
 {% extends "base.html" %}
 
 {% block title %}Alerts Management - {% if current_user.is_faculty_admin %}Faculty Dashboard{% else %}Admin Dashboard{% endif %}{% endblock %}
@@ -118,7 +117,7 @@
                             </thead>
                             <tbody>
                                 {% for alert in alerts %}
-                                <tr class="{{ 'table-warning' if not alert.is_resolved else '' }}" data-alert-id="{{ alert.id }}" class="alert-row">
+                                <tr class="{{ 'table-warning' if not alert.is_resolved else '' }}" onclick="viewAlert({{ alert.id }})">
                                     <td><input type="checkbox" class="alert-checkbox" value="{{ alert.id }}" id="alert_checkbox_{{ alert.id }}" onchange="updateDeletePanel()" onclick="event.stopPropagation()"></td>
                                     <td class="student-cell">
                                         <div class="d-flex align-items-center">
@@ -173,7 +172,7 @@
                                     </td>
                                     <td>
                                         {% if not alert.is_resolved %}
-                                        <button class="btn btn-sm btn-success resolve-alert-btn" data-alert-id="{{ alert.id }}">
+                                        <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); resolveAlert({{ alert.id }})">
                                             <i class="fas fa-check me-1"></i>Resolve
                                         </button>
                                         {% else %}
@@ -565,23 +564,6 @@ async function resolveAlert(alertId) {
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeAlertManagement();
-
-    // Bind click events for alert rows
-    document.querySelectorAll('.alert-row').forEach(row => {
-        row.addEventListener('click', function() {
-            const alertId = this.dataset.alertId;
-            viewAlert(alertId);
-        });
-    });
-
-    // Bind click events for resolve buttons
-    document.querySelectorAll('.resolve-alert-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const alertId = this.dataset.alertId;
-            resolveAlert(alertId);
-        });
-    });
 });
 
 function initializeAlertManagement() {

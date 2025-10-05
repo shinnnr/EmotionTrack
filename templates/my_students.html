@@ -97,7 +97,7 @@
                             <tbody>
                                 {% if students_pagination %}
                                     {% for student in students_pagination.items %}
-                                        <tr data-student-id="{{ student.id }}" style="cursor: pointer;" data-student-name="{{ student.full_name|lower }}" data-student-email="{{ student.username|lower }}" class="student-row">
+                                        <tr data-student-id="{{ student.id }}" onclick="viewStudentProfile({{ student.id }})" style="cursor: pointer;" data-student-name="{{ student.full_name|lower }}" data-student-email="{{ student.username|lower }}">
                                             <td onclick="event.stopPropagation();" class="d-table-cell">
                                                 <div class="form-check">
                                                     <input class="form-check-input student-checkbox"
@@ -127,18 +127,18 @@
                                             </td>
                                             <td class="d-none d-lg-table-cell">
                                                 <div class="btn-group" role="group">
-                                                    <button class="btn btn-outline-info btn-sm view-student-profile-btn"
-                                                            data-student-id="{{ student.id }}"
+                                                    <button class="btn btn-outline-info btn-sm"
+                                                            onclick="event.stopPropagation(); viewStudentProfile({{ student.id }})"
                                                             title="View Profile">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
-                                                    <button class="btn btn-outline-primary btn-sm message-student-btn"
-                                                            data-student-id="{{ student.id }}"
+                                                    <button class="btn btn-outline-primary btn-sm"
+                                                            onclick="event.stopPropagation(); messageStudent({{ student.id }})"
                                                             title="Send Message">
                                                         <i class="fas fa-comments"></i>
                                                     </button>
-                                                    <button class="btn btn-outline-danger btn-sm delete-student-btn"
-                                                            data-student-id="{{ student.id }}"
+                                                    <button class="btn btn-outline-danger btn-sm"
+                                                            onclick="event.stopPropagation(); deleteStudent({{ student.id }})"
                                                             title="Delete Student">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
@@ -551,42 +551,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Show alert messages - using global showAlert function from admin.js
 
-    // Bind click events for student rows
-    document.querySelectorAll('.student-row').forEach(row => {
-        row.addEventListener('click', function() {
-            const studentId = this.dataset.studentId;
-            viewStudentProfile(studentId);
-        });
-    });
-
-    // Bind click events for action buttons
-    document.querySelectorAll('.view-student-profile-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const studentId = this.dataset.studentId;
-            viewStudentProfile(studentId);
-        });
-    });
-
-    document.querySelectorAll('.message-student-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const studentId = this.dataset.studentId;
-            messageStudent(studentId);
-        });
-    });
-
-    document.querySelectorAll('.delete-student-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const studentId = this.dataset.studentId;
-            deleteStudent(studentId);
-        });
-    });
-
     // Initial state update
     updateSelectionState();
-
+    
     // Remove placeholder functions - use global functions from admin.js
 });
 </script>
