@@ -368,16 +368,6 @@ body {
     .btn.py-3 {
         padding: 1rem 0.75rem !important;
     }
-
-    /* Position flash messages above toggle button on mobile */
-    .flash-messages {
-        top: 0;
-        right: 0;
-        left: 0;
-        max-width: none;
-        width: 100%;
-        padding: 0 15px;
-    }
 }
 
 @media (max-width: 576px) {
