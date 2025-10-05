@@ -391,6 +391,7 @@
         <div class="custom-modal-body">
             <form id="changePasswordForm">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" id="changePassword_csrf_token"/>
+                <input type="hidden" name="username" value="{{ user.username }}" autocomplete="username"/>
                 <div class="mb-3">
                     <label for="currentPassword" class="form-label">Current Password</label>
                     <div class="password-input-group">
