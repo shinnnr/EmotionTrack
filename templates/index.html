@@ -55,13 +55,13 @@
                             <div class="mb-3">
                                 <label class="form-label">
                                     <i class="fas fa-lock me-2"></i>Password
-                                    <div class="password-input-group">
-                                        {{ login_form.password(id="login_password", class="form-control password-field", placeholder=" ", autocomplete="current-password") }}
-                                        <button type="button" class="password-toggle-btn" onclick="togglePassword('login_password', this)">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
                                 </label>
+                                <div class="password-input-group">
+                                    {{ login_form.password(id="login_password", class="form-control password-field", placeholder=" ", autocomplete="current-password") }}
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('login_password', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             
                             <button type="submit" class="btn btn-clsu-green w-100 mb-3">
@@ -130,14 +130,13 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Password
+                                <label class="form-label">Password</label>
                                 <div class="password-input-group">
                                     {{ register_form.password(id="register_password", class="form-control password-field", placeholder=" ", autocomplete="new-password") }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('register_password', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
-                                </label>
                                 {% if register_form.password.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.password.errors %}
@@ -147,14 +146,13 @@
                                 {% endif %}
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Confirm Password
+                                <label class="form-label">Confirm Password</label>
                                 <div class="password-input-group">
                                     {{ register_form.confirm_password(id="register_confirm_password", class="form-control password-field", placeholder=" ", autocomplete="new-password") }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('register_confirm_password', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
-                                </label>
                                 {% if register_form.confirm_password.errors %}
                                     <div class="text-danger small mt-1">
                                         {% for error in register_form.confirm_password.errors %}
