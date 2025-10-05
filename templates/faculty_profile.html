@@ -3,69 +3,88 @@
 {% block title %}Faculty Profile - EmotionTrack{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <h3 class="mb-4">
-                <i class="fas fa-user-edit me-2"></i>Faculty Profile Settings
-            </h3>
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                Update your section assignment below. This will affect which students you can access in the system.
-            </div>
-
-            <!-- Current Information Display -->
-            <div class="mb-4">
-                <h5 class="text-muted">Current Information</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Name:</strong> {{ user.full_name }}</p>
-                        <p><strong>Employee ID:</strong> {{ user.username }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Current Assignment:</strong> {{ user.strand or 'N/A' }} {{ user.grade_level or 'N/A' }} - {{ user.section or 'N/A' }}</p>
-                        <p><strong>Role:</strong> Faculty Admin</p>
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="admin-header bg-gradient-dark text-white p-4 rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-6 fw-bold mb-2">
+                            <i class="fas fa-user-edit me-3"></i>
+                            Faculty Profile Settings
+                        </h1>
+                        <p class="lead mb-0">Update your section assignment and profile information</p>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <hr>
-
-            <!-- Profile Update Form -->
-            <form id="profileForm" method="POST">
-                {{ form.hidden_tag() }}
-                
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="{{ form.strand.id }}" class="form-label">Strand</label>
-                        {{ form.strand(class="form-select") }}
-                        <div class="invalid-feedback" id="strand-error"></div>
+    <!-- Profile Settings Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Update your section assignment below. This will affect which students you can access in the system.
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="{{ form.grade_level.id }}" class="form-label">Grade Level</label>
-                        {{ form.grade_level(class="form-select") }}
-                        <div class="invalid-feedback" id="grade_level-error"></div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="{{ form.section.id }}" class="form-label">Section</label>
-                        {{ form.section(class="form-control") }}
-                        <div class="invalid-feedback" id="section-error"></div>
-                        <small class="form-text text-muted">Example: MARX, SMITH, etc.</small>
-                    </div>
-                </div>
 
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Important:</strong> Changing your section assignment will immediately update which students you can access. Make sure this is correct before saving.
-                </div>
+                    <!-- Current Information Display -->
+                    <div class="mb-4">
+                        <h5 class="text-muted">Current Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Name:</strong> {{ user.full_name }}</p>
+                                <p><strong>Employee ID:</strong> {{ user.username }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Current Assignment:</strong> {{ user.strand or 'N/A' }} {{ user.grade_level or 'N/A' }} - {{ user.section or 'N/A' }}</p>
+                                <p><strong>Role:</strong> Faculty Admin</p>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-primary" id="saveBtn">
-                        <i class="fas fa-save me-2"></i>Save Changes
-                        <span class="spinner-border spinner-border-sm d-none ms-2" id="saveSpinner"></span>
-                    </button>
+                    <hr>
+
+                    <!-- Profile Update Form -->
+                    <form id="profileForm" method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.strand.id }}" class="form-label">Strand</label>
+                                {{ form.strand(class="form-select") }}
+                                <div class="invalid-feedback" id="strand-error"></div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.grade_level.id }}" class="form-label">Grade Level</label>
+                                {{ form.grade_level(class="form-select") }}
+                                <div class="invalid-feedback" id="grade_level-error"></div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.section.id }}" class="form-label">Section</label>
+                                {{ form.section(class="form-control") }}
+                                <div class="invalid-feedback" id="section-error"></div>
+                                <small class="form-text text-muted">Example: MARX, SMITH, etc.</small>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Important:</strong> Changing your section assignment will immediately update which students you can access. Make sure this is correct before saving.
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary" id="saveBtn">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                                <span class="spinner-border spinner-border-sm d-none ms-2" id="saveSpinner"></span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
@@ -215,6 +234,26 @@ function showAlert(message, type = 'info') {
     closeButton.type = 'button';
     closeButton.className = 'btn-close';
     closeButton.setAttribute('data-bs-dismiss', 'alert');
+{% block extra_css %}
+<style>
+.admin-header {
+    border-left: 5px solid var(--clsu-gold);
+}
+
+/* Mobile layout for admin header */
+@media (max-width: 768px) {
+    .admin-header .d-flex {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+}
+
+    .admin-header .d-flex > div:last-child {
+        width: fit-content;
+    }
+</style>
+{% endblock %}
     alertDiv.appendChild(closeButton);
 
     alert.appendChild(alertDiv);
