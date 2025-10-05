@@ -882,8 +882,8 @@ function generateSuggestionsHTML(suggestions) {
                                                 </small>
                                             ` : ''}
                                         </div>
-                                        <button class="btn btn-outline-primary btn-sm ms-3" 
-                                                onclick="copySuggestion('${escapeHtml(suggestion.text).replace(/'/g, "\\'")}')">
+                                        <button class="btn btn-outline-primary btn-sm ms-3"
+                                                onclick="copySuggestion(${JSON.stringify(suggestion.text)})">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                     </div>
