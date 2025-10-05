@@ -227,84 +227,19 @@ async function sendResponse() {
     font-weight: 600;
 }
 
-/* Desktop - make rows clickable */
+/* Desktop - ensure normal table behavior */
 @media (min-width: 769px) {
     .table tbody tr {
-        cursor: pointer !important;
-        transition: background-color 0.2s ease !important;
+        cursor: default !important;
     }
-
-    .table tbody tr:hover {
-        background-color: var(--clsu-gold-light, #f8f9fa) !important;
-    }
-
+    
     .table tbody tr td:first-child::after {
         display: none !important;
     }
-
+    
     .mobile-details-panel {
         display: none !important;
     }
-}
-
-/* Custom Modal Styles - Desktop default */
-.custom-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1070;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.custom-modal {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    width: 100%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow: hidden;
-}
-
-.custom-modal-header {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #dee2e6;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #f8f9fa;
-}
-
-.custom-modal-title {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.custom-modal-close {
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    transition: background-color 0.15s ease-in-out;
-}
-
-.custom-modal-close:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-}
-
-.custom-modal-body {
-    padding: 1.5rem;
-    max-height: calc(80vh - 120px);
-    overflow-y: auto;
 }
 
 /* Mobile responsive styles for admin messages */
@@ -314,51 +249,51 @@ async function sendResponse() {
         align-items: flex-start !important;
         gap: 1rem !important;
     }
-
+    
     .per-page-controls {
         width: 100%;
         justify-content: flex-start !important;
     }
-
+    
     /* Hide table headers except Student on mobile */
     .table thead th:not(:first-child) {
         display: none !important;
     }
-
+    
     /* Hide all table cells except Student on mobile */
     .table tbody td:not(:first-child) {
         display: none !important;
     }
-
+    
     /* Make student rows clickable and touch-friendly on mobile only */
     .table tbody tr {
         cursor: pointer !important;
         transition: background-color 0.2s ease !important;
     }
-
+    
     .table tbody tr:hover {
         background-color: var(--clsu-gold-light, #f8f9fa) !important;
     }
-
+    
     /* Student column takes full width on mobile */
     .table td:first-child {
         width: 100% !important;
         padding: 1rem !important;
         position: relative !important;
     }
-
-
-
+    
+    
+    
     /* Make the entire table card more mobile friendly */
     .card-body {
         padding: 1rem !important;
     }
-
+    
     .container-fluid {
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
     }
-
+    
     /* Remove table responsiveness on mobile since we're handling it differently */
     .table-responsive {
         overflow-x: visible !important;
@@ -371,33 +306,103 @@ async function sendResponse() {
         gap: 1rem !important;
     }
 
-    /* Mobile modal overrides */
+
+    /* Custom Modal Styles */
     .custom-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1070;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
         padding-left: 300px; /* Account for sidebar width */
     }
 
     .custom-modal {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        width: 100%;
         max-width: calc(100vw - 350px);
-        max-height: 95vh;
+        max-height: 90vh;
+        overflow: hidden;
+    }
+
+    @media (min-width: 768px) and (max-width: 991px) {
+        .custom-modal-overlay {
+            padding-left: 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .custom-modal {
+            max-width: calc(100vw - 40px);
+            max-height: 95vh;
+        }
+    }
+
+    .custom-modal-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #f8f9fa;
+    }
+
+    .custom-modal-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .custom-modal-close {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        transition: background-color 0.15s ease-in-out;
+    }
+
+    .custom-modal-close:hover {
+        background-color: rgba(0, 0, 0, 0.1);
     }
 
     .custom-modal-body {
-        padding: 1rem;
-        max-height: calc(95vh - 120px);
+        padding: 1.5rem;
+        max-height: calc(90vh - 120px);
+        overflow-y: auto;
     }
 
-    .student-profile .card-body {
-        padding: 1rem;
-    }
+    @media (max-width: 768px) {
+        .custom-modal-overlay {
+            padding-left: 20px;
+        }
 
-    .student-profile .nav-tabs .nav-link {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
-    }
+        .custom-modal-body {
+            padding: 1rem;
+        }
 
-    .custom-modal .admin-header .d-flex {
-        flex-direction: column;
-        gap: 1rem;
+        .student-profile .card-body {
+            padding: 1rem;
+        }
+
+        .student-profile .nav-tabs .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .custom-modal .admin-header .d-flex {
+            flex-direction: column;
+            gap: 1rem;
+        }
     }
 }
 </style>
@@ -544,10 +549,10 @@ async function loadMessages(page = 1, showLoading = true) {
                 const latestMessage = conversation.latest_message;
                 
                 tableHTML += `
-                    <tr class="${hasUnread ? 'table-warning' : ''}" onclick="showStudentDetails(this)"
+                    <tr class="${hasUnread ? 'table-warning' : ''}" onclick="showMobileDetails(this)" 
                         data-user-id="${user.id}"
                         data-user-name="${user.full_name}"
-                        data-user-email="${user.username}"
+                        data-user-email="${user.username}" 
                         data-user-strand="${user.strand || 'N/A'}"
                         data-user-grade="${user.grade_level || 'N/A'}"
                         data-user-firstname="${user.firstname || ''}"
@@ -676,8 +681,9 @@ function generatePagination(pagination) {
 }
 
 
-function showStudentDetails(row) {
-    // Handle clicks on all devices
+function showMobileDetails(row) {
+    // Only handle clicks on mobile (768px and below)
+    if (window.innerWidth > 768) return;
 
     // Get data from row attributes
     const userId = row.dataset.userId;
