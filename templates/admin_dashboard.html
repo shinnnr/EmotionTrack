@@ -433,7 +433,10 @@
 
                     <form id="changePasswordForm">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" id="admin_changePassword_csrf_token"/>
-                        <input type="hidden" name="username" value="{{ current_user.username }}" autocomplete="username"/>
+                        <div class="mb-3">
+                            <label for="adminChangeUsername" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="adminChangeUsername" value="{{ current_user.username }}" readonly autocomplete="username">
+                        </div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="currentPassword" class="form-label">Current Password</label>
