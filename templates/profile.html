@@ -251,7 +251,7 @@
                 </div>
                 
                 <form id="updateProfileForm" method="POST" action="{{ url_for('main.update_student_profile') }}">
-                    {{ profile_form.hidden_tag() }}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" id="updateProfile_csrf_token"/>
                     
                     <div class="mb-3">
                         <label for="{{ profile_form.grade_level.id }}" class="form-label">Grade Level</label>
@@ -315,7 +315,7 @@
         </div>
         <div class="custom-modal-body">
             <form id="updateProfileInfoForm" method="POST" action="{{ url_for('main.update_profile_info') }}">
-                {{ profile_info_form.hidden_tag() }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" id="updateProfileInfo_csrf_token"/>
 
                 <div class="mb-3">
                     <label for="{{ profile_info_form.firstname.id }}" class="form-label">First Name</label>
@@ -390,11 +390,11 @@
         </div>
         <div class="custom-modal-body">
             <form id="changePasswordForm">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" id="changePassword_csrf_token"/>
                 <div class="mb-3">
                     <label for="currentPassword" class="form-label">Current Password</label>
                     <div class="password-input-group">
-                        <input type="password" class="form-control password-field" id="currentPassword" name="current_password" placeholder=" " required>
+                        <input type="password" class="form-control password-field" id="currentPassword" name="current_password" placeholder=" " required autocomplete="current-password">
                         <button type="button" class="password-toggle-btn" onclick="togglePassword('currentPassword', this)">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -403,7 +403,7 @@
                 <div class="mb-3">
                     <label for="newPassword" class="form-label">New Password</label>
                     <div class="password-input-group">
-                        <input type="password" class="form-control password-field" id="newPassword" name="new_password" placeholder=" " required minlength="6">
+                        <input type="password" class="form-control password-field" id="newPassword" name="new_password" placeholder=" " required minlength="6" autocomplete="new-password">
                         <button type="button" class="password-toggle-btn" onclick="togglePassword('newPassword', this)">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -412,7 +412,7 @@
                 <div class="mb-3">
                     <label for="confirmPassword" class="form-label">Confirm New Password</label>
                     <div class="password-input-group">
-                        <input type="password" class="form-control password-field" id="confirmPassword" name="confirm_password" placeholder=" " required minlength="6">
+                        <input type="password" class="form-control password-field" id="confirmPassword" name="confirm_password" placeholder=" " required minlength="6" autocomplete="new-password">
                         <button type="button" class="password-toggle-btn" onclick="togglePassword('confirmPassword', this)">
                             <i class="fas fa-eye"></i>
                         </button>

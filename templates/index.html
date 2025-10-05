@@ -57,7 +57,7 @@
                                     <i class="fas fa-lock me-2"></i>Password
                                 </label>
                                 <div class="password-input-group">
-                                    {{ login_form.password(id="login_password", class="form-control password-field", placeholder=" ") }}
+                                    {{ login_form.password(id="login_password", class="form-control password-field", placeholder=" ", autocomplete="current-password") }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('login_password', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -132,7 +132,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Password</label>
                                 <div class="password-input-group">
-                                    {{ register_form.password(id="register_password", class="form-control password-field", placeholder=" ") }}
+                                    {{ register_form.password(id="register_password", class="form-control password-field", placeholder=" ", autocomplete="new-password") }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('register_password', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -148,7 +148,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Confirm Password</label>
                                 <div class="password-input-group">
-                                    {{ register_form.confirm_password(id="register_confirm_password", class="form-control password-field", placeholder=" ") }}
+                                    {{ register_form.confirm_password(id="register_confirm_password", class="form-control password-field", placeholder=" ", autocomplete="new-password") }}
                                     <button type="button" class="password-toggle-btn" onclick="togglePassword('register_confirm_password', this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
