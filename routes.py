@@ -3,15 +3,11 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_from_directory, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from flask_wtf.csrf import validate_csrf, ValidationError
+from flask_wtf.csrf import validate_csrf, ValidationError, csrf
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from db import db
 
-# CSRF exempt decorator
-def csrf_exempt(f):
-    f.csrf_exempt = True
-    return f
 from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, DailyTips, get_current_time, convert_to_manila_time
 import pytz
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm, StudentProfileInfoUpdateForm, FeedbackForm
@@ -342,7 +338,7 @@ def get_dass21_results():
 
 
 @main_bp.route('/api/delete-mood-logs', methods=['POST'])
-@csrf_exempt
+@csrf.exempt
 @login_required
 def delete_mood_logs():
     """Delete selected mood logs for the current user"""
