@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import validate_csrf, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -833,6 +833,14 @@ def mark_read():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@main_bp.route('/robots.txt')
+def robots_txt():
+    return send_from_directory(app.root_path, 'robots.txt')
+
+@main_bp.route('/sitemap.xml')
+def sitemap_xml():
+    return send_from_directory(app.root_path, 'sitemap.xml')
 
 # Authentication routes
 @auth_bp.route('/login', methods=['GET', 'POST'])

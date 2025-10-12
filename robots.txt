@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://emotiontrack.up.railway.app/sitemap.xml
