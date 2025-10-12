@@ -133,7 +133,8 @@ with app.app_context():
         logger.error(f"Database initialization failed: {str(e)}")
         logger.warning("App will continue to start, but database operations may fail until connection is restored")
         # Don't raise the exception - allow the app to start even if database is unavailable
-    
+
+if __name__ == '__main__':
     # Register blueprints after models are imported to avoid circular imports
     from routes import main_bp, auth_bp, api_bp, admin_bp
     app.register_blueprint(main_bp)
@@ -169,5 +170,4 @@ with app.app_context():
             # Previous day: show time and date
             return manila_dt.strftime('%I:%M %p<br><small class="text-muted">%b %d, %Y</small>')
 
-if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -6,7 +6,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import validate_csrf, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
-from app import db, csrf
+from app import db, csrf, app
 from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, DailyTips, get_current_time, convert_to_manila_time
 import pytz
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm, StudentProfileInfoUpdateForm, FeedbackForm
