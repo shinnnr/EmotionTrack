@@ -340,8 +340,8 @@ def get_dass21_results():
 
 
 @main_bp.route('/api/delete-mood-logs', methods=['POST'])
-@csrf.exempt
 @login_required
+@csrf.exempt
 def delete_mood_logs():
     """Delete selected mood logs for the current user"""
     print(f"DEBUG: delete_mood_logs called by user {current_user.id} ({current_user.username})")

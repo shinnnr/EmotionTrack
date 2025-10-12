@@ -2,6 +2,10 @@
 
 {% block title %}Dashboard - EmotionTrack{% endblock %}
 
+{% block head %}
+<meta name="csrf-token" content="{{ csrf_token() }}" />
+{% endblock %}
+
 {% block content %}
 {% set emotion_icons = {
     'Happy': 'fa-smile',
@@ -1088,6 +1092,7 @@ async function deleteMoodLog(logId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({ log_ids: [logId] })
         });
@@ -1186,6 +1191,7 @@ function initializeLogSelection() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({ log_ids: logIds })
         })
