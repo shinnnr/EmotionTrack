@@ -10,7 +10,6 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
-from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Configure logging
@@ -25,11 +24,7 @@ if os.path.exists(env_file_path):
     logger.info("Loading .env file explicitly")
     load_dotenv(env_file_path)
 
-class Base(DeclarativeBase):
-    pass
-
-
-db = SQLAlchemy(model_class=Base)
+from db import db
 login_manager = LoginManager()
 csrf = CSRFProtect()
 
@@ -134,8 +129,10 @@ with app.app_context():
         logger.warning("App will continue to start, but database operations may fail until connection is restored")
         # Don't raise the exception - allow the app to start even if database is unavailable
 
-# Register blueprints after models are imported to avoid circular imports
+# Import routes after models to avoid circular imports
 from routes import main_bp, auth_bp, api_bp, admin_bp
+
+# Register blueprints after models are imported to avoid circular imports
 app.register_blueprint(main_bp)
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(api_bp, url_prefix='/api')

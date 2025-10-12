@@ -1,12 +1,17 @@
 import json
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_from_directory
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_from_directory, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import validate_csrf, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
-from app import db, csrf, app
+from db import db
+
+# CSRF exempt decorator
+def csrf_exempt(f):
+    f.csrf_exempt = True
+    return f
 from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, DailyTips, get_current_time, convert_to_manila_time
 import pytz
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm, StudentProfileInfoUpdateForm, FeedbackForm
@@ -337,7 +342,7 @@ def get_dass21_results():
 
 
 @main_bp.route('/api/delete-mood-logs', methods=['POST'])
-@csrf.exempt
+@csrf_exempt
 @login_required
 def delete_mood_logs():
     """Delete selected mood logs for the current user"""
@@ -836,11 +841,11 @@ def mark_read():
 
 @main_bp.route('/robots.txt')
 def robots_txt():
-    return send_from_directory(app.root_path, 'robots.txt')
+    return send_from_directory(current_app.root_path, 'robots.txt')
 
 @main_bp.route('/sitemap.xml')
 def sitemap_xml():
-    return send_from_directory(app.root_path, 'sitemap.xml')
+    return send_from_directory(current_app.root_path, 'sitemap.xml')
 
 # Authentication routes
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -1346,7 +1351,7 @@ def create_faculty():
         return jsonify({'success': False, 'message': f'Error creating faculty: {str(e)}'})
 
 @admin_bp.route('/delete-faculty', methods=['POST'])
-@csrf.exempt
+@csrf_exempt
 @login_required
 def delete_faculty():
     if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
@@ -1472,7 +1477,7 @@ def my_students():
                           students_pagination=students_pagination)
 
 @admin_bp.route('/delete-alerts', methods=['POST'])
-@csrf.exempt
+@csrf_exempt
 @login_required
 def delete_alerts():
     """Delete selected alerts"""
@@ -1538,7 +1543,7 @@ def delete_alerts():
         })
 
 @admin_bp.route('/delete-feedback', methods=['POST'])
-@csrf.exempt
+@csrf_exempt
 @login_required
 def delete_feedback():
     """Delete selected feedback"""
@@ -2630,7 +2635,7 @@ def view_student_profile(user_id):
 
 @admin_bp.route('/api/export-data', methods=['GET', 'POST'])
 @login_required
-@csrf.exempt  
+@csrf_exempt
 def export_data():
     if not current_user.is_admin:
         return jsonify({'error': 'Access denied'}), 403
