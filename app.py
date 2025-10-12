@@ -134,40 +134,40 @@ with app.app_context():
         logger.warning("App will continue to start, but database operations may fail until connection is restored")
         # Don't raise the exception - allow the app to start even if database is unavailable
 
+# Register blueprints after models are imported to avoid circular imports
+from routes import main_bp, auth_bp, api_bp, admin_bp
+app.register_blueprint(main_bp)
+app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(api_bp, url_prefix='/api')
+app.register_blueprint(admin_bp, url_prefix='/admin')
+
+# Add template filters for time handling
+from models import convert_to_manila_time, get_current_time
+@app.template_filter('manila_time')
+def manila_time_filter(dt):
+    return convert_to_manila_time(dt)
+
+@app.template_filter('strftime')
+def strftime_filter(dt, format_str):
+    if dt is None:
+        return ''
+    return dt.strftime(format_str)
+
+@app.template_filter('message_time')
+def message_time_filter(dt):
+    if dt is None:
+        return ''
+    # Convert to Manila time
+    manila_dt = convert_to_manila_time(dt)
+    now = get_current_time()
+
+    # Check if message is from today
+    if (manila_dt.date() == now.date()):
+        # Today: show time only
+        return manila_dt.strftime('%I:%M %p')
+    else:
+        # Previous day: show time and date
+        return manila_dt.strftime('%I:%M %p<br><small class="text-muted">%b %d, %Y</small>')
+
 if __name__ == '__main__':
-    # Register blueprints after models are imported to avoid circular imports
-    from routes import main_bp, auth_bp, api_bp, admin_bp
-    app.register_blueprint(main_bp)
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(api_bp, url_prefix='/api')
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-
-    # Add template filters for time handling
-    from models import convert_to_manila_time, get_current_time
-    @app.template_filter('manila_time')
-    def manila_time_filter(dt):
-        return convert_to_manila_time(dt)
-
-    @app.template_filter('strftime')
-    def strftime_filter(dt, format_str):
-        if dt is None:
-            return ''
-        return dt.strftime(format_str)
-
-    @app.template_filter('message_time')
-    def message_time_filter(dt):
-        if dt is None:
-            return ''
-        # Convert to Manila time
-        manila_dt = convert_to_manila_time(dt)
-        now = get_current_time()
-
-        # Check if message is from today
-        if (manila_dt.date() == now.date()):
-            # Today: show time only
-            return manila_dt.strftime('%I:%M %p')
-        else:
-            # Previous day: show time and date
-            return manila_dt.strftime('%I:%M %p<br><small class="text-muted">%b %d, %Y</small>')
-
     app.run(debug=True, host='0.0.0.0', port=5000)
