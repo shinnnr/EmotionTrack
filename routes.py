@@ -346,19 +346,26 @@ def get_dass21_results():
 @login_required
 def delete_mood_logs():
     """Delete selected mood logs for the current user"""
+    print(f"DEBUG: delete_mood_logs called by user {current_user.id} ({current_user.username})")
     try:
         data = request.get_json()
+        print(f"DEBUG: Received data: {data}")
         if not data or 'log_ids' not in data:
+            print("DEBUG: No log_ids in data")
             return jsonify({'success': False, 'message': 'No log IDs provided'}), 400
 
         log_ids = data['log_ids']
+        print(f"DEBUG: log_ids: {log_ids}")
         if not isinstance(log_ids, list) or not log_ids:
+            print("DEBUG: Invalid log_ids format")
             return jsonify({'success': False, 'message': 'Invalid log IDs format'}), 400
 
         # Convert to integers and validate
         try:
             log_ids = [int(log_id) for log_id in log_ids]
-        except (ValueError, TypeError):
+            print(f"DEBUG: Converted log_ids: {log_ids}")
+        except (ValueError, TypeError) as e:
+            print(f"DEBUG: Error converting log_ids: {e}")
             return jsonify({'success': False, 'message': 'Invalid log ID format'}), 400
 
         # Get logs that belong to the current user
@@ -366,12 +373,15 @@ def delete_mood_logs():
             MoodLog.log_id.in_(log_ids),
             MoodLog.user_id == current_user.id
         ).all()
+        print(f"DEBUG: Found {len(logs_to_delete)} logs to delete")
 
         # Check if all requested logs were found
         found_ids = [log.log_id for log in logs_to_delete]
         not_found_ids = [log_id for log_id in log_ids if log_id not in found_ids]
+        print(f"DEBUG: Found IDs: {found_ids}, Not found: {not_found_ids}")
 
         if not_found_ids:
+            print(f"DEBUG: Some logs not found: {not_found_ids}")
             return jsonify({
                 'success': False,
                 'message': f'Some logs not found or access denied: {not_found_ids}'
@@ -380,17 +390,22 @@ def delete_mood_logs():
         # Delete the logs
         deleted_count = 0
         for log in logs_to_delete:
+            print(f"DEBUG: Deleting log {log.log_id}")
             db.session.delete(log)
             deleted_count += 1
 
         # Check if user has any remaining mood logs
         remaining_logs = MoodLog.query.filter_by(user_id=current_user.id).count()
+        print(f"DEBUG: Remaining logs after deletion: {remaining_logs}")
 
         # If no logs remain, delete all daily tips for this user
         if remaining_logs == 0:
+            print("DEBUG: Deleting daily tips")
             DailyTips.query.filter_by(user_id=current_user.id).delete()
 
+        print("DEBUG: Committing transaction")
         db.session.commit()
+        print(f"DEBUG: Successfully deleted {deleted_count} logs")
 
         return jsonify({
             'success': True,
@@ -399,6 +414,9 @@ def delete_mood_logs():
         })
 
     except Exception as e:
+        print(f"DEBUG: Exception in delete_mood_logs: {str(e)}")
+        import traceback
+        traceback.print_exc()
         db.session.rollback()
         return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'}), 500
 
