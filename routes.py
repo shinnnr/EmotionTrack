@@ -1367,8 +1367,8 @@ def create_faculty():
         return jsonify({'success': False, 'message': f'Error creating faculty: {str(e)}'})
 
 @admin_bp.route('/delete-faculty', methods=['POST'])
-@csrf.exempt
 @login_required
+@csrf.exempt
 def delete_faculty():
     if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
         return jsonify({'success': False, 'message': 'Access denied'})
@@ -1493,8 +1493,8 @@ def my_students():
                           students_pagination=students_pagination)
 
 @admin_bp.route('/delete-alerts', methods=['POST'])
-@csrf.exempt
 @login_required
+@csrf.exempt
 def delete_alerts():
     """Delete selected alerts"""
     if not current_user.is_admin:
@@ -1559,8 +1559,8 @@ def delete_alerts():
         })
 
 @admin_bp.route('/delete-feedback', methods=['POST'])
-@csrf.exempt
 @login_required
+@csrf.exempt
 def delete_feedback():
     """Delete selected feedback"""
     if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
