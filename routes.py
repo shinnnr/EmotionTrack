@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_from_directory, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from flask_wtf.csrf import validate_csrf, ValidationError, csrf_exempt
+from flask_wtf.csrf import validate_csrf, ValidationError
 from flask_wtf.csrf import CSRFProtect
 csrf = CSRFProtect()
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -1367,7 +1367,7 @@ def create_faculty():
         return jsonify({'success': False, 'message': f'Error creating faculty: {str(e)}'})
 
 @admin_bp.route('/delete-faculty', methods=['POST'])
-@csrf_exempt
+@csrf.exempt
 @login_required
 def delete_faculty():
     if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
@@ -1493,7 +1493,7 @@ def my_students():
                           students_pagination=students_pagination)
 
 @admin_bp.route('/delete-alerts', methods=['POST'])
-@csrf_exempt
+@csrf.exempt
 @login_required
 def delete_alerts():
     """Delete selected alerts"""
@@ -1559,7 +1559,7 @@ def delete_alerts():
         })
 
 @admin_bp.route('/delete-feedback', methods=['POST'])
-@csrf_exempt
+@csrf.exempt
 @login_required
 def delete_feedback():
     """Delete selected feedback"""
@@ -2651,7 +2651,7 @@ def view_student_profile(user_id):
 
 @admin_bp.route('/api/export-data', methods=['GET', 'POST'])
 @login_required
-@csrf_exempt
+@csrf.exempt
 def export_data():
     if not current_user.is_admin:
         return jsonify({'error': 'Access denied'}), 403
