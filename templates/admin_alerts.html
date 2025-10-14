@@ -651,6 +651,7 @@ function initializeAlertManagement() {
         // Send delete request
         const formData = new FormData();
         formData.append('alert_ids', alertIds.join(','));
+        formData.append('csrf_token', '{{ csrf_token() }}');
 
         fetch('/admin/delete-alerts', {
             method: 'POST',
