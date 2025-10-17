@@ -121,14 +121,14 @@ function validateForm(event) {
 
     if (unanswered.length > 0) {
         event.preventDefault(); // Prevent form submission
-        showFloatingNotification(`Please answer all questions before submitting. The following questions are unanswered: ${unanswered.join(', ')}.`, 'warning');
+        showFloatingNotification(`Please answer all questions before submitting. The following questions are unanswered: ${unanswered.join(', ')}.`, 'warning', unanswered);
         return false;
     } else {
         return true; // Allow form submission
     }
 }
 
-function showFloatingNotification(message, type = 'info') {
+function showFloatingNotification(message, type = 'info', unansweredQuestions = []) {
     // Remove any existing notification
     const existingNotification = document.getElementById('floatingNotification');
     if (existingNotification) {
@@ -139,17 +139,42 @@ function showFloatingNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.id = 'floatingNotification';
     notification.className = `position-fixed top-0 end-0 m-3 alert alert-${type === 'warning' ? 'warning' : 'info'} alert-dismissible fade show shadow`;
-    notification.style.cssText = 'z-index: 1070; max-width: 400px;';
-    notification.innerHTML = `
+    notification.style.cssText = 'z-index: 1070; max-width: 400px; cursor: pointer;';
+
+    // Create notification content
+    let contentHTML = `
         <i class="fas fa-exclamation-triangle me-2"></i>
         <strong>Warning:</strong> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
 
+    // Add quick jump buttons for unanswered questions if provided
+    if (unansweredQuestions.length > 0 && unansweredQuestions.length <= 5) {
+        contentHTML += '<div class="mt-2"><small class="text-muted">Jump to unanswered:</small><br>';
+        unansweredQuestions.forEach(qNum => {
+            contentHTML += `<button class="btn btn-sm btn-outline-primary me-1 mt-1" onclick="jumpToQuestion(${qNum}); event.stopPropagation();">Q${qNum}</button>`;
+        });
+        contentHTML += '</div>';
+    }
+
+    notification.innerHTML = contentHTML;
+
+    // Add click handler to dismiss
+    notification.addEventListener('click', function(e) {
+        if (e.target === this || e.target.classList.contains('alert')) {
+            this.classList.remove('show');
+            setTimeout(() => {
+                if (this.parentNode) {
+                    this.parentNode.removeChild(this);
+                }
+            }, 150);
+        }
+    });
+
     // Add to page
     document.body.appendChild(notification);
 
-    // Auto-dismiss after 8 seconds
+    // Auto-dismiss after 10 seconds (longer since it has interactive elements)
     setTimeout(() => {
         if (notification.parentNode) {
             notification.classList.remove('show');
@@ -159,7 +184,28 @@ function showFloatingNotification(message, type = 'info') {
                 }
             }, 150);
         }
-    }, 8000);
+    }, 10000);
+}
+
+function jumpToQuestion(questionNumber) {
+    const questionElement = document.querySelector(`input[name="q${questionNumber}"]`);
+    if (questionElement) {
+        // Find the question card containing this input
+        const questionCard = questionElement.closest('.card');
+        if (questionCard) {
+            questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Add temporary highlight effect
+            questionCard.style.transition = 'all 0.3s ease';
+            questionCard.style.boxShadow = '0 0 0 3px rgba(255, 193, 7, 0.5)';
+            questionCard.style.borderColor = '#ffc107';
+
+            setTimeout(() => {
+                questionCard.style.boxShadow = '';
+                questionCard.style.borderColor = '';
+            }, 2000);
+        }
+    }
 }
 </script>
 {% endblock %}
