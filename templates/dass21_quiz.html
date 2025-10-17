@@ -26,6 +26,9 @@
                     </div>
                 </div>
 
+                <!-- Notification for incomplete form -->
+                <div id="notification" class="alert alert-danger" style="display: none;"></div>
+
                 <!-- DASS-21 Form -->
                 <form method="POST" action="{{ url_for('main.process_dass21') }}" id="dass21Form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -86,7 +89,7 @@
 
                     <!-- Submit Button -->
                     <div class="text-center mt-5">
-                        <button type="submit" class="btn btn-clsu-gold btn-lg px-5 py-3">
+                        <button type="submit" class="btn btn-clsu-gold btn-lg px-5 py-3" onclick="validateForm(event)">
                             <i class="fas fa-check-circle me-2"></i>
                             Submit Assessment
                         </button>
@@ -96,6 +99,42 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function validateForm(event) {
+    const form = document.getElementById('dass21Form');
+    const notification = document.getElementById('notification');
+    let unanswered = [];
+
+    // Check each question (assuming 21 questions)
+    for (let i = 1; i <= 21; i++) {
+        const questionRadios = document.querySelectorAll(`input[name="q${i}"]`);
+        let answered = false;
+        questionRadios.forEach(radio => {
+            if (radio.checked) {
+                answered = true;
+            }
+        });
+        if (!answered) {
+            unanswered.push(i);
+        }
+    }
+
+    if (unanswered.length > 0) {
+        event.preventDefault(); // Prevent form submission
+        notification.innerHTML = `<strong>Warning:</strong> Please answer all questions before submitting. The following questions are unanswered: ${unanswered.join(', ')}.`;
+        notification.style.display = 'block';
+        // Scroll to notification
+        notification.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    } else {
+        notification.style.display = 'none';
+        return true; // Allow form submission
+    }
+}
+</script>
 {% endblock %}
 
 {% block extra_css %}
