@@ -188,23 +188,30 @@ function showFloatingNotification(message, type = 'info', unansweredQuestions = 
 }
 
 function jumpToQuestion(questionNumber) {
-    const questionElement = document.querySelector(`input[name="q${questionNumber}"]`);
-    if (questionElement) {
-        // Find the question card containing this input
-        const questionCard = questionElement.closest('.card');
-        if (questionCard) {
-            questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Find the question card by looking for the question number span
+    const questionNumbers = document.querySelectorAll('.question-number');
+    let targetCard = null;
 
-            // Add temporary highlight effect
-            questionCard.style.transition = 'all 0.3s ease';
-            questionCard.style.boxShadow = '0 0 0 3px rgba(255, 193, 7, 0.5)';
-            questionCard.style.borderColor = '#ffc107';
-
-            setTimeout(() => {
-                questionCard.style.boxShadow = '';
-                questionCard.style.borderColor = '';
-            }, 2000);
+    questionNumbers.forEach(span => {
+        if (span.textContent.trim() === questionNumber.toString()) {
+            targetCard = span.closest('.card');
         }
+    });
+
+    if (targetCard) {
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Add temporary highlight effect
+        targetCard.style.transition = 'all 0.3s ease';
+        targetCard.style.boxShadow = '0 0 0 3px rgba(255, 193, 7, 0.5)';
+        targetCard.style.borderColor = '#ffc107';
+
+        setTimeout(() => {
+            targetCard.style.boxShadow = '';
+            targetCard.style.borderColor = '';
+        }, 2000);
+    } else {
+        console.log(`Question ${questionNumber} not found`);
     }
 }
 </script>
