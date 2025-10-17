@@ -121,6 +121,13 @@ function validateForm(event) {
 
     if (unanswered.length > 0) {
         event.preventDefault(); // Prevent form submission
+
+        // Jump to first unanswered question
+        if (unanswered.length > 0) {
+            jumpToQuestion(unanswered[0]);
+        }
+
+        // Show notification with all unanswered questions
         showFloatingNotification(`Please answer all questions before submitting. The following questions are unanswered: ${unanswered.join(', ')}.`, 'warning', unanswered);
         return false;
     } else {
@@ -149,27 +156,32 @@ function showFloatingNotification(message, type = 'info', unansweredQuestions = 
     `;
 
     // Add quick jump buttons for unanswered questions if provided
-    if (unansweredQuestions.length > 0 && unansweredQuestions.length <= 5) {
+    if (unansweredQuestions.length > 0) {
         contentHTML += '<div class="mt-2"><small class="text-muted">Jump to unanswered:</small><br>';
-        unansweredQuestions.forEach(qNum => {
-            contentHTML += `<button class="btn btn-sm btn-outline-primary me-1 mt-1" onclick="jumpToQuestion(${qNum}); event.stopPropagation();">Q${qNum}</button>`;
+        unansweredQuestions.slice(0, 5).forEach(qNum => { // Show max 5 buttons
+            contentHTML += `<button class="btn btn-sm btn-outline-primary me-1 mt-1" onclick="jumpToQuestion(${qNum})">Q${qNum}</button>`;
         });
+        if (unansweredQuestions.length > 5) {
+            contentHTML += `<small class="text-muted ms-2">+${unansweredQuestions.length - 5} more</small>`;
+        }
         contentHTML += '</div>';
     }
 
     notification.innerHTML = contentHTML;
 
-    // Add click handler to dismiss
-    notification.addEventListener('click', function(e) {
-        if (e.target === this || e.target.classList.contains('alert')) {
-            this.classList.remove('show');
+    // Add click handler to dismiss (only for the close button and alert background)
+    const closeBtn = notification.querySelector('.btn-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            notification.classList.remove('show');
             setTimeout(() => {
-                if (this.parentNode) {
-                    this.parentNode.removeChild(this);
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
                 }
             }, 150);
-        }
-    });
+        });
+    }
 
     // Add to page
     document.body.appendChild(notification);
