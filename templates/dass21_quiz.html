@@ -26,8 +26,6 @@
                     </div>
                 </div>
 
-                <!-- Notification for incomplete form -->
-                <div id="notification" class="alert alert-danger" style="display: none;"></div>
 
                 <!-- DASS-21 Form -->
                 <form method="POST" action="{{ url_for('main.process_dass21') }}" id="dass21Form">
@@ -105,7 +103,6 @@
 <script>
 function validateForm(event) {
     const form = document.getElementById('dass21Form');
-    const notification = document.getElementById('notification');
     let unanswered = [];
 
     // Check each question (assuming 21 questions)
@@ -124,15 +121,45 @@ function validateForm(event) {
 
     if (unanswered.length > 0) {
         event.preventDefault(); // Prevent form submission
-        notification.innerHTML = `<strong>Warning:</strong> Please answer all questions before submitting. The following questions are unanswered: ${unanswered.join(', ')}.`;
-        notification.style.display = 'block';
-        // Scroll to notification
-        notification.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showFloatingNotification(`Please answer all questions before submitting. The following questions are unanswered: ${unanswered.join(', ')}.`, 'warning');
         return false;
     } else {
-        notification.style.display = 'none';
         return true; // Allow form submission
     }
+}
+
+function showFloatingNotification(message, type = 'info') {
+    // Remove any existing notification
+    const existingNotification = document.getElementById('floatingNotification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.id = 'floatingNotification';
+    notification.className = `position-fixed top-0 end-0 m-3 alert alert-${type === 'warning' ? 'warning' : 'info'} alert-dismissible fade show shadow`;
+    notification.style.cssText = 'z-index: 1070; max-width: 400px;';
+    notification.innerHTML = `
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Warning:</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+
+    // Add to page
+    document.body.appendChild(notification);
+
+    // Auto-dismiss after 8 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 150);
+        }
+    }, 8000);
 }
 </script>
 {% endblock %}
