@@ -424,27 +424,8 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 alert('Update request submitted successfully! The guidance admin will review your request.');
-                // Reset form and clear validation states immediately
-                this.reset();
-                // Clear any remaining validation states and reset form appearance
-                const form = this;
-                // Use a longer timeout to ensure alert is dismissed first
-                setTimeout(() => {
-                    form.querySelectorAll('input, select, textarea').forEach(field => {
-                        field.classList.remove('is-invalid', 'is-valid');
-                        field.setCustomValidity('');
-                        field.style.borderColor = ''; // Reset border color
-                        field.style.boxShadow = ''; // Reset box shadow
-                    });
-                    // Also clear any Bootstrap validation feedback
-                    form.querySelectorAll('.invalid-feedback, .valid-feedback').forEach(el => {
-                        el.style.display = 'none';
-                    });
-                    // Reset form-group classes
-                    form.querySelectorAll('.form-group, .mb-3').forEach(group => {
-                        group.classList.remove('has-error', 'has-success');
-                    });
-                }, 500); // Increased timeout to ensure alert is fully dismissed
+                // Refresh the page to clear all form states and prevent validation issues
+                location.reload();
             } else {
                 alert('Error: ' + data.message);
             }
