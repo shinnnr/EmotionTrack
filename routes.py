@@ -1393,6 +1393,8 @@ def delete_faculty():
                 # Find the faculty member
                 faculty = User.query.filter_by(id=faculty_id, is_admin=True).filter(User.role.in_(['faculty_admin', 'guidance_admin'])).first()
                 if faculty and faculty.username != 'admin@emotiontrack.app':
+                    # Set resolved_by to NULL for all alerts resolved by this faculty
+                    GuidanceAlert.query.filter_by(resolved_by=faculty_id).update({'resolved_by': None})
                     # Delete associated class assignments
                     ClassAssignment.query.filter_by(faculty_id=faculty_id).delete()
                     # Delete the faculty user
@@ -1417,6 +1419,9 @@ def delete_faculty():
             # Prevent deletion of main admin
             if faculty.username == 'admin@emotiontrack.app':
                 return jsonify({'success': False, 'message': 'Cannot delete main admin account'})
+
+            # Set resolved_by to NULL for all alerts resolved by this faculty
+            GuidanceAlert.query.filter_by(resolved_by=faculty_id).update({'resolved_by': None})
 
             # Delete associated class assignments
             ClassAssignment.query.filter_by(faculty_id=faculty_id).delete()
