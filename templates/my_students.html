@@ -32,6 +32,62 @@
     </div>
 
     {% if assignment and students_pagination.items %}
+        <!-- Request Update Panel -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4">
+                            <i class="fas fa-edit text-primary me-2"></i>
+                            Request Grade & Section Update
+                        </h5>
+                        <p class="text-muted mb-3">Submit a request to the guidance admin to update a student's grade level and section assignment.</p>
+
+                        <form id="updateRequestForm">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="requestStudentId" class="form-label">Select Student</label>
+                                    <select class="form-select" id="requestStudentId" name="student_id" required>
+                                        <option value="">Choose a student...</option>
+                                        {% if students_pagination and students_pagination.items %}
+                                            {% for student in students_pagination.items %}
+                                                <option value="{{ student.id }}">{{ student.firstname }} {{ student.lastname }} ({{ student.username }})</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="requestGradeLevel" class="form-label">New Grade Level</label>
+                                    <select class="form-select" id="requestGradeLevel" name="grade_level" required>
+                                        <option value="">Select grade...</option>
+                                        <option value="7">Grade 7</option>
+                                        <option value="8">Grade 8</option>
+                                        <option value="9">Grade 9</option>
+                                        <option value="10">Grade 10</option>
+                                        <option value="11">Grade 11</option>
+                                        <option value="12">Grade 12</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="requestSection" class="form-label">New Section</label>
+                                    <input type="text" class="form-control" id="requestSection" name="section" placeholder="e.g., MARX" required>
+                                </div>
+                                <div class="col-md-2 mb-3 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-paper-plane me-2"></i>Submit Request
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="requestReason" class="form-label">Reason for Update (Optional)</label>
+                                <textarea class="form-control" id="requestReason" name="reason" rows="2" placeholder="Please provide a reason for this update request..."></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Selection Controls -->
         <div class="row mb-4 d-block">
             <div class="col-12">
@@ -355,6 +411,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize search functionality
     initializeMyStudentSearch();
+
+    // Handle update request form submission
+    document.getElementById('updateRequestForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        formData.append('csrf_token', '{{ csrf_token() }}');
+
+        fetch('{{ url_for("admin.submit_update_request") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Update request submitted successfully! The guidance admin will review your request.');
+                // Reset form
+                this.reset();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while submitting the request.');
+        });
+    });
 
     const selectAllCheckbox = document.getElementById('selectAll');
     const headerSelectAllCheckbox = document.getElementById('headerSelectAll');
