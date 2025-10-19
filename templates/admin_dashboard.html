@@ -91,7 +91,7 @@
     </div>
 
     <!-- Pending Requests Card - Only for Main Admin -->
-    {% if current_user.username == 'admin@emotiontrack.app' %}
+    {% if current_user.username == 'admin@emotiontrack.app' and pending_requests_count > 0 %}
     <div class="row g-4 mb-4">
         <div class="col-12">
             <div class="stat-card card border-0 shadow-sm clickable-stat" onclick="goToPendingRequests()">
@@ -99,7 +99,7 @@
                     <div class="stat-icon mb-3">
                         <i class="fas fa-clock fa-3x text-warning"></i>
                     </div>
-                    <h3 class="fw-bold">{{ all_pending_requests | length }}</h3>
+                    <h3 class="fw-bold">{{ pending_requests_count }}</h3>
                     <p class="text-muted mb-0">Pending Update Requests</p>
                     <small class="text-warning">
                         <i class="fas fa-arrow-right me-1"></i>Review Requests

@@ -1017,24 +1017,24 @@ def dashboard():
     if not current_user.is_admin:
         flash('Access denied. Admin privileges required.', 'error')
         return redirect(url_for('main.home'))
-    
+
     # Get pagination parameters
     risk_page = request.args.get('risk_page', 1, type=int)
     activity_page = request.args.get('activity_page', 1, type=int)
     risk_per_page = 10  # 10 high risk students per page
     activity_per_page = 10  # 10 activity items per page
-    
+
     # Get statistics for admin dashboard (filtered by faculty section if applicable)
     accessible_students_query = get_students_for_faculty(current_user)
     total_users = accessible_students_query.count()
-    
+
     # Get accessible student IDs for filtering other queries
     accessible_student_ids = [user.id for user in accessible_students_query.all()]
-    
+
     # Determine conversation type based on admin role
     is_main_admin = current_user.username == 'admin@emotiontrack.app'
     conversation_type = 'guidance_office' if is_main_admin else 'faculty_adviser'
-    
+
     # Filter mood logs and messages based on accessible students
     if accessible_student_ids:
         total_logs = MoodLog.query.filter(MoodLog.user_id.in_(accessible_student_ids)).count()
@@ -1048,40 +1048,45 @@ def dashboard():
     else:
         total_logs = 0
         unread_messages = 0
-    
+
+    # Get pending update requests count for main admin
+    pending_requests_count = 0
+    if is_main_admin:
+        pending_requests_count = FacultyUpdateRequest.query.filter_by(status='pending').count()
+
     # Recent activity with pagination (filtered by faculty section)
     if accessible_student_ids:
         recent_logs_pagination = MoodLog.query.join(User, MoodLog.user_id == User.id).filter(
             MoodLog.user_id.in_(accessible_student_ids)
         ).order_by(desc(MoodLog.log_date)).paginate(
-            page=activity_page, 
-            per_page=activity_per_page, 
+            page=activity_page,
+            per_page=activity_per_page,
             error_out=False
         )
     else:
         # Create empty pagination if no accessible students
         recent_logs_pagination = MoodLog.query.filter(MoodLog.user_id == -1).paginate(
-            page=activity_page, 
-            per_page=activity_per_page, 
+            page=activity_page,
+            per_page=activity_per_page,
             error_out=False
         )
     # Get the associated users for each mood log
     recent_logs = [(log, User.query.get(log.user_id)) for log in recent_logs_pagination.items]
-    
+
     # Get students with concerning DASS-21 scores (based on most recent assessment only)
     # First, get the most recent DASS21Result ID for each user
     latest_dass_subquery = db.session.query(
         DASS21Result.user_id,
         func.max(DASS21Result.created_at).label('max_created_at')
     ).group_by(DASS21Result.user_id).subquery()
-    
+
     # Then get the actual DASS21Result records that match the latest assessment for each user
     latest_dass_results = db.session.query(DASS21Result).join(
         latest_dass_subquery,
         (DASS21Result.user_id == latest_dass_subquery.c.user_id) &
         (DASS21Result.created_at == latest_dass_subquery.c.max_created_at)
     ).subquery()
-    
+
     # Finally, get users whose LATEST assessment shows concerning scores with pagination (filtered by faculty section)
     # First get the concerning DASS21Result IDs from the subquery, filtered by accessible students
     if accessible_student_ids:
@@ -1091,33 +1096,34 @@ def dashboard():
             (latest_dass_results.c.stress_severity.in_(['Severe', 'Extremely Severe'])),
             latest_dass_results.c.user_id.in_(accessible_student_ids)
         ).subquery()
-        
+
         # Now paginate the DASS21Result objects
         concerning_students_pagination = DASS21Result.query.filter(
             DASS21Result.id.in_(db.session.query(concerning_dass_ids.c.id))
         ).order_by(desc(DASS21Result.created_at)).paginate(
-            page=risk_page, 
-            per_page=risk_per_page, 
+            page=risk_page,
+            per_page=risk_per_page,
             error_out=False
         )
     else:
         # Create empty pagination if no accessible students
         concerning_students_pagination = DASS21Result.query.filter(DASS21Result.user_id == -1).paginate(
-            page=risk_page, 
-            per_page=risk_per_page, 
+            page=risk_page,
+            per_page=risk_per_page,
             error_out=False
         )
     # Get the associated users for each DASS21Result
     concerning_students = [(result, User.query.get(result.user_id)) for result in concerning_students_pagination.items]
-    
+
     return render_template('admin_dashboard.html',
-                         total_users=total_users,
-                         total_logs=total_logs,
-                         unread_messages=unread_messages,
-                         recent_logs=recent_logs,
-                         recent_logs_pagination=recent_logs_pagination,
-                         concerning_students=concerning_students,
-                         concerning_students_pagination=concerning_students_pagination)
+                          total_users=total_users,
+                          total_logs=total_logs,
+                          unread_messages=unread_messages,
+                          pending_requests_count=pending_requests_count,
+                          recent_logs=recent_logs,
+                          recent_logs_pagination=recent_logs_pagination,
+                          concerning_students=concerning_students,
+                          concerning_students_pagination=concerning_students_pagination)
 
 @admin_bp.route('/messages')
 @login_required
