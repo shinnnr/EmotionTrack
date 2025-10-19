@@ -49,6 +49,7 @@
                                     <label for="requestStudentId" class="form-label">Select Student</label>
                                     <select class="form-select" id="requestStudentId" name="student_id" required>
                                         <option value="">Choose a student...</option>
+                                        <option value="all">All Students</option>
                                         {% if students_pagination and students_pagination.items %}
                                             {% for student in students_pagination.items %}
                                                 <option value="{{ student.id }}">{{ student.firstname }} {{ student.lastname }} ({{ student.username }})</option>
@@ -60,10 +61,6 @@
                                     <label for="requestGradeLevel" class="form-label">New Grade Level</label>
                                     <select class="form-select" id="requestGradeLevel" name="grade_level" required>
                                         <option value="">Select grade...</option>
-                                        <option value="7">Grade 7</option>
-                                        <option value="8">Grade 8</option>
-                                        <option value="9">Grade 9</option>
-                                        <option value="10">Grade 10</option>
                                         <option value="11">Grade 11</option>
                                         <option value="12">Grade 12</option>
                                     </select>

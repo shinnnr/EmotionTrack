@@ -2905,44 +2905,91 @@ def submit_update_request():
         if not all([student_id, grade_level, section]):
             return jsonify({'success': False, 'message': 'Student, grade level, and section are required.'})
 
-        # Verify the student belongs to this faculty's section
+        # Validate grade level (only 11 and 12 allowed)
+        if grade_level not in ['11', '12']:
+            return jsonify({'success': False, 'message': 'Grade level must be 11 or 12.'})
+
+        # Verify the faculty has an assigned class
         assignment = ClassAssignment.query.filter_by(faculty_id=current_user.id).first()
         if not assignment:
             return jsonify({'success': False, 'message': 'You do not have an assigned class.'})
 
-        student = User.query.filter_by(
-            id=student_id,
+        # Get all students in this faculty's section for validation
+        faculty_students = User.query.filter_by(
             grade_level=assignment.grade_level,
             section=assignment.section,
             is_admin=False
-        ).first()
+        ).all()
 
-        if not student:
-            return jsonify({'success': False, 'message': 'Student not found in your assigned class.'})
+        faculty_student_ids = [s.id for s in faculty_students]
 
-        # Check if there's already a pending request for this student
-        existing_request = FacultyUpdateRequest.query.filter_by(
-            faculty_id=current_user.id,
-            student_id=student_id,
-            status='pending'
-        ).first()
+        if student_id == 'all':
+            # Handle "All Students" option - create requests for all students
+            created_requests = 0
+            failed_requests = 0
 
-        if existing_request:
-            return jsonify({'success': False, 'message': 'A pending request already exists for this student.'})
+            for student in faculty_students:
+                # Check if there's already a pending request for this student
+                existing_request = FacultyUpdateRequest.query.filter_by(
+                    faculty_id=current_user.id,
+                    student_id=student.id,
+                    status='pending'
+                ).first()
 
-        # Create the update request
-        update_request = FacultyUpdateRequest(
-            faculty_id=current_user.id,
-            student_id=student_id,
-            requested_grade_level=grade_level,
-            requested_section=section.upper().strip(),
-            reason=reason
-        )
+                if not existing_request:
+                    # Create the update request
+                    update_request = FacultyUpdateRequest(
+                        faculty_id=current_user.id,
+                        student_id=student.id,
+                        requested_grade_level=grade_level,
+                        requested_section=section.upper().strip(),
+                        reason=reason
+                    )
+                    db.session.add(update_request)
+                    created_requests += 1
+                else:
+                    failed_requests += 1
 
-        db.session.add(update_request)
-        db.session.commit()
+            if created_requests > 0:
+                db.session.commit()
+                message = f'Update requests submitted for {created_requests} student(s).'
+                if failed_requests > 0:
+                    message += f' {failed_requests} request(s) were skipped due to existing pending requests.'
+                return jsonify({'success': True, 'message': message})
+            else:
+                return jsonify({'success': False, 'message': 'All students already have pending requests.'})
 
-        return jsonify({'success': True, 'message': 'Update request submitted successfully.'})
+        else:
+            # Handle individual student request
+            student_id_int = int(student_id)
+
+            # Verify the student belongs to this faculty's section
+            if student_id_int not in faculty_student_ids:
+                return jsonify({'success': False, 'message': 'Student not found in your assigned class.'})
+
+            # Check if there's already a pending request for this student
+            existing_request = FacultyUpdateRequest.query.filter_by(
+                faculty_id=current_user.id,
+                student_id=student_id_int,
+                status='pending'
+            ).first()
+
+            if existing_request:
+                return jsonify({'success': False, 'message': 'A pending request already exists for this student.'})
+
+            # Create the update request
+            update_request = FacultyUpdateRequest(
+                faculty_id=current_user.id,
+                student_id=student_id_int,
+                requested_grade_level=grade_level,
+                requested_section=section.upper().strip(),
+                reason=reason
+            )
+
+            db.session.add(update_request)
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Update request submitted successfully.'})
 
     except Exception as e:
         db.session.rollback()
