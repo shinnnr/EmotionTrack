@@ -424,8 +424,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 alert('Update request submitted successfully! The guidance admin will review your request.');
-                // Reset form
+                // Reset form and clear validation states
                 this.reset();
+                // Clear any remaining validation states
+                const form = this;
+                setTimeout(() => {
+                    form.querySelectorAll('input, select, textarea').forEach(field => {
+                        field.classList.remove('is-invalid', 'is-valid');
+                        field.setCustomValidity('');
+                    });
+                }, 100);
             } else {
                 alert('Error: ' + data.message);
             }

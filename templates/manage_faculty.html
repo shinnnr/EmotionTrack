@@ -112,6 +112,11 @@
                         <i class="fas fa-clock text-warning me-2"></i>
                         Pending Update Requests
                         <span class="badge bg-warning ms-2">{{ all_pending_requests | length }}</span>
+                        {% if all_pending_requests %}
+                            <button class="btn btn-success btn-sm ms-3" onclick="approveAllRequests()">
+                                <i class="fas fa-check-double me-1"></i>Approve All
+                            </button>
+                        {% endif %}
                     </h5>
 
                     <div class="table-responsive">
@@ -521,6 +526,35 @@ function reviewRequest(requestId, action) {
         .catch(error => {
             console.error('Error:', error);
             alert('An error occurred while processing the request.');
+        });
+    }
+}
+
+// Function to approve all pending requests
+function approveAllRequests() {
+    const confirmMessage = 'Are you sure you want to approve ALL pending update requests? This will update all student records accordingly.';
+
+    if (confirm(confirmMessage)) {
+        const formData = new FormData();
+        formData.append('action', 'approve_all');
+        formData.append('csrf_token', '{{ csrf_token() }}');
+
+        fetch('{{ url_for("admin.review_update_request") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`All requests approved successfully! ${data.approved_count} student records updated.`);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the requests.');
         });
     }
 }

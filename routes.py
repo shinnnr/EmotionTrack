@@ -3010,33 +3010,62 @@ def review_update_request():
         request_id = request.form.get('request_id')
         action = request.form.get('action')
 
-        if not request_id or action not in ['approve', 'reject']:
-            return jsonify({'success': False, 'message': 'Invalid request parameters.'})
+        if action == 'approve_all':
+            # Handle approve all requests
+            pending_requests = FacultyUpdateRequest.query.filter_by(status='pending').all()
 
-        # Get the update request
-        update_request = FacultyUpdateRequest.query.get_or_404(request_id)
+            if not pending_requests:
+                return jsonify({'success': False, 'message': 'No pending requests found.'})
 
-        if update_request.status != 'pending':
-            return jsonify({'success': False, 'message': 'This request has already been reviewed.'})
+            approved_count = 0
+            for update_request in pending_requests:
+                # Update the request status
+                update_request.status = 'approved'
+                update_request.reviewed_by = current_user.id
+                update_request.reviewed_at = get_current_time()
 
-        # Update the request status
-        update_request.status = 'approved' if action == 'approve' else 'rejected'
-        update_request.reviewed_by = current_user.id
-        update_request.reviewed_at = get_current_time()
+                # Update the student's grade and section
+                student = update_request.student
+                student.grade_level = update_request.requested_grade_level
+                student.section = update_request.requested_section
 
-        # If approved, update the student's grade and section
-        if action == 'approve':
-            student = update_request.student
-            student.grade_level = update_request.requested_grade_level
-            student.section = update_request.requested_section
+                approved_count += 1
 
-            # Check if there's a class assignment for the new grade/section
-            # If not, we might need to create one or handle this case
-            # For now, we'll just update the student record
+            db.session.commit()
+            return jsonify({
+                'success': True,
+                'message': f'All {approved_count} requests approved successfully.',
+                'approved_count': approved_count
+            })
 
-        db.session.commit()
+        elif action in ['approve', 'reject']:
+            # Handle individual request
+            if not request_id:
+                return jsonify({'success': False, 'message': 'Request ID is required.'})
 
-        return jsonify({'success': True, 'message': f'Request {action}d successfully.'})
+            # Get the update request
+            update_request = FacultyUpdateRequest.query.get_or_404(request_id)
+
+            if update_request.status != 'pending':
+                return jsonify({'success': False, 'message': 'This request has already been reviewed.'})
+
+            # Update the request status
+            update_request.status = 'approved' if action == 'approve' else 'rejected'
+            update_request.reviewed_by = current_user.id
+            update_request.reviewed_at = get_current_time()
+
+            # If approved, update the student's grade and section
+            if action == 'approve':
+                student = update_request.student
+                student.grade_level = update_request.requested_grade_level
+                student.section = update_request.requested_section
+
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': f'Request {action}d successfully.'})
+
+        else:
+            return jsonify({'success': False, 'message': 'Invalid action.'})
 
     except Exception as e:
         db.session.rollback()
