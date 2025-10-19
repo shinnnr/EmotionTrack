@@ -71,15 +71,7 @@
 
 
     <!-- Pending Update Requests -->
-    {% set all_pending_requests = [] %}
-    {% for data in faculty_data %}
-        {% set pending_requests = data.faculty.faculty_update_requests | selectattr('status', 'equalto', 'pending') | list %}
-        {% for request in pending_requests %}
-            {% set _ = all_pending_requests.append(request) %}
-        {% endfor %}
-    {% endfor %}
-
-    {% if all_pending_requests %}
+    {% if pending_requests %}
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
@@ -87,12 +79,10 @@
                     <h5 class="card-title fw-bold mb-4">
                         <i class="fas fa-clock text-warning me-2"></i>
                         Pending Update Requests
-                        <span class="badge bg-warning ms-2">{{ all_pending_requests | length }}</span>
-                        {% if all_pending_requests %}
-                            <button class="btn btn-success btn-sm ms-3" onclick="approveAllRequests()">
-                                <i class="fas fa-check-double me-1"></i>Approve All
-                            </button>
-                        {% endif %}
+                        <span class="badge bg-warning ms-2">{{ pending_requests | length }}</span>
+                        <button class="btn btn-success btn-sm ms-3" onclick="approveAllRequests()">
+                            <i class="fas fa-check-double me-1"></i>Approve All
+                        </button>
                     </h5>
 
                     <div class="table-responsive">
@@ -108,7 +98,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for request in all_pending_requests %}
+                                {% for request in pending_requests %}
                                 <tr>
                                     <td class="fw-bold">{{ request.faculty.firstname }} {{ request.faculty.lastname }}</td>
                                     <td>{{ request.student.firstname }} {{ request.student.lastname }}</td>

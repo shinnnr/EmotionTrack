@@ -1256,13 +1256,13 @@ def manage_faculty():
     if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
         flash('Access denied. Only the main admin can manage faculty.', 'error')
         return redirect(url_for('main.home'))
-    
+
     # Get all faculty members (users with role 'faculty_admin' or 'guidance_admin' but not main admin)
     faculties = User.query.filter(
         User.role.in_(['faculty_admin', 'guidance_admin']),
         User.username != 'admin@emotiontrack.app'
     ).all()
-    
+
     # Get class assignments for each faculty
     faculty_data = []
     for faculty in faculties:
@@ -1274,14 +1274,20 @@ def manage_faculty():
                 User.section == assignment.section,
                 User.is_admin == False
             ).count()
-        
+
         faculty_data.append({
             'faculty': faculty,
             'assignment': assignment,
             'student_count': student_count
         })
-    
-    return render_template('manage_faculty.html', faculty_data=faculty_data)
+
+    # Get all pending update requests with faculty and student info
+    pending_requests = FacultyUpdateRequest.query.filter_by(status='pending').options(
+        db.joinedload(FacultyUpdateRequest.faculty),
+        db.joinedload(FacultyUpdateRequest.student)
+    ).all()
+
+    return render_template('manage_faculty.html', faculty_data=faculty_data, pending_requests=pending_requests)
 
 @admin_bp.route('/create-faculty', methods=['POST'])
 @login_required
