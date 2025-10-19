@@ -184,24 +184,18 @@ class GuidanceAlert(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    alert_type = db.Column(db.String(50), nullable=False)  # 'dass21_severe', 'emotional_pattern', 'crisis_indicator', 'faculty_escalation'
+    alert_type = db.Column(db.String(50), nullable=False)  # 'dass21_severe', 'emotional_pattern', 'crisis_indicator'
     severity = db.Column(db.String(20), nullable=False)  # 'low', 'medium', 'high', 'critical'
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=False)
     is_resolved = db.Column(db.Boolean, default=False)
     resolved_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     resolved_at = db.Column(db.DateTime, nullable=True)
-    resolution_notes = db.Column(db.Text, nullable=True)  # Documentation of how the alert was resolved
-    resolution_method = db.Column(db.String(100), nullable=True)  # e.g., 'counseling', 'referral', 'monitoring', 'escalated'
-    escalated_from = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Faculty who escalated the alert
-    escalated_at = db.Column(db.DateTime, nullable=True)
-    escalation_reason = db.Column(db.Text, nullable=True)  # Reason for escalation
     created_at = db.Column(db.DateTime, default=get_current_time)
 
     # Relationships
     user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('alerts', cascade='all, delete-orphan'))
     resolver = db.relationship('User', foreign_keys=[resolved_by])
-    escalator = db.relationship('User', foreign_keys=[escalated_from])
 
     def __repr__(self):
         return f'<GuidanceAlert {self.alert_type} for User {self.user_id} - {self.severity}>'
