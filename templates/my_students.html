@@ -426,12 +426,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Update request submitted successfully! The guidance admin will review your request.');
                 // Reset form and clear validation states
                 this.reset();
-                // Clear any remaining validation states
+                // Clear any remaining validation states and reset form appearance
                 const form = this;
                 setTimeout(() => {
                     form.querySelectorAll('input, select, textarea').forEach(field => {
                         field.classList.remove('is-invalid', 'is-valid');
                         field.setCustomValidity('');
+                        field.style.borderColor = ''; // Reset border color
+                    });
+                    // Also clear any Bootstrap validation feedback
+                    form.querySelectorAll('.invalid-feedback, .valid-feedback').forEach(el => {
+                        el.style.display = 'none';
                     });
                 }, 100);
             } else {
