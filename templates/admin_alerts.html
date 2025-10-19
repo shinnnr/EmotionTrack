@@ -521,7 +521,6 @@ async function viewAlert(alertId) {
 
             <div class="d-flex justify-content-end gap-3 mt-4">
                 <button type="button" class="btn btn-secondary" onclick="closeAlertModal()">Close</button>
-                ${!alert.is_resolved ? `<button type="button" class="btn btn-success" onclick="resolveAlert(${alert.id})">Resolve Alert</button>` : ''}
             </div>
         `;
     } catch (error) {
