@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Alerts Management - {% if current_user.is_faculty_admin %}Faculty Dashboard{% else %}Admin Dashboard{% endif %}{% endblock %}
+{% block title %}Faculty Alerts - Admin Dashboard{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -12,9 +12,9 @@
                     <div>
                         <h1 class="display-6 fw-bold mb-2">
                             <i class="fas fa-exclamation-triangle me-3"></i>
-                            Student Alerts
+                            Faculty Alerts
                         </h1>
-                        <p class="lead mb-0">Monitor and manage student alerts and concerns</p>
+                        <p class="lead mb-0">Monitor and manage faculty alerts and student concerns</p>
                     </div>
                 </div>
             </div>
@@ -31,7 +31,8 @@
                             <label for="status_filter" class="form-label fw-bold">Filter by Status</label>
                             <select name="status_filter" id="status_filter" class="form-select">
                                 <option value="all" {{ 'selected' if status_filter == 'all' else '' }}>All Status</option>
-                                <option value="active" {{ 'selected' if status_filter == 'active' else '' }}>Active</option>
+                                <option value="unread" {{ 'selected' if status_filter == 'unread' else '' }}>Unread</option>
+                                <option value="ongoing" {{ 'selected' if status_filter == 'ongoing' else '' }}>Ongoing</option>
                                 <option value="resolved" {{ 'selected' if status_filter == 'resolved' else '' }}>Resolved</option>
                             </select>
                         </div>
@@ -117,7 +118,7 @@
                             </thead>
                             <tbody>
                                 {% for alert in alerts %}
-                                <tr class="{{ 'table-warning' if not alert.is_resolved else '' }}" onclick="viewAlert({{ alert.id }})">
+                                <tr class="{{ 'table-warning' if alert.status == 'unread' else '' }}" onclick="viewAlert({{ alert.id }})">
                                     <td><input type="checkbox" class="alert-checkbox" value="{{ alert.id }}" id="alert_checkbox_{{ alert.id }}" onchange="updateDeletePanel()" onclick="event.stopPropagation()"></td>
                                     <td class="student-cell">
                                         <div class="d-flex align-items-center">
@@ -159,31 +160,21 @@
                                         </small>
                                     </td>
                                     <td>
-                                        {% if alert.is_resolved %}
-                                            <span class="badge bg-success">Resolved</span>
-                                            {% if alert.resolved_at %}
-                                            <br><small class="text-muted">
-                                                {{ alert.resolved_at | manila_time | strftime('%b %d, %Y') }}
-                                            </small>
-                                            {% endif %}
+                                        {% if alert.status == 'unread' %}
+                                            <span class="badge bg-danger">Unread</span>
+                                        {% elif alert.status == 'ongoing' %}
+                                            <span class="badge bg-warning">Ongoing</span>
                                         {% else %}
-                                            <span class="badge bg-warning">Active</span>
+                                            <span class="badge bg-success">Resolved</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if not alert.is_resolved %}
-                                        {% set faculty_alert_exists = faculty_alerts and faculty_alerts|selectattr('user_id', 'equalto', alert.user_id)|selectattr('alert_type', 'equalto', alert.alert_type)|selectattr('severity', 'equalto', alert.severity)|selectattr('title', 'equalto', alert.title)|selectattr('message', 'equalto', alert.message)|selectattr('status', 'equalto', 'unread')|list|length > 0 %}
-                                        {% if faculty_alert_exists %}
-                                        <button class="btn btn-sm btn-secondary" disabled title="This alert has already been sent to guidance admin">
-                                            <i class="fas fa-check me-1"></i>Already Alerted
+                                        {% if alert.status == 'resolved' %}
+                                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); downloadHistory({{ alert.id }})">
+                                            <i class="fas fa-download me-1"></i>History
                                         </button>
                                         {% else %}
-                                        <button class="btn btn-sm btn-warning alert-guidance-btn" data-alert-id="{{ alert.id }}" onclick="event.stopPropagation(); alertGuidanceAdmin({{ alert.id }})" style="pointer-events: auto;">
-                                            <i class="fas fa-exclamation-triangle me-1"></i>Alert Guidance Admin
-                                        </button>
-                                        {% endif %}
-                                        {% else %}
-                                        <span class="text-muted">Resolved</span>
+                                        <span class="text-muted">No actions</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -198,7 +189,7 @@
                         <ul class="pagination justify-content-center">
                             {% if pagination.has_prev %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('admin.view_alerts', page=pagination.prev_num, status_filter=status_filter) }}" aria-label="Previous">
+                                <a class="page-link" href="{{ url_for('admin.faculty_alerts', page=pagination.prev_num, status_filter=status_filter) }}" aria-label="Previous">
                                     <span aria-hidden="true">&laquo; Previous</span>
                                 </a>
                             </li>
@@ -218,7 +209,7 @@
                                     </li>
                                     {% else %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('admin.view_alerts', page=page_num, status_filter=status_filter) }}">{{ page_num }}</a>
+                                        <a class="page-link" href="{{ url_for('admin.faculty_alerts', page=page_num, status_filter=status_filter) }}">{{ page_num }}</a>
                                     </li>
                                     {% endif %}
                                 {% else %}
@@ -230,7 +221,7 @@
 
                             {% if pagination.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('admin.view_alerts', page=pagination.next_num, status_filter=status_filter) }}" aria-label="Next">
+                                <a class="page-link" href="{{ url_for('admin.faculty_alerts', page=pagination.next_num, status_filter=status_filter) }}" aria-label="Next">
                                     <span aria-hidden="true">Next &raquo;</span>
                                 </a>
                             </li>
@@ -249,7 +240,7 @@
                     <div class="text-center py-5">
                         <i class="fas fa-exclamation-triangle fa-4x text-muted mb-3"></i>
                         <h4 class="text-muted">No Alerts</h4>
-                        <p class="text-muted">No student alerts have been generated yet.</p>
+                        <p class="text-muted">No faculty alerts have been generated yet.</p>
                     </div>
                     {% endif %}
                 </div>
@@ -263,7 +254,7 @@
     <div class="custom-modal" onclick="event.stopPropagation()">
         <div class="custom-modal-header">
             <h5 class="custom-modal-title">
-                <i class="fas fa-exclamation-triangle me-2"></i>Alert Details
+                <i class="fas fa-exclamation-triangle me-2"></i>Faculty Alert Details
             </h5>
             <button type="button" class="custom-modal-close" onclick="closeAlertModal()">
                 <i class="fas fa-times"></i>
@@ -427,11 +418,6 @@ body.modal-open {
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
     }
-
-    /* Mobile layout for search bar */
-    .input-group {
-        margin-bottom: 1rem !important;
-    }
 }
 
 /* Desktop row clickability */
@@ -470,7 +456,7 @@ async function viewAlert(alertId) {
     document.body.classList.add('modal-open');
 
     try {
-        const response = await fetch(`/admin/api/alert/${alertId}`);
+        const response = await fetch(`/admin/api/faculty-alert/${alertId}`);
         const data = await response.json();
 
         if (!response.ok || !data.success) {
@@ -478,6 +464,16 @@ async function viewAlert(alertId) {
         }
 
         const alert = data;
+
+        // Mark as read if unread
+        if (alert.status === 'unread') {
+            await fetch(`/admin/api/faculty-alert/${alertId}/mark-read`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
+                }
+            });
+        }
 
         // Populate content
         content.innerHTML = `
@@ -514,14 +510,17 @@ async function viewAlert(alertId) {
             <div class="mb-3">
                 <label class="form-label fw-bold">Status:</label>
                 <div class="p-2 bg-light rounded">
-                    ${alert.is_resolved ? '<span class="badge bg-success">Resolved</span>' : '<span class="badge bg-warning">Active</span>'}
+                    ${alert.status === 'unread' ? '<span class="badge bg-danger">Unread</span>' :
+                      alert.status === 'ongoing' ? '<span class="badge bg-warning">Ongoing</span>' :
+                      '<span class="badge bg-success">Resolved</span>'}
                     ${alert.resolved_at ? '<br><small class="text-muted">Resolved on ' + new Date(alert.resolved_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</small>' : ''}
                 </div>
             </div>
 
             <div class="d-flex justify-content-end gap-3 mt-4">
                 <button type="button" class="btn btn-secondary" onclick="closeAlertModal()">Close</button>
-                ${!alert.is_resolved ? `<button type="button" class="btn btn-success" onclick="resolveAlert(${alert.id})">Resolve Alert</button>` : ''}
+                ${alert.status !== 'resolved' ? `<button type="button" class="btn btn-primary me-2" onclick="sendMessage(${alert.user.id})">Send Message</button>` : ''}
+                ${alert.status !== 'resolved' ? `<button type="button" class="btn btn-success" onclick="resolveAlert(${alert.id})">Resolve Alert</button>` : ''}
             </div>
         `;
     } catch (error) {
@@ -543,18 +542,16 @@ function closeAlertModal() {
     document.body.classList.remove('modal-open');
 }
 
-async function alertGuidanceAdmin(alertId) {
-    if (!confirm('Are you sure you want to alert the guidance admin about this student?')) return;
+function sendMessage(userId) {
+    // Redirect to student chat
+    window.location.href = `/admin/student-chat/${userId}`;
+}
 
-    // Disable the button to prevent multiple clicks
-    const button = document.querySelector(`.alert-guidance-btn[data-alert-id="${alertId}"]`);
-    if (button) {
-        button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Alerting...';
-    }
+async function resolveAlert(alertId) {
+    if (!confirm('Are you sure you want to resolve this alert?')) return;
 
     try {
-        const response = await fetch(`/admin/alert-guidance-admin/${alertId}`, {
+        const response = await fetch(`/admin/api/faculty-alert/${alertId}/resolve`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -565,27 +562,29 @@ async function alertGuidanceAdmin(alertId) {
         const result = await response.json();
 
         if (result.success) {
-            alert('Alert sent to guidance admin successfully!');
-            // Replace the button with "Already Alerted" instead of reloading
-            if (button) {
-                button.outerHTML = '<button class="btn btn-sm btn-secondary" disabled title="This alert has already been sent to guidance admin"><i class="fas fa-check me-1"></i>Already Alerted</button>';
-            }
+            alert('Alert resolved successfully!');
+            location.reload();
         } else {
             alert('Error: ' + result.message);
-            // Re-enable button on error
-            if (button) {
-                button.disabled = false;
-                button.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Alert Guidance Admin';
-            }
         }
     } catch (error) {
-        console.error('Error alerting guidance admin:', error);
-        alert('Failed to alert guidance admin. Please try again.');
-        // Re-enable button on error
-        if (button) {
-            button.disabled = false;
-            button.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Alert Guidance Admin';
-        }
+        console.error('Error resolving alert:', error);
+        alert('Failed to resolve alert. Please try again.');
+    }
+}
+
+async function downloadHistory(alertId) {
+    try {
+        // Create a temporary link to download the history
+        const link = document.createElement('a');
+        link.href = `/admin/api/download-alert-history/${alertId}`;
+        link.download = `alert_history_${alertId}.docx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Error downloading history:', error);
+        alert('Failed to download history. Please try again.');
     }
 }
 
@@ -680,7 +679,7 @@ function initializeAlertManagement() {
         formData.append('alert_ids', alertIds.join(','));
         formData.append('csrf_token', '{{ csrf_token() }}');
 
-        fetch('/admin/delete-alerts', {
+        fetch('/admin/api/delete-faculty-alerts', {
             method: 'POST',
             body: formData
         })

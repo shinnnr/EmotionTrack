@@ -254,3 +254,25 @@ class FacultyUpdateRequest(db.Model):
 
     def __repr__(self):
         return f'<FacultyUpdateRequest Faculty {self.faculty_id} for Student {self.student_id} - {self.status}>'
+
+class FacultyAlert(db.Model):
+    __tablename__ = 'faculty_alerts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    alert_type = db.Column(db.String(50), nullable=False)  # 'dass21_severe', 'emotional_pattern', 'crisis_indicator'
+    severity = db.Column(db.String(20), nullable=False)  # 'low', 'medium', 'high', 'critical'
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(Enum('unread', 'ongoing', 'resolved', name='alert_status'), default='unread')
+    is_read = db.Column(db.Boolean, default=False)  # Track if alert details have been viewed
+    resolved_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    resolved_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=get_current_time)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('faculty_alerts', cascade='all, delete-orphan'))
+    resolver = db.relationship('User', foreign_keys=[resolved_by])
+
+    def __repr__(self):
+        return f'<FacultyAlert {self.alert_type} for User {self.user_id} - {self.status}>'

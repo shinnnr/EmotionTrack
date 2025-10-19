@@ -10,7 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from db import db
 
-from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, DailyTips, FacultyUpdateRequest, get_current_time, convert_to_manila_time
+from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, DailyTips, FacultyUpdateRequest, FacultyAlert, get_current_time, convert_to_manila_time
 import pytz
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm, StudentProfileInfoUpdateForm, FeedbackForm
 from coping_recommendations import get_user_coping_recommendations, get_user_motivational_quote
@@ -507,6 +507,8 @@ def emotion_log():
             # Generate alerts based on emotional patterns
             try:
                 generate_guidance_alerts(current_user.id)
+                # Also generate faculty alerts for guidance admin
+                generate_faculty_alerts(current_user.id)
             except Exception as e:
                 print(f"Error generating alerts for mood log: {e}")
                 # Don't fail the mood log submission if alert generation fails
@@ -667,6 +669,8 @@ def process_dass21():
         # Generate alerts based on DASS-21 results
         try:
             generate_guidance_alerts(current_user.id)
+            # Also generate faculty alerts for guidance admin
+            generate_faculty_alerts(current_user.id)
         except Exception as e:
             print(f"Error generating alerts for DASS-21: {e}")
             # Don't fail the DASS-21 submission if alert generation fails
@@ -1514,8 +1518,8 @@ def my_students():
 @csrf.exempt
 def delete_alerts():
     """Delete selected alerts"""
-    if not current_user.is_admin:
-        return jsonify({'success': False, 'message': 'Access denied.'})
+    if not current_user.is_admin or not current_user.is_faculty_admin:
+        return jsonify({'success': False, 'message': 'Access denied. Only faculty admins can delete alerts.'})
 
     try:
         # Get alert IDs from form data
@@ -1877,6 +1881,61 @@ def check_dass21_alerts(user_id):
 
     return alerts
 
+def check_dass21_faculty_alerts(user_id):
+    """Check for DASS-21 related alerts for faculty alerts table"""
+    alerts = []
+
+    # Get latest DASS-21 result
+    latest_dass = DASS21Result.query.filter_by(user_id=user_id).order_by(
+        DASS21Result.created_at.desc()
+    ).first()
+
+    if not latest_dass:
+        return alerts
+
+    user = User.query.get(user_id)
+    if not user:
+        return alerts
+
+    # Check each scale for concerning scores
+    scales = [
+        ('depression', latest_dass.depression_score, latest_dass.depression_severity),
+        ('anxiety', latest_dass.anxiety_score, latest_dass.anxiety_severity),
+        ('stress', latest_dass.stress_score, latest_dass.stress_severity)
+    ]
+
+    for scale_name, score, severity in scales:
+        if severity in ['Severe', 'Extremely Severe']:
+            severity_level = 'high' if severity == 'Severe' else 'critical'
+
+            # Check if alert already exists
+            existing_alert = FacultyAlert.query.filter_by(
+                user_id=user_id,
+                alert_type='dass21_severe',
+                status='unread'
+            ).filter(
+                FacultyAlert.message.contains(scale_name)
+            ).first()
+
+            if not existing_alert:
+                template = get_alert_template('dass21_severe', severity_level, {
+                    'name': user.full_name
+                }, {
+                    'scale': scale_name,
+                    'score': score
+                })
+
+                alert = FacultyAlert(
+                    user_id=user_id,
+                    alert_type='dass21_severe',
+                    severity=severity_level,
+                    title=template['title'],
+                    message=template['message']
+                )
+                alerts.append(alert)
+
+    return alerts
+
 def check_emotional_pattern_alerts(user_id):
     """Check for concerning emotional patterns"""
     alerts = []
@@ -1926,6 +1985,65 @@ def check_emotional_pattern_alerts(user_id):
         })
 
         alert = GuidanceAlert(
+            user_id=user_id,
+            alert_type='emotional_pattern',
+            severity=severity_level,
+            title=template['title'],
+            message=template['message']
+        )
+        alerts.append(alert)
+
+    return alerts
+
+def check_emotional_pattern_faculty_alerts(user_id):
+    """Check for concerning emotional patterns for faculty alerts table"""
+    alerts = []
+
+    # Get last 7 days of mood logs
+    week_ago = get_current_time() - timedelta(days=7)
+    recent_logs = MoodLog.query.filter(
+        MoodLog.user_id == user_id,
+        MoodLog.log_date >= week_ago
+    ).all()
+
+    if len(recent_logs) < 3:
+        return alerts
+
+    user = User.query.get(user_id)
+    if not user:
+        return alerts
+
+    # Count negative emotions
+    negative_emotions = ['sad', 'angry', 'frustrated', 'anxious', 'lonely', 'depressed', 'overwhelmed']
+    negative_count = sum(1 for log in recent_logs if log.emotion.lower() in negative_emotions)
+
+    # Calculate severity based on negative emotion ratio
+    negative_ratio = negative_count / len(recent_logs)
+
+    if negative_ratio >= 0.8:  # 80% or more negative emotions
+        severity_level = 'high'
+    elif negative_ratio >= 0.6:  # 60% or more
+        severity_level = 'medium'
+    elif negative_ratio >= 0.4:  # 40% or more
+        severity_level = 'low'
+    else:
+        return alerts
+
+    # Check if alert already exists
+    existing_alert = FacultyAlert.query.filter_by(
+        user_id=user_id,
+        alert_type='emotional_pattern',
+        status='unread'
+    ).first()
+
+    if not existing_alert:
+        template = get_alert_template('emotional_pattern', severity_level, {
+            'name': user.full_name
+        }, {
+            'days': len(recent_logs)
+        })
+
+        alert = FacultyAlert(
             user_id=user_id,
             alert_type='emotional_pattern',
             severity=severity_level,
@@ -2007,6 +2125,77 @@ def check_crisis_indicators(user_id):
 
     return alerts
 
+def check_crisis_indicators_faculty_alerts(user_id):
+    """Check for crisis indicators in user input for faculty alerts table"""
+    alerts = []
+
+    # Crisis keywords to monitor
+    crisis_keywords = [
+        'suicide', 'kill myself', 'end it all', 'not worth living',
+        'harm myself', 'self-harm', 'cutting', 'overdose',
+        'give up', 'no hope', 'can\'t go on'
+    ]
+
+    user = User.query.get(user_id)
+    if not user:
+        return alerts
+
+    # Check recent mood logs for crisis keywords
+    week_ago = get_current_time() - timedelta(days=7)
+    recent_logs = MoodLog.query.filter(
+        MoodLog.user_id == user_id,
+        MoodLog.log_date >= week_ago
+    ).all()
+
+    crisis_count = 0
+    for log in recent_logs:
+        text_to_check = f"{log.triggers or ''} {log.coping or ''} {log.gratitude or ''}".lower()
+        for keyword in crisis_keywords:
+            if keyword in text_to_check:
+                crisis_count += 1
+                break
+
+    # Check recent messages
+    recent_messages = StudentMessage.query.filter_by(
+        sender_user_id=user_id
+    ).filter(
+        StudentMessage.created_at >= week_ago
+    ).all()
+
+    for message in recent_messages:
+        if message.message_text:
+            text_to_check = message.message_text.lower()
+            for keyword in crisis_keywords:
+                if keyword in text_to_check:
+                    crisis_count += 1
+                    break
+
+    if crisis_count > 0:
+        severity_level = get_severity_level(crisis_count, 'crisis_words')
+
+        # Check if alert already exists
+        existing_alert = FacultyAlert.query.filter_by(
+            user_id=user_id,
+            alert_type='crisis_indicator',
+            status='unread'
+        ).first()
+
+        if not existing_alert:
+            template = get_alert_template('crisis_indicator', severity_level, {
+                'name': user.full_name
+            })
+
+            alert = FacultyAlert(
+                user_id=user_id,
+                alert_type='crisis_indicator',
+                severity=severity_level,
+                title=template['title'],
+                message=template['message']
+            )
+            alerts.append(alert)
+
+    return alerts
+
 def generate_guidance_alerts(user_id=None):
     """Generate alerts for all users or specific user"""
     alerts_created = []
@@ -2037,13 +2226,43 @@ def generate_guidance_alerts(user_id=None):
 
     return alerts_created
 
+def generate_faculty_alerts(user_id=None):
+    """Generate faculty alerts for all users or specific user"""
+    alerts_created = []
+
+    if user_id:
+        users_to_check = [User.query.get(user_id)]
+    else:
+        users_to_check = User.query.filter_by(is_admin=False).all()
+
+    for user in users_to_check:
+        if not user:
+            continue
+
+        # Check all alert types for faculty alerts
+        dass_alerts = check_dass21_faculty_alerts(user.id)
+        pattern_alerts = check_emotional_pattern_faculty_alerts(user.id)
+        crisis_alerts = check_crisis_indicators_faculty_alerts(user.id)
+
+        all_alerts = dass_alerts + pattern_alerts + crisis_alerts
+
+        # Save alerts to database
+        for alert in all_alerts:
+            db.session.add(alert)
+            alerts_created.append(alert)
+
+    if alerts_created:
+        db.session.commit()
+
+    return alerts_created
+
 # Alert Management Routes
 @admin_bp.route('/alerts')
 @login_required
 def view_alerts():
-    if not current_user.is_admin:
-        flash('Access denied. Admin privileges required.', 'error')
-        return redirect(url_for('main.home'))
+    if not current_user.is_admin or not current_user.is_faculty_admin:
+        flash('Access denied. Only faculty admins can access the Alerts page.', 'error')
+        return redirect(url_for('admin.dashboard'))
 
     # Get pagination parameters
     page = request.args.get('page', 1, type=int)
@@ -2074,8 +2293,8 @@ def view_alerts():
 @admin_bp.route('/alert/<int:alert_id>/resolve', methods=['POST'])
 @login_required
 def resolve_alert(alert_id):
-    if not current_user.is_admin:
-        return jsonify({'success': False, 'message': 'Access denied'})
+    if not current_user.is_admin or not current_user.is_faculty_admin:
+        return jsonify({'success': False, 'message': 'Access denied. Only faculty admins can resolve alerts.'})
 
     alert = GuidanceAlert.query.get_or_404(alert_id)
 
@@ -2091,23 +2310,425 @@ def resolve_alert(alert_id):
 
     return jsonify({'success': True, 'message': 'Alert resolved successfully'})
 
-@admin_bp.route('/api/generate-alerts', methods=['POST'])
+@admin_bp.route('/faculty-alerts')
 @login_required
-def api_generate_alerts():
-    if not current_user.is_admin:
+def faculty_alerts():
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
+        flash('Access denied. Only the main admin can access Faculty Alerts.', 'error')
+        return redirect(url_for('admin.dashboard'))
+
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # Fixed to 10 items per page
+    status_filter = request.args.get('status_filter', 'all')  # 'all', 'unread', 'ongoing', 'resolved'
+
+    # Build query
+    query = FacultyAlert.query
+
+    if status_filter == 'unread':
+        query = query.filter_by(status='unread')
+    elif status_filter == 'ongoing':
+        query = query.filter_by(status='ongoing')
+    elif status_filter == 'resolved':
+        query = query.filter_by(status='resolved')
+
+    # Order by creation date, unresolved first
+    query = query.order_by(FacultyAlert.status.asc(), FacultyAlert.created_at.desc())
+
+    alerts_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('faculty_alerts.html',
+                          alerts=alerts_pagination.items,
+                          pagination=alerts_pagination,
+                          status_filter=status_filter)
+
+@admin_bp.route('/api/faculty-alert/<int:alert_id>')
+@login_required
+def get_faculty_alert_details(alert_id):
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Access denied. Only the main admin can view faculty alert details.'})
+
+    alert = FacultyAlert.query.get_or_404(alert_id)
+
+    user_info = {
+        'id': alert.user.id,
+        'full_name': alert.user.full_name,
+        'username': alert.user.username
+    }
+
+    return jsonify({
+        'success': True,
+        'id': alert.id,
+        'user': user_info,
+        'alert_type': alert.alert_type,
+        'severity': alert.severity,
+        'title': alert.title,
+        'message': alert.message,
+        'status': alert.status,
+        'is_read': alert.is_read,
+        'resolved_at': convert_to_manila_time(alert.resolved_at).isoformat() if alert.resolved_at else None,
+        'created_at': convert_to_manila_time(alert.created_at).isoformat() if alert.created_at else None
+    })
+
+@admin_bp.route('/api/faculty-alert/<int:alert_id>/mark-read', methods=['POST'])
+@login_required
+def mark_faculty_alert_read(alert_id):
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    alert = FacultyAlert.query.get_or_404(alert_id)
+
+    # Mark as read and change status to ongoing
+    alert.is_read = True
+    alert.status = 'ongoing'
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Alert marked as read and status changed to ongoing'})
+
+@admin_bp.route('/api/faculty-alert/<int:alert_id>/resolve', methods=['POST'])
+@login_required
+def resolve_faculty_alert(alert_id):
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    alert = FacultyAlert.query.get_or_404(alert_id)
+
+    alert.status = 'resolved'
+    alert.resolved_by = current_user.id
+    alert.resolved_at = get_current_time()
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Alert resolved successfully'})
+
+@admin_bp.route('/api/delete-faculty-alerts', methods=['POST'])
+@login_required
+@csrf.exempt
+def delete_faculty_alerts():
+    """Delete selected faculty alerts"""
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Access denied. Only the main admin can delete faculty alerts.'})
+
+    try:
+        # Get alert IDs from form data
+        alert_ids_str = request.form.get('alert_ids')
+        if not alert_ids_str:
+            return jsonify({'success': False, 'message': 'No alerts selected.'})
+
+        # Parse comma-separated IDs
+        try:
+            alert_ids = [int(id.strip()) for id in alert_ids_str.split(',') if id.strip()]
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'message': 'Invalid alert IDs provided.'})
+
+        if not alert_ids:
+            return jsonify({'success': False, 'message': 'No alerts selected.'})
+
+        # Get alerts that are accessible
+        accessible_alerts = FacultyAlert.query.filter(
+            FacultyAlert.id.in_(alert_ids)
+        ).all()
+
+        # Check if all requested alerts are accessible
+        accessible_ids = [alert.id for alert in accessible_alerts]
+        inaccessible_ids = [id for id in alert_ids if id not in accessible_ids]
+
+        if inaccessible_ids:
+            return jsonify({
+                'success': False,
+                'message': f'Access denied for some alerts.'
+            })
+
+        if not accessible_alerts:
+            return jsonify({'success': False, 'message': 'No valid alerts found to delete.'})
+
+        # Delete the alerts
+        deleted_count = 0
+        for alert in accessible_alerts:
+            db.session.delete(alert)
+            deleted_count += 1
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Successfully deleted {deleted_count} alert(s).',
+            'deleted_count': deleted_count
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred while deleting alerts: {str(e)}'
+        })
+
+@admin_bp.route('/alert-guidance-admin/<int:alert_id>', methods=['POST'])
+@login_required
+def alert_guidance_admin(alert_id):
+    if not current_user.is_admin or not current_user.is_faculty_admin:
+        return jsonify({'success': False, 'message': 'Access denied. Only faculty admins can alert guidance admin.'})
+
+    alert = GuidanceAlert.query.get_or_404(alert_id)
+
+    # Check if faculty admin can access this alert
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+    if alert.user_id not in accessible_student_ids:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    # Check if faculty alert already exists for this specific alert (any status)
+    existing_faculty_alert = FacultyAlert.query.filter_by(
+        user_id=alert.user_id,
+        alert_type=alert.alert_type,
+        severity=alert.severity,
+        title=alert.title,
+        message=alert.message
+    ).first()
+
+    if existing_faculty_alert:
+        return jsonify({'success': False, 'message': 'This alert has already been sent to guidance admin'})
+
+    # Create faculty alert
+    faculty_alert = FacultyAlert(
+        user_id=alert.user_id,
+        alert_type=alert.alert_type,
+        severity=alert.severity,
+        title=alert.title,
+        message=alert.message
+    )
+
+    db.session.add(faculty_alert)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Alert sent to guidance admin successfully'})
+
+@admin_bp.route('/api/generate-faculty-alerts', methods=['POST'])
+@login_required
+def api_generate_faculty_alerts():
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
         return jsonify({'success': False, 'message': 'Access denied'})
 
     try:
         user_id = request.json.get('user_id') if request.json else None
-        alerts_created = generate_guidance_alerts(user_id)
+        alerts_created = generate_faculty_alerts(user_id)
 
         return jsonify({
             'success': True,
             'alerts_created': len(alerts_created),
-            'message': f'Successfully generated {len(alerts_created)} alerts'
+            'message': f'Successfully generated {len(alerts_created)} faculty alerts'
         })
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+@admin_bp.route('/api/download-alert-history/<int:alert_id>')
+@login_required
+def download_alert_history(alert_id):
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    try:
+        from flask import Response
+        from docx import Document
+        from docx.shared import Inches, Pt
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from docx.enum.style import WD_STYLE_TYPE
+        import io
+
+        # Get the alert
+        alert = FacultyAlert.query.get_or_404(alert_id)
+
+        # Check if alert is resolved
+        if alert.status != 'resolved':
+            return jsonify({'success': False, 'message': 'Alert must be resolved to download history'})
+
+        # Get student info
+        student = alert.user
+
+        # Get all messages between guidance admin and this student
+        messages = StudentMessage.query.filter_by(
+            sender_user_id=student.id,
+            conversation_type='guidance_office'
+        ).order_by(StudentMessage.created_at).all()
+
+        # Get DASS-21 results for this student
+        dass_results = DASS21Result.query.filter_by(user_id=student.id).order_by(DASS21Result.created_at).all()
+
+        # Get mood logs for this student (latest 10)
+        mood_logs = MoodLog.query.filter_by(user_id=student.id).order_by(MoodLog.log_date.desc()).limit(10).all()
+
+        # Create Word document
+        doc = Document()
+
+        # Title
+        title = doc.add_heading('EmotionTrack - Alert Resolution History', 0)
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        # Student Information Section
+        doc.add_heading('Student Information', level=1)
+        student_info = doc.add_table(rows=6, cols=2)
+        student_info.style = 'Table Grid'
+
+        # Fill student information table
+        cells = student_info.rows[0].cells
+        cells[0].text = 'Full Name:'
+        cells[1].text = student.full_name
+
+        cells = student_info.rows[1].cells
+        cells[0].text = 'LRN:'
+        cells[1].text = student.username
+
+        cells = student_info.rows[2].cells
+        cells[0].text = 'Gender:'
+        cells[1].text = student.gender or 'Not specified'
+
+        cells = student_info.rows[3].cells
+        cells[0].text = 'Strand:'
+        cells[1].text = student.strand or 'Not specified'
+
+        cells = student_info.rows[4].cells
+        cells[0].text = 'Grade Level:'
+        cells[1].text = student.grade_level or 'Not specified'
+
+        cells = student_info.rows[5].cells
+        cells[0].text = 'Section:'
+        cells[1].text = student.section or 'Not specified'
+
+        doc.add_paragraph()
+
+        # Summary Report Section
+        doc.add_heading('Summary Report', level=1)
+        summary_info = doc.add_table(rows=5, cols=2)
+        summary_info.style = 'Table Grid'
+
+        cells = summary_info.rows[0].cells
+        cells[0].text = 'Alert Type:'
+        cells[1].text = alert.alert_type.replace('_', ' ').title()
+
+        cells = summary_info.rows[1].cells
+        cells[0].text = 'Alert Severity:'
+        cells[1].text = alert.severity.title()
+
+        cells = summary_info.rows[2].cells
+        cells[0].text = 'Alert Created:'
+        cells[1].text = convert_to_manila_time(alert.created_at).strftime('%B %d, %Y %I:%M %p')
+
+        cells = summary_info.rows[3].cells
+        cells[0].text = 'Alert Resolved:'
+        cells[1].text = convert_to_manila_time(alert.resolved_at).strftime('%B %d, %Y %I:%M %p') if alert.resolved_at else 'N/A'
+
+        cells = summary_info.rows[4].cells
+        cells[0].text = 'Resolution Status:'
+        cells[1].text = 'Resolved'
+
+        doc.add_paragraph()
+
+        # Alert Resolution History Section
+        doc.add_heading('Alert Resolution History', level=1)
+        doc.add_paragraph(alert.message)
+
+        doc.add_paragraph()
+
+        # Communication History Summary Section
+        doc.add_heading('Communication History Summary', level=1)
+
+        if messages:
+            comm_table = doc.add_table(rows=1, cols=4)
+            comm_table.style = 'Table Grid'
+
+            # Header row
+            hdr_cells = comm_table.rows[0].cells
+            hdr_cells[0].text = 'Date'
+            hdr_cells[1].text = 'Type'
+            hdr_cells[2].text = 'Message'
+            hdr_cells[3].text = 'Response'
+
+            for message in messages:
+                row_cells = comm_table.add_row().cells
+                row_cells[0].text = convert_to_manila_time(message.created_at).strftime('%Y-%m-%d %H:%M')
+                row_cells[1].text = 'Student Message'
+                row_cells[2].text = message.message_text or 'N/A'
+                row_cells[3].text = message.admin_response or 'Pending'
+        else:
+            doc.add_paragraph('No communication history available.')
+
+        doc.add_paragraph()
+
+        # DASS-21 Assessment History Section
+        doc.add_heading('DASS-21 Assessment History', level=1)
+
+        if dass_results:
+            dass_table = doc.add_table(rows=1, cols=7)
+            dass_table.style = 'Table Grid'
+
+            # Header row
+            hdr_cells = dass_table.rows[0].cells
+            hdr_cells[0].text = 'Date'
+            hdr_cells[1].text = 'Depression Score'
+            hdr_cells[2].text = 'Anxiety Score'
+            hdr_cells[3].text = 'Stress Score'
+            hdr_cells[4].text = 'Depression Severity'
+            hdr_cells[5].text = 'Anxiety Severity'
+            hdr_cells[6].text = 'Stress Severity'
+
+            for result in dass_results:
+                row_cells = dass_table.add_row().cells
+                row_cells[0].text = convert_to_manila_time(result.created_at).strftime('%Y-%m-%d')
+                row_cells[1].text = str(result.depression_score)
+                row_cells[2].text = str(result.anxiety_score)
+                row_cells[3].text = str(result.stress_score)
+                row_cells[4].text = result.depression_severity
+                row_cells[5].text = result.anxiety_severity
+                row_cells[6].text = result.stress_severity
+        else:
+            doc.add_paragraph('No DASS-21 assessments available.')
+
+        doc.add_paragraph()
+
+        # Latest Mood Logs History Section
+        doc.add_heading('Latest Mood Logs History', level=1)
+
+        if mood_logs:
+            mood_table = doc.add_table(rows=1, cols=8)
+            mood_table.style = 'Table Grid'
+
+            # Header row
+            hdr_cells = mood_table.rows[0].cells
+            hdr_cells[0].text = 'Date'
+            hdr_cells[1].text = 'Emotion'
+            hdr_cells[2].text = 'Intensity'
+            hdr_cells[3].text = 'Sleep Hours'
+            hdr_cells[4].text = 'Energy Level'
+            hdr_cells[5].text = 'Triggers'
+            hdr_cells[6].text = 'Coping Strategy'
+            hdr_cells[7].text = 'Gratitude'
+
+            for log in mood_logs:
+                row_cells = mood_table.add_row().cells
+                row_cells[0].text = convert_to_manila_time(log.log_date).strftime('%Y-%m-%d %H:%M') if log.log_date else 'N/A'
+                row_cells[1].text = log.emotion or 'N/A'
+                row_cells[2].text = str(log.intensity) if log.intensity else 'N/A'
+                row_cells[3].text = str(log.sleep) if log.sleep else 'N/A'
+                row_cells[4].text = str(log.energy) if log.energy else 'N/A'
+                row_cells[5].text = log.triggers or 'N/A'
+                row_cells[6].text = log.coping or 'N/A'
+                row_cells[7].text = log.gratitude or 'N/A'
+        else:
+            doc.add_paragraph('No mood logs available.')
+
+        # Save document to memory
+        doc_buffer = io.BytesIO()
+        doc.save(doc_buffer)
+        doc_buffer.seek(0)
+
+        filename = f'emotiontrack_alert_history_{student.username}_{alert.id}_{get_current_time().strftime("%Y%m%d_%H%M%S")}.docx'
+
+        return Response(
+            doc_buffer.getvalue(),
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            headers={'Content-Disposition': f'attachment; filename={filename}'}
+        )
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error generating history: {str(e)}'})
 
 # Student Feedback Routes
 @main_bp.route('/feedback', methods=['GET', 'POST'])
@@ -2207,8 +2828,8 @@ def get_feedback_details(feedback_id):
 @admin_bp.route('/api/alert/<int:alert_id>')
 @login_required
 def get_alert_details(alert_id):
-    if not current_user.is_admin:
-        return jsonify({'success': False, 'message': 'Access denied'})
+    if not current_user.is_admin or not current_user.is_faculty_admin:
+        return jsonify({'success': False, 'message': 'Access denied. Only faculty admins can view alert details.'})
 
     alert = GuidanceAlert.query.get_or_404(alert_id)
 
