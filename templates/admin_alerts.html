@@ -175,8 +175,16 @@
                                         <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); resolveAlert({{ alert.id }})">
                                             <i class="fas fa-check me-1"></i>Resolve
                                         </button>
+                                        {% if current_user.is_faculty_admin and alert.alert_type != 'faculty_escalation' %}
+                                        <button class="btn btn-sm btn-warning ms-1" onclick="event.stopPropagation(); escalateAlert({{ alert.id }})">
+                                            <i class="fas fa-arrow-up me-1"></i>Escalate
+                                        </button>
+                                        {% endif %}
                                         {% else %}
                                         <span class="text-muted">Resolved</span>
+                                        {% if alert.escalated_from %}
+                                        <br><small class="text-info"><i class="fas fa-arrow-up"></i> Escalated</small>
+                                        {% endif %}
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -509,8 +517,32 @@ async function viewAlert(alertId) {
                 <div class="p-2 bg-light rounded">
                     ${alert.is_resolved ? '<span class="badge bg-success">Resolved</span>' : '<span class="badge bg-warning">Active</span>'}
                     ${alert.resolved_at ? '<br><small class="text-muted">Resolved on ' + new Date(alert.resolved_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</small>' : ''}
+                    ${alert.escalated_from ? '<br><small class="text-info"><i class="fas fa-arrow-up"></i> Escalated from ' + alert.escalator_name + '</small>' : ''}
                 </div>
             </div>
+
+            ${alert.is_resolved && alert.resolution_notes ? `
+            <div class="mb-3">
+                <label class="form-label fw-bold">Resolution Details:</label>
+                <div class="p-3 bg-light rounded">
+                    <strong>Method:</strong> ${alert.resolution_method || 'Not specified'}<br>
+                    <strong>Notes:</strong><br>
+                    <div class="mt-2">${alert.resolution_notes.replace(/\n/g, '<br>')}</div>
+                </div>
+            </div>
+            ` : ''}
+
+            ${alert.escalation_reason ? `
+            <div class="mb-3">
+                <label class="form-label fw-bold">Escalation Details:</label>
+                <div class="p-3 bg-warning bg-opacity-10 border border-warning rounded">
+                    <strong>Escalated by:</strong> ${alert.escalator_name || 'Unknown'}<br>
+                    <strong>Date:</strong> ${alert.escalated_at ? new Date(alert.escalated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown'}<br>
+                    <strong>Reason:</strong><br>
+                    <div class="mt-2">${alert.escalation_reason.replace(/\n/g, '<br>')}</div>
+                </div>
+            </div>
+            ` : ''}
 
             <div class="d-flex justify-content-end gap-3 mt-4">
                 <button type="button" class="btn btn-secondary" onclick="closeAlertModal()">Close</button>
@@ -537,13 +569,34 @@ function closeAlertModal() {
 }
 
 async function resolveAlert(alertId) {
-    if (!confirm('Are you sure you want to resolve this alert?')) return;
+    // Show resolution form modal
+    const resolutionNotes = prompt('Please provide resolution notes (required):');
+    if (!resolutionNotes || !resolutionNotes.trim()) {
+        alert('Resolution notes are required.');
+        return;
+    }
+
+    const resolutionMethods = ['counseling', 'referral', 'monitoring', 'support_group', 'follow_up', 'other'];
+    const resolutionMethod = prompt('Please select resolution method:\n' + resolutionMethods.join('\n'));
+    if (!resolutionMethod || !resolutionMethod.trim()) {
+        alert('Resolution method is required.');
+        return;
+    }
+
+    if (!resolutionMethods.includes(resolutionMethod.toLowerCase())) {
+        alert('Please select a valid resolution method.');
+        return;
+    }
 
     try {
+        const formData = new FormData();
+        formData.append('resolution_notes', resolutionNotes.trim());
+        formData.append('resolution_method', resolutionMethod.toLowerCase());
+
         const response = await fetch(`/admin/alert/${alertId}/resolve`, {
             method: 'POST',
+            body: formData,
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
             }
         });
@@ -551,7 +604,7 @@ async function resolveAlert(alertId) {
         const result = await response.json();
 
         if (result.success) {
-            alert('Alert resolved successfully!');
+            alert('Alert resolved successfully with documentation!');
             location.reload();
         } else {
             alert('Error: ' + result.message);
@@ -559,6 +612,41 @@ async function resolveAlert(alertId) {
     } catch (error) {
         console.error('Error resolving alert:', error);
         alert('Failed to resolve alert. Please try again.');
+    }
+}
+
+async function escalateAlert(alertId) {
+    const escalationReason = prompt('Please provide the reason for escalation (required):');
+    if (!escalationReason || !escalationReason.trim()) {
+        alert('Escalation reason is required.');
+        return;
+    }
+
+    if (!confirm('Are you sure you want to escalate this alert to the guidance admin? This will create a new alert visible to guidance office staff.')) return;
+
+    try {
+        const formData = new FormData();
+        formData.append('escalation_reason', escalationReason.trim());
+
+        const response = await fetch(`/admin/alert/${alertId}/escalate`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Alert escalated successfully to guidance admin!');
+            location.reload();
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error escalating alert:', error);
+        alert('Failed to escalate alert. Please try again.');
     }
 }
 

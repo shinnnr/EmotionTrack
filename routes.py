@@ -2061,8 +2061,21 @@ def view_alerts():
     elif status_filter == 'resolved':
         query = query.filter_by(is_resolved=True)
 
-    # Order by creation date, unresolved first
-    query = query.order_by(GuidanceAlert.is_resolved.asc(), GuidanceAlert.created_at.desc())
+    # For faculty admins, prioritize escalated alerts and faculty_escalation alerts
+    if current_user.is_faculty_admin:
+        # Faculty admins see their own alerts plus any escalated alerts from guidance
+        query = query.filter(
+            (GuidanceAlert.alert_type != 'faculty_escalation') |  # Show non-escalated alerts
+            (GuidanceAlert.alert_type == 'faculty_escalation')    # Show escalated alerts
+        )
+    # Guidance admin/main admin sees all alerts including escalated ones
+
+    # Order by creation date, unresolved first, escalated alerts prioritized
+    query = query.order_by(
+        GuidanceAlert.alert_type == 'faculty_escalation',  # Escalated alerts first
+        GuidanceAlert.is_resolved.asc(),
+        GuidanceAlert.created_at.desc()
+    )
 
     alerts_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -2084,12 +2097,45 @@ def resolve_alert(alert_id):
     if alert.user_id not in accessible_student_ids:
         return jsonify({'success': False, 'message': 'Access denied'})
 
+    # Get resolution details from form
+    resolution_notes = request.form.get('resolution_notes', '').strip()
+    resolution_method = request.form.get('resolution_method', '').strip()
+
+    # Validate required fields
+    if not resolution_notes:
+        return jsonify({'success': False, 'message': 'Resolution notes are required'})
+
+    if not resolution_method:
+        return jsonify({'success': False, 'message': 'Resolution method is required'})
+
     alert.is_resolved = True
     alert.resolved_by = current_user.id
     alert.resolved_at = get_current_time()
+    alert.resolution_notes = resolution_notes
+    alert.resolution_method = resolution_method
     db.session.commit()
 
-    return jsonify({'success': True, 'message': 'Alert resolved successfully'})
+    # Auto-generate a chat message documenting the resolution
+    try:
+        resolution_message = f"[RESOLUTION DOCUMENTATION]\nAlert resolved by {current_user.full_name}\nMethod: {resolution_method}\nNotes: {resolution_notes}"
+
+        # Create a new message from admin to student documenting the resolution
+        message = StudentMessage()
+        message.sender_user_id = alert.user_id  # Keep the student as the "sender" for filtering
+        message.message_text = ""  # Empty for admin messages
+        message.admin_response = resolution_message
+        message.conversation_type = 'guidance_office' if current_user.username == 'admin@emotiontrack.app' else 'faculty_adviser'
+        message.responded_by_admin_id = current_user.id
+        message.is_read = True
+        message.responded_at = get_current_time()
+
+        db.session.add(message)
+        db.session.commit()
+    except Exception as e:
+        print(f"Error creating resolution chat message: {e}")
+        # Don't fail the resolution if chat message creation fails
+
+    return jsonify({'success': True, 'message': 'Alert resolved successfully with documentation'})
 
 @admin_bp.route('/api/generate-alerts', methods=['POST'])
 @login_required
@@ -2204,6 +2250,79 @@ def get_feedback_details(feedback_id):
         'created_at': convert_to_manila_time(feedback.created_at).isoformat() if feedback.created_at else None
     })
 
+@admin_bp.route('/alert/<int:alert_id>/escalate', methods=['POST'])
+@login_required
+def escalate_alert(alert_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    alert = GuidanceAlert.query.get_or_404(alert_id)
+
+    # Check if admin can access this alert
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+    if alert.user_id not in accessible_student_ids:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    # Only faculty admins can escalate alerts
+    if current_user.username == 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Main admin cannot escalate alerts'})
+
+    # Check if alert is already escalated
+    if alert.escalated_from:
+        return jsonify({'success': False, 'message': 'Alert has already been escalated'})
+
+    # Check if alert is already resolved
+    if alert.is_resolved:
+        return jsonify({'success': False, 'message': 'Cannot escalate a resolved alert'})
+
+    # Get escalation reason from form
+    escalation_reason = request.form.get('escalation_reason', '').strip()
+
+    if not escalation_reason:
+        return jsonify({'success': False, 'message': 'Escalation reason is required'})
+
+    # Create escalated alert for guidance admin/main admin
+    escalated_alert = GuidanceAlert(
+        user_id=alert.user_id,
+        alert_type='faculty_escalation',
+        severity=alert.severity,
+        title=f'ESCALATED: {alert.title}',
+        message=f'Faculty escalation: {escalation_reason}\n\nOriginal Alert:\n{alert.message}',
+        escalated_from=current_user.id,
+        escalated_at=get_current_time(),
+        escalation_reason=escalation_reason
+    )
+
+    db.session.add(escalated_alert)
+
+    # Mark original alert as escalated
+    alert.resolution_method = 'escalated'
+    alert.resolution_notes = f'Escalated to guidance admin on {get_current_time().strftime("%B %d, %Y at %I:%M %p")}\nReason: {escalation_reason}'
+
+    db.session.commit()
+
+    # Auto-generate a chat message documenting the escalation
+    try:
+        escalation_message = f"[ESCALATION NOTICE]\nAlert escalated by {current_user.full_name} (Faculty Adviser)\nReason: {escalation_reason}\n\nThis case has been forwarded to the guidance office for additional support."
+
+        # Create a new message from admin to student documenting the escalation
+        message = StudentMessage()
+        message.sender_user_id = alert.user_id
+        message.message_text = ""
+        message.admin_response = escalation_message
+        message.conversation_type = 'faculty_adviser'  # Keep in faculty conversation
+        message.responded_by_admin_id = current_user.id
+        message.is_read = True
+        message.responded_at = get_current_time()
+
+        db.session.add(message)
+        db.session.commit()
+    except Exception as e:
+        print(f"Error creating escalation chat message: {e}")
+        # Don't fail the escalation if chat message creation fails
+
+    return jsonify({'success': True, 'message': 'Alert escalated successfully to guidance admin'})
+
 @admin_bp.route('/api/alert/<int:alert_id>')
 @login_required
 def get_alert_details(alert_id):
@@ -2233,6 +2352,12 @@ def get_alert_details(alert_id):
         'message': alert.message,
         'is_resolved': alert.is_resolved,
         'resolved_at': convert_to_manila_time(alert.resolved_at).isoformat() if alert.resolved_at else None,
+        'resolution_notes': alert.resolution_notes,
+        'resolution_method': alert.resolution_method,
+        'escalated_from': alert.escalated_from,
+        'escalated_at': convert_to_manila_time(alert.escalated_at).isoformat() if alert.escalated_at else None,
+        'escalation_reason': alert.escalation_reason,
+        'escalator_name': alert.escalator.full_name if alert.escalator else None,
         'created_at': convert_to_manila_time(alert.created_at).isoformat() if alert.created_at else None
     })
 
