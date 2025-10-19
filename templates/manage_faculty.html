@@ -94,6 +94,68 @@
         </div>
     </div>
 
+    <!-- Pending Update Requests -->
+    {% set all_pending_requests = [] %}
+    {% for data in faculty_data %}
+        {% set pending_requests = data.faculty.faculty_update_requests | selectattr('status', 'equalto', 'pending') | list %}
+        {% for request in pending_requests %}
+            {% set _ = all_pending_requests.append(request) %}
+        {% endfor %}
+    {% endfor %}
+
+    {% if all_pending_requests %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4">
+                        <i class="fas fa-clock text-warning me-2"></i>
+                        Pending Update Requests
+                        <span class="badge bg-warning ms-2">{{ all_pending_requests | length }}</span>
+                    </h5>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Faculty</th>
+                                    <th>Student</th>
+                                    <th>Requested Change</th>
+                                    <th>Reason</th>
+                                    <th>Requested Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in all_pending_requests %}
+                                <tr>
+                                    <td class="fw-bold">{{ request.faculty.firstname }} {{ request.faculty.lastname }}</td>
+                                    <td>{{ request.student.firstname }} {{ request.student.lastname }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">Grade {{ request.requested_grade_level }}</span>
+                                        <span class="badge bg-success">{{ request.requested_section }}</span>
+                                    </td>
+                                    <td>{{ request.reason or 'No reason provided' }}</td>
+                                    <td>{{ (request.requested_at | manila_time | strftime('%b %d, %Y')) if request.requested_at else 'N/A' }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-success me-2" onclick="reviewRequest({{ request.id }}, 'approve')">
+                                            <i class="fas fa-check me-1"></i>Approve
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="reviewRequest({{ request.id }}, 'reject')">
+                                            <i class="fas fa-times me-1"></i>Reject
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Faculty List -->
     <div class="row">
         <div class="col-12">
@@ -147,9 +209,13 @@
                                                 {% endif %}
                                             </div>
                                             <div class="mt-3">
-                                                <a href="{{ url_for('admin.faculty_students', faculty_id=data.faculty.id) }}" 
+                                                <a href="{{ url_for('admin.faculty_students', faculty_id=data.faculty.id) }}"
                                                    class="btn btn-outline-primary btn-sm w-100 mb-2">
                                                     <i class="fas fa-eye me-1"></i>View Students
+                                                    {% set pending_requests = data.faculty.faculty_update_requests | selectattr('status', 'equalto', 'pending') | list %}
+                                                    {% if pending_requests %}
+                                                        <span class="badge bg-warning ms-1">{{ pending_requests | length }}</span>
+                                                    {% endif %}
                                                 </a>
                                                 <button class="btn btn-outline-danger btn-sm w-100 delete-faculty-btn"
                                                         data-faculty-id="{{ data.faculty.id }}"
@@ -426,6 +492,37 @@ function initializeFacultyManagement() {
 
     // Initial state update
     updateSelectionState();
+}
+
+// Function to review update requests
+function reviewRequest(requestId, action) {
+    const actionText = action === 'approve' ? 'approve' : 'reject';
+    const confirmMessage = `Are you sure you want to ${actionText} this update request?`;
+
+    if (confirm(confirmMessage)) {
+        const formData = new FormData();
+        formData.append('request_id', requestId);
+        formData.append('action', action);
+        formData.append('csrf_token', '{{ csrf_token() }}');
+
+        fetch('{{ url_for("admin.review_update_request") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Request ${actionText}d successfully!`);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the request.');
+        });
+    }
 }
 </script>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>

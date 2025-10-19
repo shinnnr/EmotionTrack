@@ -232,3 +232,25 @@ class DailyTips(db.Model):
 
     def __repr__(self):
         return f'<DailyTips for User {self.user_id} on {self.created_at}>'
+
+class FacultyUpdateRequest(db.Model):
+    __tablename__ = 'faculty_update_requests'
+
+    id = db.Column(db.Integer, primary_key=True)
+    faculty_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    requested_grade_level = db.Column(db.String(20), nullable=False)
+    requested_section = db.Column(db.String(50), nullable=False)
+    reason = db.Column(db.Text, nullable=True)
+    status = db.Column(Enum('pending', 'approved', 'rejected', name='request_status'), default='pending')
+    requested_at = db.Column(db.DateTime, default=get_current_time)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    reviewed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    # Relationships
+    faculty = db.relationship('User', foreign_keys=[faculty_id], backref=db.backref('faculty_update_requests', cascade='all, delete-orphan'))
+    student = db.relationship('User', foreign_keys=[student_id], backref=db.backref('update_requests', cascade='all, delete-orphan'))
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by])
+
+    def __repr__(self):
+        return f'<FacultyUpdateRequest Faculty {self.faculty_id} for Student {self.student_id} - {self.status}>'

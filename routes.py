@@ -10,7 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from db import db
 
-from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, DailyTips, get_current_time, convert_to_manila_time
+from models import User, MoodLog, DASS21Result, StudentMessage, ClassAssignment, GuidanceAlert, StudentFeedback, DailyTips, FacultyUpdateRequest, get_current_time, convert_to_manila_time
 import pytz
 from forms import LoginForm, RegisterForm, EmotionLogForm, ConsultationForm, FacultyProfileForm, StudentProfileUpdateForm, StudentProfileInfoUpdateForm, FeedbackForm
 from coping_recommendations import get_user_coping_recommendations, get_user_motivational_quote
@@ -2889,6 +2889,106 @@ def export_data():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/submit-update-request', methods=['POST'])
+@login_required
+def submit_update_request():
+    if not current_user.is_admin or not current_user.is_faculty_admin:
+        return jsonify({'success': False, 'message': 'Access denied. Faculty admin privileges required.'})
+
+    try:
+        student_id = request.form.get('student_id')
+        grade_level = request.form.get('grade_level')
+        section = request.form.get('section')
+        reason = request.form.get('reason')
+
+        if not all([student_id, grade_level, section]):
+            return jsonify({'success': False, 'message': 'Student, grade level, and section are required.'})
+
+        # Verify the student belongs to this faculty's section
+        assignment = ClassAssignment.query.filter_by(faculty_id=current_user.id).first()
+        if not assignment:
+            return jsonify({'success': False, 'message': 'You do not have an assigned class.'})
+
+        student = User.query.filter_by(
+            id=student_id,
+            grade_level=assignment.grade_level,
+            section=assignment.section,
+            is_admin=False
+        ).first()
+
+        if not student:
+            return jsonify({'success': False, 'message': 'Student not found in your assigned class.'})
+
+        # Check if there's already a pending request for this student
+        existing_request = FacultyUpdateRequest.query.filter_by(
+            faculty_id=current_user.id,
+            student_id=student_id,
+            status='pending'
+        ).first()
+
+        if existing_request:
+            return jsonify({'success': False, 'message': 'A pending request already exists for this student.'})
+
+        # Create the update request
+        update_request = FacultyUpdateRequest(
+            faculty_id=current_user.id,
+            student_id=student_id,
+            requested_grade_level=grade_level,
+            requested_section=section.upper().strip(),
+            reason=reason
+        )
+
+        db.session.add(update_request)
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Update request submitted successfully.'})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'})
+
+@admin_bp.route('/review-update-request', methods=['POST'])
+@login_required
+def review_update_request():
+    if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
+        return jsonify({'success': False, 'message': 'Access denied. Only the main admin can review update requests.'})
+
+    try:
+        request_id = request.form.get('request_id')
+        action = request.form.get('action')
+
+        if not request_id or action not in ['approve', 'reject']:
+            return jsonify({'success': False, 'message': 'Invalid request parameters.'})
+
+        # Get the update request
+        update_request = FacultyUpdateRequest.query.get_or_404(request_id)
+
+        if update_request.status != 'pending':
+            return jsonify({'success': False, 'message': 'This request has already been reviewed.'})
+
+        # Update the request status
+        update_request.status = 'approved' if action == 'approve' else 'rejected'
+        update_request.reviewed_by = current_user.id
+        update_request.reviewed_at = get_current_time()
+
+        # If approved, update the student's grade and section
+        if action == 'approve':
+            student = update_request.student
+            student.grade_level = update_request.requested_grade_level
+            student.section = update_request.requested_section
+
+            # Check if there's a class assignment for the new grade/section
+            # If not, we might need to create one or handle this case
+            # For now, we'll just update the student record
+
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': f'Request {action}d successfully.'})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'})
 
 @admin_bp.route('/api/analytics-data')
 @login_required
