@@ -611,7 +611,7 @@ function generateProfileHTML(data) {
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <p class="mb-1"><strong>Email:</strong> ${escapeHtml(student.username)}</p>
+                                    <p class="mb-1"><strong>LRN:</strong> ${escapeHtml(student.username)}</p>
                                     <p class="mb-1"><strong>Gender:</strong> ${escapeHtml(student.gender) || 'Not specified'}</p>
                                     <p class="mb-1"><strong>Strand:</strong> ${escapeHtml(student.strand) || 'Not specified'}</p>
                                 </div>
