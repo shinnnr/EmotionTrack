@@ -25,13 +25,46 @@
                 </div>
             </div>
             
+            <!-- Resolution Summary Section -->
+            {% set resolved_alerts = [] %}
+            {% for alert in student.alerts if alert.is_resolved and alert.resolution_notes %}
+                {% if resolved_alerts.append(alert) %}{% endif %}
+            {% endfor %}
+
+            {% if resolved_alerts %}
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-success bg-opacity-10">
+                    <h6 class="mb-0 fw-bold text-success">
+                        <i class="fas fa-check-circle me-2"></i>Resolution Summary
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for alert in resolved_alerts %}
+                    <div class="resolution-item mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-secondary">{{ alert.alert_type.replace('_', ' ').title() }}</span>
+                                <small class="text-muted ms-2">{{ alert.resolved_at | manila_time | strftime('%b %d, %Y') }}</small>
+                            </div>
+                            <span class="badge bg-success">{{ alert.resolution_method.title() }}</span>
+                        </div>
+                        <div class="mt-2">
+                            <strong>Resolution Notes:</strong>
+                            <div class="text-muted small">{{ alert.resolution_notes }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Chat Container -->
             <div class="card border-0 shadow-sm">
                 <div class="chat-container" id="chatContainer">
                     {% if messages %}
                         {% for message in messages %}
                             <!-- Student Message -->
-                            {% if message.message_text and not message.message_text.startswith('[ADMIN]') %}
+                            {% if message.message_text and not message.message_text.startswith('[ADMIN]') and not message.message_text.startswith('[RESOLUTION') and not message.message_text.startswith('[ESCALATION') %}
                                 <div class="message-bubble student-message" data-message-id="{{ message.id }}">
                                     <div class="message-content">
                                         <div class="message-text">{{ message.message_text }}</div>
@@ -41,16 +74,21 @@
                                     </div>
                                 </div>
                             {% endif %}
-                            
+
                             <!-- Admin Response -->
                             {% if message.admin_response %}
-                                <div class="message-bubble admin-message" data-message-id="{{ message.id }}">
+                                <div class="message-bubble admin-message {% if '[RESOLUTION' in message.admin_response or '[ESCALATION' in message.admin_response %}system-message{% endif %}" data-message-id="{{ message.id }}">
                                     <div class="message-content">
                                         <div class="message-sender">
                                             {% if message.conversation_type == 'guidance_office' %}
                                                 Guidance Counselor
                                             {% else %}
                                                 Faculty Adviser
+                                            {% endif %}
+                                            {% if '[RESOLUTION' in message.admin_response %}
+                                                <i class="fas fa-check-circle text-success ms-1"></i>
+                                            {% elif '[ESCALATION' in message.admin_response %}
+                                                <i class="fas fa-arrow-up text-warning ms-1"></i>
                                             {% endif %}
                                         </div>
                                         <div class="message-text">{{ message.admin_response }}</div>
@@ -545,6 +583,23 @@ async function loadSuggestedResponses() {
     max-width: 70%;
     box-shadow: 0 2px 8px rgba(45, 80, 22, 0.2);
     margin-left: auto;
+}
+
+.system-message .message-content {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 0.875rem 1.25rem;
+    border-radius: 1.25rem;
+    max-width: 80%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+}
+
+.resolution-item {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
 }
 
 
