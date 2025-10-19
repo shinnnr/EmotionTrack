@@ -72,7 +72,7 @@
 
     <!-- Pending Update Requests -->
     {% if pending_requests %}
-    <div class="row mb-4">
+    <div class="row mb-4" id="pending-requests">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
@@ -240,6 +240,18 @@
 
 
 <script>
+// Auto-scroll to pending requests if URL has hash
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash === '#pending-requests') {
+        const pendingRequestsElement = document.getElementById('pending-requests');
+        if (pendingRequestsElement) {
+            setTimeout(function() {
+                pendingRequestsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    }
+});
+
 document.getElementById('createFacultyForm').addEventListener('submit', function(e) {
     e.preventDefault();
     

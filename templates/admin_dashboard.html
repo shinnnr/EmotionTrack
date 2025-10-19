@@ -721,7 +721,7 @@ function hideChangePasswordPanel() {
 
 function goToPendingRequests() {
     // Redirect to manage faculty page where pending requests are displayed
-    window.location.href = '{{ url_for("admin.manage_faculty") }}';
+    window.location.href = '{{ url_for("admin.manage_faculty") }}#pending-requests';
 }
 </script>
 {% endblock %}
