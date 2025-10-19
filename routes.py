@@ -2381,6 +2381,24 @@ def mark_faculty_alert_read(alert_id):
     # Mark as read and change status to ongoing
     alert.is_read = True
     alert.status = 'ongoing'
+
+    # Synchronize with corresponding guidance alert if it exists
+    # Find the guidance alert that matches this faculty alert
+    guidance_alert = GuidanceAlert.query.filter_by(
+        user_id=alert.user_id,
+        alert_type=alert.alert_type,
+        severity=alert.severity,
+        title=alert.title,
+        message=alert.message,
+        is_resolved=False  # Only update if not already resolved
+    ).first()
+
+    if guidance_alert and not guidance_alert.is_resolved:
+        # Mark the guidance alert as read by updating its status or adding a note
+        # Since guidance alerts don't have an is_read field, we can update the resolved_at to indicate it's been viewed
+        guidance_alert.resolved_at = get_current_time()
+        guidance_alert.resolved_by = current_user.id
+
     db.session.commit()
 
     return jsonify({'success': True, 'message': 'Alert marked as read and status changed to ongoing'})
@@ -2396,6 +2414,23 @@ def resolve_faculty_alert(alert_id):
     alert.status = 'resolved'
     alert.resolved_by = current_user.id
     alert.resolved_at = get_current_time()
+
+    # Synchronize with corresponding guidance alert if it exists
+    # Find the guidance alert that matches this faculty alert
+    guidance_alert = GuidanceAlert.query.filter_by(
+        user_id=alert.user_id,
+        alert_type=alert.alert_type,
+        severity=alert.severity,
+        title=alert.title,
+        message=alert.message,
+        is_resolved=False  # Only update if not already resolved
+    ).first()
+
+    if guidance_alert:
+        guidance_alert.is_resolved = True
+        guidance_alert.resolved_by = current_user.id
+        guidance_alert.resolved_at = get_current_time()
+
     db.session.commit()
 
     return jsonify({'success': True, 'message': 'Alert resolved successfully'})

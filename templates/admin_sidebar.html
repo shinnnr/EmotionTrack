@@ -20,7 +20,7 @@
 
         <!-- Only show for faculty admins -->
         {% if current_user.is_faculty_admin %}
-        <a href="{{ url_for('admin.alerts') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.alerts' }}">
+        <a href="{{ url_for('admin.view_alerts') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.view_alerts' }}">
             <i class="fas fa-exclamation-triangle"></i>
             <span>Alerts</span>
         </a>
