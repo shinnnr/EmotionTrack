@@ -111,13 +111,13 @@
                                     <th>Severity</th>
                                     <th>Message</th>
                                     <th>Date</th>
-                                    <th>Status</th>
+                                    <th>Alert Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for alert in alerts %}
-                                <tr class="{{ 'table-warning' if not alert.is_resolved else '' }}" onclick="viewAlert({{ alert.id }})">
+                                <tr class="{{ 'table-warning' if alert.status == 'unread' else 'table-info' if alert.status == 'ongoing' else '' }}" onclick="viewAlert({{ alert.id }})">
                                     <td><input type="checkbox" class="alert-checkbox" value="{{ alert.id }}" id="alert_checkbox_{{ alert.id }}" onchange="updateDeletePanel()" onclick="event.stopPropagation()"></td>
                                     <td class="student-cell">
                                         <div class="d-flex align-items-center">
@@ -159,7 +159,11 @@
                                         </small>
                                     </td>
                                     <td>
-                                        {% if alert.is_resolved %}
+                                        {% if alert.status == 'unread' %}
+                                            <span class="badge bg-danger">Unread</span>
+                                        {% elif alert.status == 'ongoing' %}
+                                            <span class="badge bg-warning">Ongoing</span>
+                                        {% elif alert.status == 'resolved' %}
                                             <span class="badge bg-success">Resolved</span>
                                             {% if alert.resolved_at %}
                                             <br><small class="text-muted">
@@ -167,11 +171,15 @@
                                             </small>
                                             {% endif %}
                                         {% else %}
-                                            <span class="badge bg-warning">Active</span>
+                                            <span class="badge bg-secondary">{{ alert.status.title() }}</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if not alert.is_resolved %}
+                                        {% if alert.status == 'unread' %}
+                                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); startAlertGuidance({{ alert.id }})">
+                                            <i class="fas fa-comments me-1"></i>Alert Guidance
+                                        </button>
+                                        {% elif alert.status == 'ongoing' %}
                                         <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); resolveAlert({{ alert.id }})">
                                             <i class="fas fa-check me-1"></i>Resolve
                                         </button>
@@ -507,14 +515,18 @@ async function viewAlert(alertId) {
             <div class="mb-3">
                 <label class="form-label fw-bold">Status:</label>
                 <div class="p-2 bg-light rounded">
-                    ${alert.is_resolved ? '<span class="badge bg-success">Resolved</span>' : '<span class="badge bg-warning">Active</span>'}
+                    ${alert.status === 'unread' ? '<span class="badge bg-danger">Unread</span>' :
+                      alert.status === 'ongoing' ? '<span class="badge bg-warning">Ongoing</span>' :
+                      alert.status === 'resolved' ? '<span class="badge bg-success">Resolved</span>' :
+                      '<span class="badge bg-secondary">' + alert.status + '</span>'}
                     ${alert.resolved_at ? '<br><small class="text-muted">Resolved on ' + new Date(alert.resolved_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</small>' : ''}
                 </div>
             </div>
 
             <div class="d-flex justify-content-end gap-3 mt-4">
                 <button type="button" class="btn btn-secondary" onclick="closeAlertModal()">Close</button>
-                ${!alert.is_resolved ? `<button type="button" class="btn btn-success" onclick="resolveAlert(${alert.id})">Resolve Alert</button>` : ''}
+                ${alert.status === 'unread' ? `<button type="button" class="btn btn-primary" onclick="startAlertGuidance(${alert.id})">Start Alert Guidance</button>` :
+                  alert.status === 'ongoing' ? `<button type="button" class="btn btn-success" onclick="resolveAlert(${alert.id})">Resolve Alert</button>` : ''}
             </div>
         `;
     } catch (error) {
@@ -534,6 +546,32 @@ function closeAlertModal() {
     document.getElementById('alertModal').style.display = 'none';
     // Re-enable body scroll
     document.body.classList.remove('modal-open');
+}
+
+async function startAlertGuidance(alertId) {
+    if (!confirm('Are you sure you want to start alert guidance for this student? This will change the status to ongoing and redirect you to the chat page.')) return;
+
+    try {
+        const response = await fetch(`/admin/alert/${alertId}/start-guidance`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Redirect to chat page with the student
+            window.location.href = `/admin/student-chat/${result.student_id}`;
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error starting alert guidance:', error);
+        alert('Failed to start alert guidance. Please try again.');
+    }
 }
 
 async function resolveAlert(alertId) {

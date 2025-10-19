@@ -507,6 +507,8 @@ def emotion_log():
             # Generate alerts based on emotional patterns
             try:
                 generate_guidance_alerts(current_user.id)
+                # Check for automatic resolution of ongoing alerts
+                check_alert_resolution_conditions(current_user.id)
             except Exception as e:
                 print(f"Error generating alerts for mood log: {e}")
                 # Don't fail the mood log submission if alert generation fails
@@ -667,6 +669,8 @@ def process_dass21():
         # Generate alerts based on DASS-21 results
         try:
             generate_guidance_alerts(current_user.id)
+            # Check for automatic resolution of ongoing alerts
+            check_alert_resolution_conditions(current_user.id)
         except Exception as e:
             print(f"Error generating alerts for DASS-21: {e}")
             # Don't fail the DASS-21 submission if alert generation fails
@@ -2029,6 +2033,8 @@ def generate_guidance_alerts(user_id=None):
 
         # Save alerts to database
         for alert in all_alerts:
+            # Set default status to 'unread' for new alerts
+            alert.status = 'unread'
             db.session.add(alert)
             alerts_created.append(alert)
 
@@ -2036,6 +2042,58 @@ def generate_guidance_alerts(user_id=None):
         db.session.commit()
 
     return alerts_created
+
+def check_alert_resolution_conditions(user_id):
+    """Check if ongoing alerts should be automatically resolved based on conditions"""
+    # Get ongoing alerts for this user
+    ongoing_alerts = GuidanceAlert.query.filter_by(
+        user_id=user_id,
+        status='ongoing'
+    ).all()
+
+    for alert in ongoing_alerts:
+        should_resolve = False
+
+        # Check DASS-21 condition: low score in following week
+        if alert.alert_type in ['dass21_severe']:
+            # Get latest DASS-21 result
+            latest_dass = DASS21Result.query.filter_by(user_id=user_id).order_by(
+                DASS21Result.created_at.desc()
+            ).first()
+
+            if latest_dass:
+                # Check if the latest assessment shows improvement (lower severity)
+                if latest_dass.depression_severity not in ['Severe', 'Extremely Severe'] and \
+                   latest_dass.anxiety_severity not in ['Severe', 'Extremely Severe'] and \
+                   latest_dass.stress_severity not in ['Severe', 'Extremely Severe']:
+                    should_resolve = True
+
+        # Check emotion log condition: positive emotions in following week
+        if alert.alert_type in ['emotional_pattern', 'crisis_indicator']:
+            # Get recent mood logs (last 7 days)
+            week_ago = get_current_time() - timedelta(days=7)
+            recent_logs = MoodLog.query.filter(
+                MoodLog.user_id == user_id,
+                MoodLog.log_date >= week_ago
+            ).all()
+
+            if recent_logs:
+                # Count positive emotions
+                positive_emotions = ['happy', 'joyful', 'content', 'peaceful', 'grateful', 'excited', 'confident']
+                positive_count = sum(1 for log in recent_logs if log.emotion.lower() in positive_emotions)
+
+                # If more than 50% of recent logs are positive, resolve
+                if positive_count / len(recent_logs) > 0.5:
+                    should_resolve = True
+
+        if should_resolve:
+            alert.status = 'resolved'
+            alert.is_resolved = True
+            alert.resolved_at = get_current_time()
+            # Note: resolved_by is not set for automatic resolution
+
+    if ongoing_alerts:
+        db.session.commit()
 
 # Alert Management Routes
 @admin_bp.route('/alerts')
@@ -2071,6 +2129,26 @@ def view_alerts():
                           pagination=alerts_pagination,
                           status_filter=status_filter)
 
+@admin_bp.route('/alert/<int:alert_id>/start-guidance', methods=['POST'])
+@login_required
+def start_alert_guidance(alert_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    alert = GuidanceAlert.query.get_or_404(alert_id)
+
+    # Check if admin can access this alert
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+    if alert.user_id not in accessible_student_ids:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    # Change status from unread to ongoing
+    if alert.status == 'unread':
+        alert.status = 'ongoing'
+        db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Alert guidance started', 'student_id': alert.user_id})
+
 @admin_bp.route('/alert/<int:alert_id>/resolve', methods=['POST'])
 @login_required
 def resolve_alert(alert_id):
@@ -2084,6 +2162,7 @@ def resolve_alert(alert_id):
     if alert.user_id not in accessible_student_ids:
         return jsonify({'success': False, 'message': 'Access denied'})
 
+    alert.status = 'resolved'
     alert.is_resolved = True
     alert.resolved_by = current_user.id
     alert.resolved_at = get_current_time()

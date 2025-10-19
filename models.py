@@ -188,6 +188,7 @@ class GuidanceAlert(db.Model):
     severity = db.Column(db.String(20), nullable=False)  # 'low', 'medium', 'high', 'critical'
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default='unread')  # 'unread', 'ongoing', 'resolved'
     is_resolved = db.Column(db.Boolean, default=False)
     resolved_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     resolved_at = db.Column(db.DateTime, nullable=True)
