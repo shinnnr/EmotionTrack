@@ -337,6 +337,51 @@ def get_dass21_results():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+@api_bp.route('/student-assessment-data')
+@login_required
+def get_student_assessment_data():
+    """API endpoint to get latest DASS-21 and recent mood logs for attachment"""
+    try:
+        # Get latest DASS-21 result
+        latest_dass = DASS21Result.query.filter_by(user_id=current_user.id).order_by(desc(DASS21Result.created_at)).first()
+
+        # Get recent mood logs (last 7 days)
+        week_ago = get_current_time() - timedelta(days=7)
+        recent_moods = MoodLog.query.filter(
+            MoodLog.user_id == current_user.id,
+            MoodLog.log_date >= week_ago
+        ).order_by(desc(MoodLog.log_date)).limit(10).all()
+
+        response_data = {}
+
+        if (latest_dass):
+            response_data['dass21'] = {
+                'depression_score': latest_dass.depression_score,
+                'anxiety_score': latest_dass.anxiety_score,
+                'stress_score': latest_dass.stress_score,
+                'depression_severity': latest_dass.depression_severity,
+                'anxiety_severity': latest_dass.anxiety_severity,
+                'stress_severity': latest_dass.stress_severity,
+                'created_at': convert_to_manila_time(latest_dass.created_at).strftime('%B %d, %Y at %I:%M %p') if latest_dass.created_at else None
+            }
+
+        if (recent_moods):
+            response_data['mood_logs'] = [{
+                'emotion': log.emotion,
+                'intensity': log.intensity,
+                'sleep': log.sleep,
+                'energy': log.energy,
+                'triggers': log.triggers,
+                'coping': log.coping,
+                'gratitude': log.gratitude,
+                'log_date': convert_to_manila_time(log.log_date).strftime('%B %d, %Y at %I:%M %p') if log.log_date else None
+            } for log in recent_moods]
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 
 @main_bp.route('/api/delete-mood-logs', methods=['POST'])
@@ -507,8 +552,6 @@ def emotion_log():
             # Generate alerts based on emotional patterns
             try:
                 generate_guidance_alerts(current_user.id)
-                # Also generate faculty alerts for guidance admin
-                generate_faculty_alerts(current_user.id)
             except Exception as e:
                 print(f"Error generating alerts for mood log: {e}")
                 # Don't fail the mood log submission if alert generation fails
@@ -669,8 +712,6 @@ def process_dass21():
         # Generate alerts based on DASS-21 results
         try:
             generate_guidance_alerts(current_user.id)
-            # Also generate faculty alerts for guidance admin
-            generate_faculty_alerts(current_user.id)
         except Exception as e:
             print(f"Error generating alerts for DASS-21: {e}")
             # Don't fail the DASS-21 submission if alert generation fails
@@ -1513,54 +1554,52 @@ def my_students():
                           assignment=assignment,
                           students_pagination=students_pagination)
 
-@admin_bp.route('/delete-alerts', methods=['POST'])
+@admin_bp.route('/delete-student-alerts', methods=['POST'])
 @login_required
 @csrf.exempt
-def delete_alerts():
-    """Delete selected alerts"""
+def delete_student_alerts():
+    """Delete all alerts for selected students"""
     if not current_user.is_admin or not current_user.is_faculty_admin:
-        return jsonify({'success': False, 'message': 'Access denied. Only faculty admins can delete alerts.'})
+        return jsonify({'success': False, 'message': 'Access denied. Only faculty admins can delete student alerts.'})
 
     try:
-        # Get alert IDs from form data
-        alert_ids_str = request.form.get('alert_ids')
-        if not alert_ids_str:
-            return jsonify({'success': False, 'message': 'No alerts selected.'})
+        # Get student IDs from form data
+        student_ids_str = request.form.get('student_ids')
+        if not student_ids_str:
+            return jsonify({'success': False, 'message': 'No students selected.'})
 
         # Parse comma-separated IDs
         try:
-            alert_ids = [int(id.strip()) for id in alert_ids_str.split(',') if id.strip()]
+            student_ids = [int(id.strip()) for id in student_ids_str.split(',') if id.strip()]
         except (ValueError, TypeError):
-            return jsonify({'success': False, 'message': 'Invalid alert IDs provided.'})
+            return jsonify({'success': False, 'message': 'Invalid student IDs provided.'})
 
-        if not alert_ids:
-            return jsonify({'success': False, 'message': 'No alerts selected.'})
+        if not student_ids:
+            return jsonify({'success': False, 'message': 'No students selected.'})
 
         # Check access permissions based on admin type
         accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
 
-        # Get alerts that are accessible
-        accessible_alerts = GuidanceAlert.query.filter(
-            GuidanceAlert.id.in_(alert_ids),
-            GuidanceAlert.user_id.in_(accessible_student_ids)
-        ).all()
+        # Check if all requested students are accessible
+        inaccessible_student_ids = [id for id in student_ids if id not in accessible_student_ids]
 
-        # Check if all requested alerts are accessible
-        accessible_ids = [alert.id for alert in accessible_alerts]
-        inaccessible_ids = [id for id in alert_ids if id not in accessible_ids]
-
-        if inaccessible_ids:
+        if inaccessible_student_ids:
             return jsonify({
                 'success': False,
-                'message': f'Access denied for some alerts. You can only delete alerts for students in your assigned section.'
+                'message': f'Access denied for some students. You can only delete alerts for students in your assigned section.'
             })
 
-        if not accessible_alerts:
-            return jsonify({'success': False, 'message': 'No valid alerts found to delete.'})
+        # Get all alerts for the accessible students
+        alerts_to_delete = GuidanceAlert.query.filter(
+            GuidanceAlert.user_id.in_(student_ids)
+        ).all()
+
+        if not alerts_to_delete:
+            return jsonify({'success': False, 'message': 'No alerts found for the selected students.'})
 
         # Delete the alerts
         deleted_count = 0
-        for alert in accessible_alerts:
+        for alert in alerts_to_delete:
             db.session.delete(alert)
             deleted_count += 1
 
@@ -1568,7 +1607,7 @@ def delete_alerts():
 
         return jsonify({
             'success': True,
-            'message': f'Successfully deleted {deleted_count} alert(s).',
+            'message': f'Successfully deleted {deleted_count} alert(s) for {len(student_ids)} student(s).',
             'deleted_count': deleted_count
         })
 
@@ -1576,7 +1615,7 @@ def delete_alerts():
         db.session.rollback()
         return jsonify({
             'success': False,
-            'message': f'An error occurred while deleting alerts: {str(e)}'
+            'message': f'An error occurred while deleting student alerts: {str(e)}'
         })
 
 @admin_bp.route('/delete-feedback', methods=['POST'])
@@ -2272,7 +2311,7 @@ def view_alerts():
     # Get accessible student IDs
     accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
 
-    # Build query
+    # Build query for all alerts (not paginated yet)
     query = GuidanceAlert.query.filter(GuidanceAlert.user_id.in_(accessible_student_ids))
 
     if status_filter == 'active':
@@ -2280,14 +2319,76 @@ def view_alerts():
     elif status_filter == 'resolved':
         query = query.filter_by(is_resolved=True)
 
-    # Order by creation date, unresolved first
-    query = query.order_by(GuidanceAlert.is_resolved.asc(), GuidanceAlert.created_at.desc())
+    # Get all alerts first, then group by student
+    all_alerts = query.order_by(GuidanceAlert.is_resolved.asc(), GuidanceAlert.created_at.desc()).all()
 
-    alerts_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    # Group alerts by student
+    student_alerts = {}
+    for alert in all_alerts:
+        student_id = alert.user_id
+        if student_id not in student_alerts:
+            student_alerts[student_id] = {
+                'student': alert.user,
+                'alerts': [],
+                'latest_alert_date': alert.created_at,
+                'has_unread': False,
+                'has_ongoing': False,
+                'has_resolved': False,
+                'critical_count': 0,
+                'high_count': 0,
+                'medium_count': 0,
+                'low_count': 0
+            }
+
+        student_alerts[student_id]['alerts'].append(alert)
+
+        # Update latest date if this alert is newer
+        if alert.created_at > student_alerts[student_id]['latest_alert_date']:
+            student_alerts[student_id]['latest_alert_date'] = alert.created_at
+
+        # Track status flags
+        if not alert.is_resolved:
+            student_alerts[student_id]['has_unread'] = True
+        else:
+            student_alerts[student_id]['has_resolved'] = True
+
+        # Count severity levels
+        if alert.severity == 'critical':
+            student_alerts[student_id]['critical_count'] += 1
+        elif alert.severity == 'high':
+            student_alerts[student_id]['high_count'] += 1
+        elif alert.severity == 'medium':
+            student_alerts[student_id]['medium_count'] += 1
+        else:
+            student_alerts[student_id]['low_count'] += 1
+
+    # Convert to list and sort by latest alert date (most recent first)
+    grouped_students = list(student_alerts.values())
+    grouped_students.sort(key=lambda x: x['latest_alert_date'], reverse=True)
+
+    # Manual pagination on grouped students
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_students = grouped_students[start:end]
+
+    # Create pagination info
+    total_students = len(grouped_students)
+    pages = (total_students + per_page - 1) // per_page
+
+    pagination_info = {
+        'page': page,
+        'pages': pages,
+        'per_page': per_page,
+        'total': total_students,
+        'has_prev': page > 1,
+        'has_next': page < pages,
+        'prev_num': page - 1 if page > 1 else None,
+        'next_num': page + 1 if page < pages else None
+    }
 
     return render_template('admin_alerts.html',
-                          alerts=alerts_pagination.items,
-                          pagination=alerts_pagination,
+                          student_alerts=paginated_students,
+                          pagination=pagination_info,
                           status_filter=status_filter)
 
 @admin_bp.route('/alert/<int:alert_id>/resolve', methods=['POST'])
@@ -2322,7 +2423,7 @@ def faculty_alerts():
     per_page = 10  # Fixed to 10 items per page
     status_filter = request.args.get('status_filter', 'all')  # 'all', 'unread', 'ongoing', 'resolved'
 
-    # Build query
+    # Build query for all alerts (not paginated yet)
     query = FacultyAlert.query
 
     if status_filter == 'unread':
@@ -2332,42 +2433,115 @@ def faculty_alerts():
     elif status_filter == 'resolved':
         query = query.filter_by(status='resolved')
 
-    # Order by creation date, unresolved first
-    query = query.order_by(FacultyAlert.status.asc(), FacultyAlert.created_at.desc())
+    # Get all alerts first, then group by student
+    all_alerts = query.order_by(FacultyAlert.status.asc(), FacultyAlert.created_at.desc()).all()
 
-    alerts_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    # Group alerts by student
+    student_alerts = {}
+    for alert in all_alerts:
+        student_id = alert.user_id
+        if student_id not in student_alerts:
+            student_alerts[student_id] = {
+                'student': alert.user,
+                'alerts': [],
+                'latest_alert_date': alert.created_at,
+                'has_unread': False,
+                'has_ongoing': False,
+                'has_resolved': False,
+                'critical_count': 0,
+                'high_count': 0,
+                'medium_count': 0,
+                'low_count': 0
+            }
+
+        student_alerts[student_id]['alerts'].append(alert)
+
+        # Update latest date if this alert is newer
+        if alert.created_at > student_alerts[student_id]['latest_alert_date']:
+            student_alerts[student_id]['latest_alert_date'] = alert.created_at
+
+        # Track status flags
+        if alert.status == 'unread':
+            student_alerts[student_id]['has_unread'] = True
+        elif alert.status == 'ongoing':
+            student_alerts[student_id]['has_ongoing'] = True
+        elif alert.status == 'resolved':
+            student_alerts[student_id]['has_resolved'] = True
+
+        # Count severity levels
+        if alert.severity == 'critical':
+            student_alerts[student_id]['critical_count'] += 1
+        elif alert.severity == 'high':
+            student_alerts[student_id]['high_count'] += 1
+        elif alert.severity == 'medium':
+            student_alerts[student_id]['medium_count'] += 1
+        else:
+            student_alerts[student_id]['low_count'] += 1
+
+    # Convert to list and sort by latest alert date (most recent first)
+    grouped_students = list(student_alerts.values())
+    grouped_students.sort(key=lambda x: x['latest_alert_date'], reverse=True)
+
+    # Manual pagination on grouped students
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_students = grouped_students[start:end]
+
+    # Create pagination info
+    total_students = len(grouped_students)
+    pages = (total_students + per_page - 1) // per_page
+
+    pagination_info = {
+        'page': page,
+        'pages': pages,
+        'per_page': per_page,
+        'total': total_students,
+        'has_prev': page > 1,
+        'has_next': page < pages,
+        'prev_num': page - 1 if page > 1 else None,
+        'next_num': page + 1 if page < pages else None
+    }
 
     return render_template('faculty_alerts.html',
-                          alerts=alerts_pagination.items,
-                          pagination=alerts_pagination,
+                          student_alerts=paginated_students,
+                          pagination=pagination_info,
                           status_filter=status_filter)
 
-@admin_bp.route('/api/faculty-alert/<int:alert_id>')
+@admin_bp.route('/api/student-alerts/<int:student_id>')
 @login_required
-def get_faculty_alert_details(alert_id):
+def get_student_alerts(student_id):
     if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
-        return jsonify({'success': False, 'message': 'Access denied. Only the main admin can view faculty alert details.'})
+        return jsonify({'success': False, 'message': 'Access denied. Only the main admin can view student alerts.'})
 
-    alert = FacultyAlert.query.get_or_404(alert_id)
+    student = User.query.get_or_404(student_id)
+    if student.is_admin:
+        return jsonify({'success': False, 'message': 'Cannot view alerts for admin users.'})
 
-    user_info = {
-        'id': alert.user.id,
-        'full_name': alert.user.full_name,
-        'username': alert.user.username
-    }
+    # Get all alerts for this student
+    alerts = FacultyAlert.query.filter_by(user_id=student_id).order_by(FacultyAlert.created_at.desc()).all()
+
+    alerts_data = []
+    for alert in alerts:
+        alerts_data.append({
+            'id': alert.id,
+            'alert_type': alert.alert_type,
+            'severity': alert.severity,
+            'title': alert.title,
+            'message': alert.message,
+            'status': alert.status,
+            'is_read': alert.is_read,
+            'resolved_at': convert_to_manila_time(alert.resolved_at).isoformat() if alert.resolved_at else None,
+            'created_at': convert_to_manila_time(alert.created_at).isoformat() if alert.created_at else None
+        })
 
     return jsonify({
         'success': True,
-        'id': alert.id,
-        'user': user_info,
-        'alert_type': alert.alert_type,
-        'severity': alert.severity,
-        'title': alert.title,
-        'message': alert.message,
-        'status': alert.status,
-        'is_read': alert.is_read,
-        'resolved_at': convert_to_manila_time(alert.resolved_at).isoformat() if alert.resolved_at else None,
-        'created_at': convert_to_manila_time(alert.created_at).isoformat() if alert.created_at else None
+        'student': {
+            'id': student.id,
+            'full_name': student.full_name,
+            'username': student.username
+        },
+        'alerts': alerts_data
     })
 
 @admin_bp.route('/api/faculty-alert/<int:alert_id>/mark-read', methods=['POST'])
@@ -2435,46 +2609,36 @@ def resolve_faculty_alert(alert_id):
 
     return jsonify({'success': True, 'message': 'Alert resolved successfully'})
 
-@admin_bp.route('/api/delete-faculty-alerts', methods=['POST'])
+@admin_bp.route('/api/delete-student-alerts', methods=['POST'], endpoint='api_delete_student_alerts')
 @login_required
 @csrf.exempt
-def delete_faculty_alerts():
-    """Delete selected faculty alerts"""
+def api_delete_student_alerts():
+    """Delete all alerts for selected students"""
     if not current_user.is_admin or current_user.username != 'admin@emotiontrack.app':
-        return jsonify({'success': False, 'message': 'Access denied. Only the main admin can delete faculty alerts.'})
+        return jsonify({'success': False, 'message': 'Access denied. Only the main admin can delete student alerts.'})
 
     try:
-        # Get alert IDs from form data
-        alert_ids_str = request.form.get('alert_ids')
-        if not alert_ids_str:
-            return jsonify({'success': False, 'message': 'No alerts selected.'})
+        # Get student IDs from form data
+        student_ids_str = request.form.get('student_ids')
+        if not student_ids_str:
+            return jsonify({'success': False, 'message': 'No students selected.'})
 
         # Parse comma-separated IDs
         try:
-            alert_ids = [int(id.strip()) for id in alert_ids_str.split(',') if id.strip()]
+            student_ids = [int(id.strip()) for id in student_ids_str.split(',') if id.strip()]
         except (ValueError, TypeError):
-            return jsonify({'success': False, 'message': 'Invalid alert IDs provided.'})
+            return jsonify({'success': False, 'message': 'Invalid student IDs provided.'})
 
-        if not alert_ids:
-            return jsonify({'success': False, 'message': 'No alerts selected.'})
+        if not student_ids:
+            return jsonify({'success': False, 'message': 'No students selected.'})
 
-        # Get alerts that are accessible
+        # Get all alerts for the selected students
         accessible_alerts = FacultyAlert.query.filter(
-            FacultyAlert.id.in_(alert_ids)
+            FacultyAlert.user_id.in_(student_ids)
         ).all()
 
-        # Check if all requested alerts are accessible
-        accessible_ids = [alert.id for alert in accessible_alerts]
-        inaccessible_ids = [id for id in alert_ids if id not in accessible_ids]
-
-        if inaccessible_ids:
-            return jsonify({
-                'success': False,
-                'message': f'Access denied for some alerts.'
-            })
-
         if not accessible_alerts:
-            return jsonify({'success': False, 'message': 'No valid alerts found to delete.'})
+            return jsonify({'success': False, 'message': 'No alerts found for the selected students.'})
 
         # Delete the alerts
         deleted_count = 0
@@ -2486,7 +2650,7 @@ def delete_faculty_alerts():
 
         return jsonify({
             'success': True,
-            'message': f'Successfully deleted {deleted_count} alert(s).',
+            'message': f'Successfully deleted {deleted_count} alert(s) for {len(student_ids)} student(s).',
             'deleted_count': deleted_count
         })
 
@@ -2494,47 +2658,71 @@ def delete_faculty_alerts():
         db.session.rollback()
         return jsonify({
             'success': False,
-            'message': f'An error occurred while deleting alerts: {str(e)}'
+            'message': f'An error occurred while deleting student alerts: {str(e)}'
         })
 
-@admin_bp.route('/alert-guidance-admin/<int:alert_id>', methods=['POST'])
+@admin_bp.route('/alert-guidance-admin/<int:student_id>', methods=['POST'])
 @login_required
-def alert_guidance_admin(alert_id):
+def alert_guidance_admin(student_id):
     if not current_user.is_admin or not current_user.is_faculty_admin:
         return jsonify({'success': False, 'message': 'Access denied. Only faculty admins can alert guidance admin.'})
 
-    alert = GuidanceAlert.query.get_or_404(alert_id)
-
-    # Check if faculty admin can access this alert
+    # Check if faculty admin can access this student
     accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
-    if alert.user_id not in accessible_student_ids:
+    if student_id not in accessible_student_ids:
         return jsonify({'success': False, 'message': 'Access denied'})
 
-    # Check if faculty alert already exists for this specific alert (any status)
-    existing_faculty_alert = FacultyAlert.query.filter_by(
-        user_id=alert.user_id,
-        alert_type=alert.alert_type,
-        severity=alert.severity,
-        title=alert.title,
-        message=alert.message
-    ).first()
+    try:
+        # Get all active (unresolved) alerts for this student
+        active_alerts = GuidanceAlert.query.filter_by(
+            user_id=student_id,
+            is_resolved=False
+        ).all()
 
-    if existing_faculty_alert:
-        return jsonify({'success': False, 'message': 'This alert has already been sent to guidance admin'})
+        if not active_alerts:
+            return jsonify({'success': False, 'message': 'No active alerts found for this student.'})
 
-    # Create faculty alert
-    faculty_alert = FacultyAlert(
-        user_id=alert.user_id,
-        alert_type=alert.alert_type,
-        severity=alert.severity,
-        title=alert.title,
-        message=alert.message
-    )
+        # Check if any of these alerts have already been sent
+        alerts_already_sent = 0
+        new_alerts_sent = 0
 
-    db.session.add(faculty_alert)
-    db.session.commit()
+        for alert in active_alerts:
+            existing_faculty_alert = FacultyAlert.query.filter_by(
+                user_id=alert.user_id,
+                alert_type=alert.alert_type,
+                severity=alert.severity,
+                title=alert.title,
+                message=alert.message,
+                status='unread'
+            ).first()
 
-    return jsonify({'success': True, 'message': 'Alert sent to guidance admin successfully'})
+            if existing_faculty_alert:
+                alerts_already_sent += 1
+            else:
+                # Create faculty alert
+                faculty_alert = FacultyAlert(
+                    user_id=alert.user_id,
+                    alert_type=alert.alert_type,
+                    severity=alert.severity,
+                    title=alert.title,
+                    message=alert.message,
+                    status='unread'
+                )
+                db.session.add(faculty_alert)
+                new_alerts_sent += 1
+
+        if new_alerts_sent > 0:
+            db.session.commit()
+            message = f'Successfully sent {new_alerts_sent} alert(s) to guidance admin.'
+            if alerts_already_sent > 0:
+                message += f' {alerts_already_sent} alert(s) were already sent previously.'
+            return jsonify({'success': True, 'message': message})
+        else:
+            return jsonify({'success': False, 'message': f'All {alerts_already_sent} active alert(s) for this student have already been sent to guidance admin.'})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error sending alerts: {str(e)}'})
 
 @admin_bp.route('/api/generate-faculty-alerts', methods=['POST'])
 @login_required
@@ -2860,11 +3048,52 @@ def get_feedback_details(feedback_id):
         'created_at': convert_to_manila_time(feedback.created_at).isoformat() if feedback.created_at else None
     })
 
-@admin_bp.route('/api/alert/<int:alert_id>')
+@admin_bp.route('/api/guidance-student-alerts/<int:student_id>')
 @login_required
-def get_alert_details(alert_id):
+def get_guidance_student_alerts(student_id):
     if not current_user.is_admin or not current_user.is_faculty_admin:
-        return jsonify({'success': False, 'message': 'Access denied. Only faculty admins can view alert details.'})
+        return jsonify({'success': False, 'message': 'Access denied. Only faculty admins can view student alerts.'})
+
+    # Check if admin can access this student
+    accessible_student_ids = [user.id for user in get_students_for_faculty(current_user).all()]
+    if student_id not in accessible_student_ids:
+        return jsonify({'success': False, 'message': 'Access denied'})
+
+    student = User.query.get_or_404(student_id)
+
+    # Get all alerts for this student
+    alerts = GuidanceAlert.query.filter_by(user_id=student_id).order_by(desc(GuidanceAlert.created_at)).all()
+
+    student_info = {
+        'id': student.id,
+        'full_name': student.full_name,
+        'username': student.username
+    }
+
+    alerts_data = []
+    for alert in alerts:
+        alerts_data.append({
+            'id': alert.id,
+            'alert_type': alert.alert_type,
+            'severity': alert.severity,
+            'title': alert.title,
+            'message': alert.message,
+            'is_resolved': alert.is_resolved,
+            'resolved_at': convert_to_manila_time(alert.resolved_at).isoformat() if alert.resolved_at else None,
+            'created_at': convert_to_manila_time(alert.created_at).isoformat() if alert.created_at else None
+        })
+
+    return jsonify({
+        'success': True,
+        'student': student_info,
+        'alerts': alerts_data
+    })
+
+@admin_bp.route('/resolve-alert/<int:alert_id>', methods=['POST'], endpoint='resolve_guidance_alert')
+@login_required
+def resolve_guidance_alert(alert_id):
+    if not current_user.is_admin or not current_user.is_faculty_admin:
+        return jsonify({'success': False, 'message': 'Access denied. Only faculty admins can resolve alerts.'})
 
     alert = GuidanceAlert.query.get_or_404(alert_id)
 
@@ -2873,24 +3102,19 @@ def get_alert_details(alert_id):
     if alert.user_id not in accessible_student_ids:
         return jsonify({'success': False, 'message': 'Access denied'})
 
-    user_info = {
-        'id': alert.user.id,
-        'full_name': alert.user.full_name,
-        'username': alert.user.username
-    }
+    if alert.is_resolved:
+        return jsonify({'success': False, 'message': 'Alert is already resolved'})
 
-    return jsonify({
-        'success': True,
-        'id': alert.id,
-        'user': user_info,
-        'alert_type': alert.alert_type,
-        'severity': alert.severity,
-        'title': alert.title,
-        'message': alert.message,
-        'is_resolved': alert.is_resolved,
-        'resolved_at': convert_to_manila_time(alert.resolved_at).isoformat() if alert.resolved_at else None,
-        'created_at': convert_to_manila_time(alert.created_at).isoformat() if alert.created_at else None
-    })
+    try:
+        alert.is_resolved = True
+        alert.resolved_by = current_user.id
+        alert.resolved_at = get_current_time()
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Alert resolved successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error resolving alert: {str(e)}'})
 
 
 @admin_bp.route('/suggested-responses/<int:user_id>')

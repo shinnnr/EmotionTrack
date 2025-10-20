@@ -92,11 +92,11 @@
 
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <p class="text-muted mb-0">
-                            <span id="alertsCount">{{ alerts|length if alerts else 0 }}</span> alerts
+                            <span id="alertsCount">{{ student_alerts|length if student_alerts else 0 }}</span> students with alerts
                         </p>
                     </div>
 
-                    {% if alerts %}
+                    {% if student_alerts %}
                     <div class="table-responsive">
                         <table class="table table-hover" id="alertsTable">
                             <thead>
@@ -107,83 +107,79 @@
                                         </div>
                                     </th>
                                     <th>Student</th>
-                                    <th>Alert Type</th>
-                                    <th>Severity</th>
-                                    <th>Message</th>
-                                    <th>Date</th>
+                                    <th>Alert Summary</th>
+                                    <th>Severity Breakdown</th>
+                                    <th>Latest Alert</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for alert in alerts %}
-                                <tr class="{{ 'table-warning' if not alert.is_resolved else '' }}" onclick="viewAlert({{ alert.id }})">
-                                    <td><input type="checkbox" class="alert-checkbox" value="{{ alert.id }}" id="alert_checkbox_{{ alert.id }}" onchange="updateDeletePanel()" onclick="event.stopPropagation()"></td>
+                                {% for student_data in student_alerts %}
+                                <tr class="{{ 'table-warning' if student_data.has_unread else '' }}" onclick="viewStudentAlerts({{ student_data.student.id }})">
+                                    <td><input type="checkbox" class="student-checkbox" value="{{ student_data.student.id }}" id="student_checkbox_{{ student_data.student.id }}" onchange="updateDeletePanel()" onclick="event.stopPropagation()"></td>
                                     <td class="student-cell">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-sm me-3">
                                                 <div class="avatar-title rounded-circle bg-primary text-white">
-                                                    {{ alert.user.firstname[0] if alert.user.firstname else '' }}{{ alert.user.lastname[0] if alert.user.lastname else '' }}
+                                                    {{ student_data.student.firstname[0] if student_data.student.firstname else '' }}{{ student_data.student.lastname[0] if student_data.student.lastname else '' }}
                                                 </div>
                                             </div>
                                             <div>
-                                                <h6 class="mb-0">{{ alert.user.full_name }}</h6>
-                                                <small class="text-muted">LRN: {{ alert.user.username }}</small>
+                                                <h6 class="mb-0">{{ student_data.student.full_name }}</h6>
+                                                <small class="text-muted">LRN: {{ student_data.student.username }}</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-secondary">
-                                            {{ alert.alert_type.replace('_', ' ').title() }}
-                                        </span>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">{{ student_data.alerts|length }} alert{{ 's' if student_data.alerts|length > 1 else '' }}</span>
+                                            <small class="text-muted">
+                                                {% for alert in student_data.alerts[:2] %}
+                                                    {{ alert.alert_type.replace('_', ' ')|title }}{% if not loop.last %}, {% endif %}
+                                                {% endfor %}
+                                                {% if student_data.alerts|length > 2 %}...{% endif %}
+                                            </small>
+                                        </div>
                                     </td>
                                     <td>
-                                        {% if alert.severity == 'critical' %}
-                                            <span class="badge bg-danger">Critical</span>
-                                        {% elif alert.severity == 'high' %}
-                                            <span class="badge bg-warning">High</span>
-                                        {% elif alert.severity == 'medium' %}
-                                            <span class="badge bg-info">Medium</span>
-                                        {% else %}
-                                            <span class="badge bg-light text-dark">Low</span>
-                                        {% endif %}
-                                    </td>
-                                    <td style="max-width: 300px;">
-                                        <div class="text-truncate" title="{{ alert.message }}">
-                                            {{ alert.message }}
+                                        <div class="d-flex gap-1 flex-wrap">
+                                            {% if student_data.critical_count > 0 %}
+                                                <span class="badge bg-danger">{{ student_data.critical_count }} Critical</span>
+                                            {% endif %}
+                                            {% if student_data.high_count > 0 %}
+                                                <span class="badge bg-warning text-dark">{{ student_data.high_count }} High</span>
+                                            {% endif %}
+                                            {% if student_data.medium_count > 0 %}
+                                                <span class="badge bg-info">{{ student_data.medium_count }} Medium</span>
+                                            {% endif %}
+                                            {% if student_data.low_count > 0 %}
+                                                <span class="badge bg-light text-dark">{{ student_data.low_count }} Low</span>
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td>
                                         <small class="text-muted">
-                                            {{ alert.created_at | manila_time | strftime('%b %d, %Y') }}
+                                            {{ student_data.latest_alert_date | manila_time | strftime('%b %d, %Y') }}<br>
+                                            {{ student_data.latest_alert_date | manila_time | strftime('%I:%M %p') }}
                                         </small>
                                     </td>
                                     <td>
-                                        {% if alert.is_resolved %}
+                                        {% if student_data.has_unread %}
+                                            <span class="badge bg-warning text-dark">Active</span>
+                                        {% elif student_data.has_resolved %}
                                             <span class="badge bg-success">Resolved</span>
-                                            {% if alert.resolved_at %}
-                                            <br><small class="text-muted">
-                                                {{ alert.resolved_at | manila_time | strftime('%b %d, %Y') }}
-                                            </small>
-                                            {% endif %}
                                         {% else %}
-                                            <span class="badge bg-warning">Active</span>
+                                            <span class="badge bg-secondary">Mixed</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if not alert.is_resolved %}
-                                        {% set faculty_alert_exists = faculty_alerts and faculty_alerts|selectattr('user_id', 'equalto', alert.user_id)|selectattr('alert_type', 'equalto', alert.alert_type)|selectattr('severity', 'equalto', alert.severity)|selectattr('title', 'equalto', alert.title)|selectattr('message', 'equalto', alert.message)|selectattr('status', 'equalto', 'unread')|list|length > 0 %}
-                                        {% if faculty_alert_exists %}
-                                        <button class="btn btn-sm btn-secondary" disabled title="This alert has already been sent to guidance admin">
-                                            <i class="fas fa-check me-1"></i>Already Alerted
-                                        </button>
-                                        {% else %}
-                                        <button class="btn btn-sm btn-warning alert-guidance-btn" data-alert-id="{{ alert.id }}" onclick="event.stopPropagation(); alertGuidanceAdmin({{ alert.id }})" style="pointer-events: auto;">
+                                        {% if student_data.has_unread %}
+                                        <button class="btn btn-sm btn-warning alert-guidance-btn" data-student-id="{{ student_data.student.id }}" onclick="event.stopPropagation(); alertGuidanceAdmin({{ student_data.student.id }})" style="pointer-events: auto;">
                                             <i class="fas fa-exclamation-triangle me-1"></i>Alert Guidance Admin
                                         </button>
-                                        {% endif %}
                                         {% else %}
-                                        <span class="text-muted">Resolved</span>
+                                        <span class="text-muted">All Resolved</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -450,8 +446,8 @@ body.modal-open {
 <script>
 let currentAlertId = null;
 
-async function viewAlert(alertId) {
-    currentAlertId = alertId;
+async function viewStudentAlerts(studentId) {
+    currentAlertId = studentId;
 
     // Show loading
     const modal = document.getElementById('alertModal');
@@ -461,7 +457,7 @@ async function viewAlert(alertId) {
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-2 text-muted">Loading alert...</p>
+            <p class="mt-2 text-muted">Loading student alerts...</p>
         </div>
     `;
     modal.style.display = 'flex';
@@ -470,69 +466,113 @@ async function viewAlert(alertId) {
     document.body.classList.add('modal-open');
 
     try {
-        const response = await fetch(`/admin/api/alert/${alertId}`);
+        const response = await fetch(`/admin/api/guidance-student-alerts/${studentId}`);
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Failed to load alert details');
+            throw new Error(data.message || 'Failed to load student alerts');
         }
 
-        const alert = data;
+        const student = data.student;
+        const alerts = data.alerts;
 
-        // Populate content
-        content.innerHTML = `
-            <div class="mb-3">
-                <label class="form-label fw-bold">Student:</label>
-                <div class="p-2 bg-light rounded">${alert.user.full_name} (LRN: ${alert.user.username})</div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">Alert Type:</label>
-                <div class="p-2 bg-light rounded">${alert.alert_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">Severity:</label>
-                <div class="p-2 bg-light rounded">
-                    ${alert.severity === 'critical' ? '<span class="badge bg-danger">Critical</span>' :
-                      alert.severity === 'high' ? '<span class="badge bg-warning">High</span>' :
-                      alert.severity === 'medium' ? '<span class="badge bg-info">Medium</span>' :
-                      '<span class="badge bg-light text-dark">Low</span>'}
+        // Populate content with all student alerts
+        let alertsHtml = `
+            <div class="mb-4">
+                <h5 class="mb-3">Student Information</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Name:</label>
+                        <div class="p-2 bg-light rounded">${student.full_name}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">LRN:</label>
+                        <div class="p-2 bg-light rounded">${student.username}</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Message:</label>
-                <div class="p-3 bg-light rounded">${alert.message}</div>
-            </div>
+            <div class="mb-4">
+                <h5 class="mb-3">All Alerts (${alerts.length})</h5>
+        `;
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Date:</label>
-                <div class="p-2 bg-light rounded">${new Date(alert.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-            </div>
+        if (alerts.length > 0) {
+            alerts.forEach((alert, index) => {
+                alertsHtml += `
+                    <div class="alert-item border rounded p-3 mb-3 ${alert.is_resolved ? 'bg-light' : 'bg-warning-subtle'}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0">${alert.alert_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h6>
+                            <div class="d-flex gap-2">
+                                ${alert.severity === 'critical' ? '<span class="badge bg-danger">Critical</span>' :
+                                  alert.severity === 'high' ? '<span class="badge bg-warning text-dark">High</span>' :
+                                  alert.severity === 'medium' ? '<span class="badge bg-info">Medium</span>' :
+                                  '<span class="badge bg-light text-dark">Low</span>'}
+                                ${alert.is_resolved ? '<span class="badge bg-success">Resolved</span>' : '<span class="badge bg-warning text-dark">Active</span>'}
+                            </div>
+                        </div>
+                        <p class="mb-2">${alert.message}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                Created: ${new Date(alert.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                ${alert.resolved_at ? '<br>Resolved: ' + new Date(alert.resolved_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            alertsHtml += '<p class="text-muted">No alerts found for this student.</p>';
+        }
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Status:</label>
-                <div class="p-2 bg-light rounded">
-                    ${alert.is_resolved ? '<span class="badge bg-success">Resolved</span>' : '<span class="badge bg-warning">Active</span>'}
-                    ${alert.resolved_at ? '<br><small class="text-muted">Resolved on ' + new Date(alert.resolved_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</small>' : ''}
-                </div>
+        alertsHtml += `
             </div>
 
             <div class="d-flex justify-content-end gap-3 mt-4">
                 <button type="button" class="btn btn-secondary" onclick="closeAlertModal()">Close</button>
             </div>
         `;
+
+        content.innerHTML = alertsHtml;
     } catch (error) {
-        console.error('Error loading alert:', error);
+        console.error('Error loading student alerts:', error);
         content.innerHTML = `
             <div class="text-center py-4">
                 <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-                <h5 class="text-danger">Error Loading Alert</h5>
-                <p class="text-muted">Failed to load alert details. Please try again.</p>
+                <h5 class="text-danger">Error Loading Student Alerts</h5>
+                <p class="text-muted">Failed to load student alerts. Please try again.</p>
                 <button class="btn btn-secondary" onclick="closeAlertModal()">Close</button>
             </div>
         `;
+    }
+}
+
+async function resolveAlert(alertId) {
+    if (!confirm('Are you sure you want to resolve this alert?')) return;
+
+    try {
+        const response = await fetch(`/admin/resolve-alert/${alertId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Refresh the modal content
+            const studentId = currentAlertId;
+            if (studentId) {
+                await viewStudentAlerts(studentId);
+            }
+            alert('Alert resolved successfully!');
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error resolving alert:', error);
+        alert('Failed to resolve alert. Please try again.');
     }
 }
 
@@ -542,18 +582,18 @@ function closeAlertModal() {
     document.body.classList.remove('modal-open');
 }
 
-async function alertGuidanceAdmin(alertId) {
-    if (!confirm('Are you sure you want to alert the guidance admin about this student?')) return;
+async function alertGuidanceAdmin(studentId) {
+    if (!confirm('Are you sure you want to alert the guidance admin about this student\'s active alerts?')) return;
 
     // Disable the button to prevent multiple clicks
-    const button = document.querySelector(`.alert-guidance-btn[data-alert-id="${alertId}"]`);
+    const button = document.querySelector(`.alert-guidance-btn[data-student-id="${studentId}"]`);
     if (button) {
         button.disabled = true;
         button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Alerting...';
     }
 
     try {
-        const response = await fetch(`/admin/alert-guidance-admin/${alertId}`, {
+        const response = await fetch(`/admin/alert-guidance-admin/${studentId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -567,7 +607,7 @@ async function alertGuidanceAdmin(alertId) {
             alert('Alert sent to guidance admin successfully!');
             // Replace the button with "Already Alerted" instead of reloading
             if (button) {
-                button.outerHTML = '<button class="btn btn-sm btn-secondary" disabled title="This alert has already been sent to guidance admin"><i class="fas fa-check me-1"></i>Already Alerted</button>';
+                button.outerHTML = '<button class="btn btn-sm btn-secondary" disabled title="This student has already been alerted to guidance admin"><i class="fas fa-check me-1"></i>Already Alerted</button>';
             }
         } else {
             alert('Error: ' + result.message);
@@ -595,7 +635,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeAlertManagement() {
     const selectAllCheckbox = document.getElementById('selectAll');
     const headerSelectAllCheckbox = document.getElementById('headerSelectAll');
-    const alertCheckboxes = document.querySelectorAll('.alert-checkbox');
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
     const deleteSelectedBtn = document.getElementById('deleteSelectedAlertsBtn');
     const selectionCount = document.getElementById('alertSelectionCount');
     const searchInput = document.getElementById('alertSearchInput');
@@ -603,14 +643,14 @@ function initializeAlertManagement() {
 
     // Update selection count and button state
     function updateSelectionState() {
-        const checkedBoxes = document.querySelectorAll('.alert-checkbox:checked');
+        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
         const count = checkedBoxes.length;
 
-        selectionCount.textContent = count === 1 ? '1 alert selected' : `${count} alerts selected`;
+        selectionCount.textContent = count === 1 ? '1 student selected' : `${count} students selected`;
         deleteSelectedBtn.disabled = count === 0;
 
         // Update select all checkbox states
-        const allChecked = count === alertCheckboxes.length && count > 0;
+        const allChecked = count === studentCheckboxes.length && count > 0;
         const someChecked = count > 0;
 
         selectAllCheckbox.checked = allChecked;
@@ -621,7 +661,7 @@ function initializeAlertManagement() {
 
     // Handle select all functionality
     function toggleSelectAll(checked) {
-        alertCheckboxes.forEach(checkbox => {
+        studentCheckboxes.forEach(checkbox => {
             checkbox.checked = checked;
         });
         updateSelectionState();
@@ -636,38 +676,38 @@ function initializeAlertManagement() {
         toggleSelectAll(this.checked);
     });
 
-    alertCheckboxes.forEach(checkbox => {
+    studentCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', updateSelectionState);
     });
 
-    // Delete selected alerts
+    // Delete selected students' alerts
     deleteSelectedBtn.addEventListener('click', function() {
-        const checkedBoxes = document.querySelectorAll('.alert-checkbox:checked');
+        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
         if (checkedBoxes.length === 0) return;
 
-        // Build confirmation message with alert details
-        let confirmMessage = 'Are you sure you want to delete the following alert(s)?\n\n';
-        const alertDetails = [];
+        // Build confirmation message with student details
+        let confirmMessage = 'Are you sure you want to delete ALL alerts for the following student(s)?\n\n';
+        const studentDetails = [];
 
         checkedBoxes.forEach(checkbox => {
             const row = checkbox.closest('tr');
             const studentName = row.cells[1].textContent.trim().split('\n')[0]; // Get student name
-            const alertType = row.cells[2].textContent.trim();
-            alertDetails.push(`${studentName} (${alertType})`);
-            confirmMessage += '• ' + studentName + ' - ' + alertType + '\n';
+            const alertCount = row.cells[2].textContent.trim().split(' ')[0]; // Get alert count
+            studentDetails.push(`${studentName} (${alertCount} alerts)`);
+            confirmMessage += '• ' + studentName + ' - ' + alertCount + ' alerts\n';
         });
 
         confirmMessage += '\nThis action cannot be undone.';
 
         // Use native confirm dialog
         if (confirm(confirmMessage)) {
-            performGroupDeleteAlerts(checkedBoxes);
+            performGroupDeleteStudentAlerts(checkedBoxes);
         }
     });
 
-    // Function to perform group delete
-    function performGroupDeleteAlerts(checkedBoxes) {
-        const alertIds = Array.from(checkedBoxes).map(cb => cb.value);
+    // Function to perform group delete of student alerts
+    function performGroupDeleteStudentAlerts(checkedBoxes) {
+        const studentIds = Array.from(checkedBoxes).map(cb => cb.value);
 
         // Show loading state on the delete button
         const originalText = deleteSelectedBtn.innerHTML;
@@ -676,23 +716,23 @@ function initializeAlertManagement() {
 
         // Send delete request
         const formData = new FormData();
-        formData.append('alert_ids', alertIds.join(','));
+        formData.append('student_ids', studentIds.join(','));
         formData.append('csrf_token', '{{ csrf_token() }}');
 
-        fetch('/admin/delete-alerts', {
+        fetch('/admin/delete-student-alerts', {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Remove deleted alert rows from the page
+                // Remove deleted student rows from the page
                 checkedBoxes.forEach(checkbox => {
                     const row = checkbox.closest('tr');
                     row.remove();
                 });
 
-                alert('Alerts deleted successfully!');
+                alert('Student alerts deleted successfully!');
                 updateSelectionState();
             } else {
                 alert('Error: ' + data.message);
@@ -700,7 +740,7 @@ function initializeAlertManagement() {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while deleting alerts.');
+            alert('An error occurred while deleting student alerts.');
         })
         .finally(() => {
             // Reset button state
@@ -712,13 +752,13 @@ function initializeAlertManagement() {
     // Search functionality
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase().trim();
-        const alertRows = document.querySelectorAll('#alertsTable tbody tr:not(.no-alerts-found)');
+        const studentRows = document.querySelectorAll('#alertsTable tbody tr:not(.no-alerts-found)');
         const tableBody = document.querySelector('#alertsTable tbody');
         let visibleCount = 0;
 
         if (!searchTerm) {
-            // Show all alert rows if search is empty
-            alertRows.forEach(row => {
+            // Show all student rows if search is empty
+            studentRows.forEach(row => {
                 row.style.display = '';
                 visibleCount++;
             });
@@ -728,8 +768,8 @@ function initializeAlertManagement() {
                 noResultsMessage.style.display = 'none';
             }
         } else {
-            // Filter alert rows based on search term
-            alertRows.forEach(row => {
+            // Filter student rows based on search term
+            studentRows.forEach(row => {
                 const studentName = row.cells[1].textContent.toLowerCase();
                 const studentLRN = row.cells[1].textContent.toLowerCase(); // LRN is in the student cell
 
@@ -748,10 +788,10 @@ function initializeAlertManagement() {
                     noResultsMessage = document.createElement('tr');
                     noResultsMessage.className = 'no-alerts-found';
                     noResultsMessage.innerHTML = `
-                        <td colspan="8" class="text-center py-4">
+                        <td colspan="7" class="text-center py-4">
                             <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No Alerts Found</h5>
-                            <p class="text-muted">No alerts match your search criteria.</p>
+                            <h5 class="text-muted">No Students Found</h5>
+                            <p class="text-muted">No students with alerts match your search criteria.</p>
                         </td>
                     `;
                     tableBody.appendChild(noResultsMessage);
@@ -764,7 +804,7 @@ function initializeAlertManagement() {
             }
         }
 
-        // Update alerts count display
+        // Update students count display
         const alertsCount = document.getElementById('alertsCount');
         if (alertsCount) {
             alertsCount.textContent = visibleCount;

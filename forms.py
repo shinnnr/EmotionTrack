@@ -69,8 +69,8 @@ class EmotionLogForm(FlaskForm):
     gratitude = TextAreaField('Gratitude Note', validators=[Length(max=500)])
 
 class ConsultationForm(FlaskForm):
-    message_text = TextAreaField('Your Message', 
-                                validators=[Length(max=500)],
+    message_text = TextAreaField('Your Message',
+                                validators=[Length(max=2000)],
                                 render_kw={"rows": 4, "placeholder": "Describe your concerns or questions..."})
 
 class FacultyProfileForm(FlaskForm):

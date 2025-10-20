@@ -65,16 +65,16 @@ function setupTextareaHandlers(textareaId) {
 
 function initializeSuggestionButtons() {
     const suggestionButtons = document.querySelectorAll('.suggestion-btn');
-    
+
     suggestionButtons.forEach(button => {
         button.addEventListener('click', function() {
             const suggestionMessage = this.dataset.message;
             const target = this.dataset.target;
-            
-            const messageInput = target === 'guidance' ? 
-                document.getElementById('guidanceMessageText') : 
+
+            const messageInput = target === 'guidance' ?
+                document.getElementById('guidanceMessageText') :
                 document.getElementById('facultyMessageText');
-            
+
             if (messageInput.value.trim() === '') {
                 messageInput.value = suggestionMessage;
                 messageInput.style.height = 'auto';
@@ -90,6 +90,14 @@ function initializeSuggestionButtons() {
             }
         });
     });
+
+    // Initialize attach assessment button
+    const attachBtn = document.getElementById('attachGuidanceAssessment');
+    if (attachBtn) {
+        attachBtn.addEventListener('click', function() {
+            attachLatestAssessment();
+        });
+    }
 }
 
 async function sendMessage(conversationType) {
@@ -387,6 +395,86 @@ function markAsRead(chatType) {
     });
 }
 
+async function attachLatestAssessment() {
+    try {
+        // Show loading state
+        const attachBtn = document.getElementById('attachGuidanceAssessment');
+        const originalContent = attachBtn.innerHTML;
+        attachBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Loading...';
+        attachBtn.disabled = true;
+
+        // Fetch latest DASS-21 and mood data
+        const response = await fetch('/api/student-assessment-data', {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrf_token]')?.value || ''
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch assessment data');
+        }
+
+        const data = await response.json();
+
+        // Format the assessment data in plain text
+        let assessmentText = 'Here is my latest assessment data:\n\n';
+
+        if (data.dass21) {
+            assessmentText += 'DASS-21 Assessment Results:\n';
+            assessmentText += `Date: ${data.dass21.created_at}\n`;
+            assessmentText += `Depression Score: ${data.dass21.depression_score} (${data.dass21.depression_severity})\n`;
+            assessmentText += `Anxiety Score: ${data.dass21.anxiety_score} (${data.dass21.anxiety_severity})\n`;
+            assessmentText += `Stress Score: ${data.dass21.stress_score} (${data.dass21.stress_severity})\n\n`;
+        } else {
+            assessmentText += 'No DASS-21 assessment found.\n\n';
+        }
+
+        if (data.mood_logs && data.mood_logs.length > 0) {
+            assessmentText += 'Recent Mood Logs (Last 7 days):\n';
+            data.mood_logs.forEach((log, index) => {
+                assessmentText += `${index + 1}. ${log.emotion} (Intensity: ${log.intensity}/10) - ${log.log_date}\n`;
+                if (log.triggers) assessmentText += `   Triggers: ${log.triggers}\n`;
+                if (log.coping) assessmentText += `   Coping: ${log.coping}\n`;
+                if (log.gratitude) assessmentText += `   Gratitude: ${log.gratitude}\n`;
+                assessmentText += '\n';
+            });
+        } else {
+            assessmentText += 'No recent mood logs found.\n';
+        }
+
+        // Get the message input
+        const messageInput = document.getElementById('guidanceMessageText');
+
+        // Check if there's already content
+        const currentContent = messageInput.value.trim();
+        if (currentContent) {
+            // Append to existing content
+            messageInput.value = currentContent + '\n\n' + assessmentText;
+        } else {
+            // Set as new content
+            messageInput.value = assessmentText;
+        }
+
+        // Auto-resize textarea
+        messageInput.style.height = 'auto';
+        messageInput.style.height = (messageInput.scrollHeight) + 'px';
+        messageInput.focus();
+
+        // Show success notification
+        showNotification('Assessment data attached successfully!', 'success');
+
+    } catch (error) {
+        console.error('Error attaching assessment:', error);
+        showNotification('Failed to attach assessment data. Please try again.', 'error');
+    } finally {
+        // Restore button
+        const attachBtn = document.getElementById('attachGuidanceAssessment');
+        attachBtn.innerHTML = '<i class="fas fa-paperclip me-1"></i>Attach Latest Assessment';
+        attachBtn.disabled = false;
+    }
+}
+
 function showNotification(message, type) {
     // Create notification element
     const notification = document.createElement('div');
@@ -397,22 +485,22 @@ function showNotification(message, type) {
         z-index: 1060;
         max-width: 400px;
     `;
-    
+
     // Create message text safely
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message; // Safe: auto-escapes HTML
-    
+
     // Create close button
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
     closeButton.className = 'btn-close';
     closeButton.setAttribute('data-bs-dismiss', 'alert');
-    
+
     notification.appendChild(messageSpan);
     notification.appendChild(closeButton);
-    
+
     document.body.appendChild(notification);
-    
+
     // Auto-dismiss after 3 seconds
     setTimeout(() => {
         if (notification.parentNode) {
@@ -893,6 +981,65 @@ function showEmergencyModal() {
     document.body.appendChild(modal);
     const bootstrapModal = new bootstrap.Modal(modal);
     bootstrapModal.show();
+function attachAssessmentData(target) {
+    // Fetch assessment data from API
+    fetch('/api/student-assessment-data')
+        .then(response => response.json())
+        .then(data => {
+            let attachmentText = '';
+
+            // Format DASS-21 data
+            if (data.dass21) {
+                attachmentText += '\n\n--- LATEST DASS-21 ASSESSMENT RESULTS ---\n';
+                attachmentText += `Assessment Date: ${data.dass21.created_at}\n\n`;
+                attachmentText += `Depression Score: ${data.dass21.depression_score} (${data.dass21.depression_severity})\n`;
+                attachmentText += `Anxiety Score: ${data.dass21.anxiety_score} (${data.dass21.anxiety_severity})\n`;
+                attachmentText += `Stress Score: ${data.dass21.stress_score} (${data.dass21.stress_severity})\n`;
+            }
+
+            // Format recent mood logs
+            if (data.mood_logs && data.mood_logs.length > 0) {
+                attachmentText += '\n\n--- RECENT MOOD LOGS (Last 7 Days) ---\n';
+                data.mood_logs.forEach((log, index) => {
+                    attachmentText += `\n${index + 1}. ${log.log_date}\n`;
+                    attachmentText += `   Emotion: ${log.emotion} (Intensity: ${log.intensity}/10)\n`;
+                    attachmentText += `   Sleep: ${log.sleep} hours\n`;
+                    attachmentText += `   Energy: ${log.energy}/10\n`;
+                    if (log.triggers) attachmentText += `   Triggers: ${log.triggers}\n`;
+                    if (log.coping) attachmentText += `   Coping: ${log.coping}\n`;
+                    if (log.gratitude) attachmentText += `   Gratitude: ${log.gratitude}\n`;
+                });
+            }
+
+            if (!attachmentText.trim()) {
+                showNotification('No assessment data available to attach.', 'warning');
+                return;
+            }
+
+            // Get the appropriate message input
+            const messageInput = target === 'guidance' ?
+                document.getElementById('guidanceMessageText') :
+                document.getElementById('facultyMessageText');
+
+            // Append to existing message or replace if empty
+            if (messageInput.value.trim() === '') {
+                messageInput.value = attachmentText.trim();
+            } else {
+                messageInput.value += attachmentText;
+            }
+
+            // Auto-resize textarea
+            messageInput.style.height = 'auto';
+            messageInput.style.height = (messageInput.scrollHeight) + 'px';
+            messageInput.focus();
+
+            showNotification('Assessment data attached to your message!', 'success');
+        })
+        .catch(error => {
+            console.error('Error fetching assessment data:', error);
+            showNotification('Failed to load assessment data. Please try again.', 'error');
+        });
+}
     
     modal.addEventListener('hidden.bs.modal', () => {
         document.body.removeChild(modal);
