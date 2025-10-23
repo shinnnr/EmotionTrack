@@ -38,11 +38,30 @@
     <div class="row">
         <div class="col-12">
             <div class="welcome-header mb-4">
-                <h1 class="display-5 fw-bold text-white">Welcome back, {{ current_user.firstname }}! </h1>
+                <h1 class="display-5 fw-bold text-white">Welcome back, {{ current_user.firstname }}!</h1>
                 <p class="lead text-light">How are you feeling today? Let's track your wellness journey.</p>
             </div>
         </div>
     </div>
+
+    <!-- DASS-21 Availability Floating Notification -->
+    {% if dass21_status.can_take %}
+    <div id="dass21FloatingNotification" class="position-fixed top-0 end-0 m-3 alert alert-primary alert-dismissible fade show shadow" style="z-index: 1070; max-width: 400px; display: none;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-brain fa-2x text-primary me-3"></i>
+            <div class="flex-grow-1">
+                <h6 class="alert-heading fw-bold mb-1">DASS-21 Available!</h6>
+                <p class="mb-1 small">
+                    Your weekly mental wellness assessment is ready.
+                </p>
+                <a href="{{ url_for('main.dass21_quiz') }}" class="btn btn-primary btn-sm mt-2">
+                    <i class="fas fa-play me-1"></i>Take Now
+                </a>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
 
     <!-- DASS-21 Status Notification -->
     {% if not dass21_status.can_take %}
@@ -1509,6 +1528,22 @@ document.addEventListener('keydown', function(event) {
 // Load daily tips when page loads
 document.addEventListener('DOMContentLoaded', function() {
     loadDailyTipsForHome();
+
+    // Show DASS-21 notification after 8 seconds (when welcome notification disappears)
+    const dass21Notification = document.getElementById('dass21FloatingNotification');
+    if (dass21Notification) {
+        setTimeout(() => {
+            dass21Notification.style.display = 'block';
+            setTimeout(() => {
+                if (dass21Notification) {
+                    dass21Notification.classList.remove('show');
+                    setTimeout(() => {
+                        dass21Notification.style.display = 'none';
+                    }, 150); // Wait for fade animation
+                }
+            }, 8000); // 8 seconds
+        }, 8000); // Show after 8 seconds (when welcome notification disappears)
+    }
 });
 </script>
 {% endblock %}

@@ -2854,7 +2854,7 @@ def download_alert_history(alert_id):
         doc.add_heading('Communication History Summary', level=1)
 
         if messages:
-            comm_table = doc.add_table(rows=1, cols=4)
+            comm_table = doc.add_table(rows=1, cols=5)
             comm_table.style = 'Table Grid'
 
             # Header row
@@ -2863,13 +2863,22 @@ def download_alert_history(alert_id):
             hdr_cells[1].text = 'Type'
             hdr_cells[2].text = 'Message'
             hdr_cells[3].text = 'Response'
+            hdr_cells[4].text = 'Action Taken'
 
             for message in messages:
                 row_cells = comm_table.add_row().cells
                 row_cells[0].text = convert_to_manila_time(message.created_at).strftime('%Y-%m-%d %H:%M')
                 row_cells[1].text = 'Student Message'
                 row_cells[2].text = message.message_text or 'N/A'
-                row_cells[3].text = message.admin_response or 'Pending'
+                if message.admin_response:
+                    row_cells[3].text = message.admin_response
+                    # Get the admin who responded to this message
+                    responded_by_admin = User.query.get(message.responded_by_admin_id) if message.responded_by_admin_id else None
+                    admin_name = responded_by_admin.full_name if responded_by_admin else 'Unknown Admin'
+                    row_cells[4].text = f'Responded by {admin_name}'
+                else:
+                    row_cells[3].text = 'In Progress'
+                    row_cells[4].text = 'Waiting for Response'
         else:
             doc.add_paragraph('No communication history available.')
 
